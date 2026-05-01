@@ -40,7 +40,7 @@
       font-size: 14px;
     }
 
-    /* ── Header ─────────────────────────────── */
+    /* ── Header ────────────────────────────────────────── */
     header {
       background: var(--navy);
       color: #fff;
@@ -75,7 +75,7 @@
     .spin { animation: spin .9s linear infinite; display: inline-block; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── Dashboard nav bar ───────────────────── */
+    /* ── Dashboard nav bar ──────────────────────────────────── */
     .dash-chrome {
       background: #152b47;
       border-bottom: 1px solid rgba(255,255,255,.08);
@@ -144,15 +144,15 @@
     .progress-bar { height: 3px; background: rgba(255,255,255,.08); }
     .progress-fill { height: 100%; background: var(--blue); width: 0%; transition: width 1s linear; }
 
-    /* ── Panels ──────────────────────────────── */
+    /* ── Panels ──────────────────────────────────────────── */
     .panels { position: relative; }
     .panel { display: none; }
     .panel.active { display: block; }
 
-    /* ── Panel inner layout ──────────────────── */
+    /* ── Panel inner layout ──────────────────────────────────── */
     .panel-main { padding: 20px 24px; max-width: 1700px; margin: 0 auto; }
 
-    /* ── Stats ───────────────────────────────── */
+    /* ── Stats ─────────────────────────────────────────────── */
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -174,7 +174,7 @@
     }
     .stat-value { font-size: 2rem; font-weight: 800; color: var(--gray-900); line-height: 1; }
 
-    /* ── Charts row ──────────────────────────── */
+    /* ── Charts row ──────────────────────────────────────────── */
     .charts-row {
       display: grid; grid-template-columns: 2fr 1fr;
       gap: 16px; margin-bottom: 18px;
@@ -196,7 +196,7 @@
       letter-spacing: .07em; color: var(--gray-500); margin-bottom: 14px;
     }
 
-    /* ── Tech cards (analytics panel) ───────── */
+    /* ── Tech cards (analytics panel) ──────────────────────── */
     .tech-cards-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -229,11 +229,11 @@
     .tech-rate-bar { margin-top: 10px; height: 4px; background: var(--gray-200); border-radius: 2px; overflow: hidden; }
     .tech-rate-fill { height: 100%; background: var(--green); border-radius: 2px; }
 
-    /* ── Body grid (panel 0) ─────────────────── */
+    /* ── Body grid (panel 0) ─────────────────────────────────── */
     .body-grid { display: grid; grid-template-columns: 1fr 250px; gap: 18px; align-items: start; }
     @media (max-width: 1200px) { .body-grid { grid-template-columns: 1fr; } }
 
-    /* ── Filters ─────────────────────────────── */
+    /* ── Filters ─────────────────────────────────────────────── */
     .filters {
       background: var(--white); border-radius: var(--radius);
       padding: 14px 18px; box-shadow: var(--shadow);
@@ -251,7 +251,7 @@
     .fi-search { flex: 1; min-width: 200px; }
     .result-count { margin-left: auto; font-size: .82rem; color: var(--gray-500); padding-bottom: 7px; white-space: nowrap; }
 
-    /* ── Table ───────────────────────────────── */
+    /* ── Table ───────────────────────────────────────────────── */
     .table-wrap { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
     .tscroll { overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; font-size: .8rem; }
@@ -291,7 +291,7 @@
     }
     .photo-btn:hover { background: #ede9fe; }
 
-    /* ── Pagination ──────────────────────────── */
+    /* ── Pagination ──────────────────────────────────────────── */
     .table-footer {
       padding: 12px 16px; display: flex; justify-content: space-between;
       align-items: center; border-top: 1px solid var(--gray-200); background: var(--gray-50);
@@ -306,7 +306,7 @@
     .pb.active { background: var(--blue); color: #fff; border-color: var(--blue); font-weight: 700; }
     .pb:disabled { opacity: .4; cursor: not-allowed; }
 
-    /* ── Sidebar ─────────────────────────────── */
+    /* ── Sidebar ─────────────────────────────────────────────── */
     .sidebar { display: flex; flex-direction: column; gap: 14px; }
     .widget { background: var(--white); border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); }
     .widget-title { font-size: .68rem; font-weight: 800; text-transform: uppercase; letter-spacing: .07em; color: var(--gray-500); margin-bottom: 12px; }
@@ -322,7 +322,7 @@
     .recent-so { font-weight: 700; font-size: .8rem; color: var(--navy); }
     .recent-sub { font-size: .72rem; color: var(--gray-500); margin-top: 1px; }
 
-    /* ── Messages ────────────────────────────── */
+    /* ── Messages ──────────────────────────────────────────── */
     .msg-box {
       background: var(--white); border-radius: var(--radius);
       padding: 48px 24px; text-align: center; box-shadow: var(--shadow); color: var(--gray-500);
@@ -338,7 +338,7 @@
 </head>
 <body>
 
-<!-- ── Header ───────────────────────────────── -->
+<!-- ── Header ───────────────────────────────────────────── -->
 <header>
   <div class="header-brand">
     <div class="logo-wrap"><img src="logo.png" alt="American Irrigation" /></div>
@@ -361,7 +361,7 @@
   </div>
 </header>
 
-<!-- ── Dashboard nav / rotation controls ────── -->
+<!-- ── Dashboard nav / rotation controls ────────────── -->
 <div class="dash-chrome">
   <div class="dash-nav">
     <div class="dash-tabs">
@@ -383,10 +383,10 @@
   <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
 </div>
 
-<!-- ── Panels ────────────────────────────────── -->
+<!-- ── Panels ────────────────────────────────────────────── -->
 <div class="panels">
 
-<!-- ── Panel 0: Service Orders ───────────────── -->
+<!-- ── Panel 0: Service Orders ─────────────────────────── -->
 <div class="panel active" id="panel-0">
 <div class="panel-main">
 
@@ -459,7 +459,7 @@
 </div>
 </div>
 
-<!-- ── Panel 1: Analytics ─────────────────────── -->
+<!-- ── Panel 1: Analytics ─────────────────────────────────── -->
 <div class="panel" id="panel-1">
 <div class="panel-main">
 
@@ -487,7 +487,7 @@
 </div>
 </div>
 
-<!-- ── Panel 2: RB W/O ──────────────────────── -->
+<!-- ── Panel 2: RB W/O ─────────────────────────────────────── -->
 <div class="panel" id="panel-2">
 <div class="panel-main">
 
@@ -562,7 +562,7 @@
     { key: C.MAP, label: 'Map', nosort: true },
   ];
 
-  // ── Config: Sheet 2 (RB W/O) ───────────────
+  // ── Config: Sheet 2 (RB W/O) ───────────
   const SHEET_ID_2   = '183p2yP9ViMqmJvGDH4YE0JB1EhocuPUt3PFCpr5_zyg';
   const SHEET_NAME_2 = 'rbia w/o';
 
@@ -597,7 +597,7 @@
   let chartDate = null, chartStatus = null, chartTech = null, chartCust = null, chartAmount = null;
   let rbTechChart = null, rbStatusChart = null;
 
-  // ── Rotation ─────────────────────────────────
+  // ── Rotation ───────────────────────────────────────────
   const NUM_PANELS = 3;
   let currentPanel = 0;
   let autoRotate   = true;
@@ -658,7 +658,7 @@
     if (autoRotate) startRotation();
   }
 
-  // ── Sheet fetch helpers ──────────────────────
+  // ── Sheet fetch helpers ────────────────────────────
   async function fetchGviz(sheetId, sheetName) {
     let url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
     if (sheetName) url += `&sheet=${encodeURIComponent(sheetName)}`;
@@ -677,7 +677,7 @@
     });
   }
 
-  // ── Load all sheets ──────────────────────────
+  // ── Load all sheets ──────────────────────────────
   async function loadAll() {
     const btn = document.getElementById('refreshBtn');
     const icon = document.getElementById('refreshIcon');
@@ -690,7 +690,7 @@
     startRotation();
   }
 
-  // ── Sheet 1: Service Orders ──────────────────
+  // ── Sheet 1: Service Orders ──────────────────────────
   async function loadData(standalone = true) {
     if (standalone) {
       const btn = document.getElementById('refreshBtn');
@@ -726,7 +726,7 @@
     }
   }
 
-  // ── Sheet 2: RB W/O ────────────────────────
+  // ── Sheet 2: RB W/O ────────────────────────────────
   async function loadData2(standalone = true) {
     try {
       const all = await fetchGviz(SHEET_ID_2, SHEET_NAME_2);
@@ -760,7 +760,7 @@
     }
   }
 
-  // ── Stats: Sheet 1 ───────────────────────────
+  // ── Stats: Sheet 1 ─────────────────────────────────────────
   function updateStats() {
     const inv   = allRows.filter(r => r[C.INVOICE]?.trim());
     const techs = new Set(allRows.map(r => r[C.TECH]?.trim()).filter(Boolean));
@@ -770,7 +770,7 @@
     ['a-sTotal','a-sInvoiced','a-sPending','a-sTechs','a-sCustomers'].forEach((id, i) => { document.getElementById(id).textContent = vals[i]; });
   }
 
-  // ── Stats: Sheet 2 ───────────────────────────
+  // ── Stats: Sheet 2 ─────────────────────────────────────────
   function updateStats2() {
     const inv   = allRows2.filter(r => r[C2.INVOICE]?.trim());
     const techs = new Set(allRows2.map(r => r[C2.TECH]?.trim()).filter(Boolean));
@@ -779,7 +779,7 @@
     ['r-sTotal','r-sInvoiced','r-sPending','r-sTechs','r-sCustomers'].forEach((id, i) => { document.getElementById(id).textContent = vals[i]; });
   }
 
-  // ── Filters: Sheet 1 ─────────────────────────
+  // ── Filters: Sheet 1 ─────────────────────────────────────────
   function populateFilters() {
     fillSel('qTech',     uniq(allRows.map(r => r[C.TECH]?.trim())).sort(),     'All Techs');
     fillSel('qCustomer', uniq(allRows.map(r => r[C.CUSTOMER]?.trim())).sort(), 'All Customers');
@@ -804,7 +804,7 @@
     page = 1; renderTable();
   }
 
-  // ── Filters: Sheet 2 ─────────────────────────
+  // ── Filters: Sheet 2 ─────────────────────────────────────────
   function populateFilters2() {
     fillSel('rTech',     uniq(allRows2.map(r => r[C2.TECH]?.trim())).sort(),     'All Techs');
     fillSel('rCustomer', uniq(allRows2.map(r => r[C2.CUSTOMER]?.trim())).sort(), 'All Customers');
@@ -829,7 +829,7 @@
     page2 = 1; renderTable2();
   }
 
-  // ── Table helpers ────────────────────────────
+  // ── Table helpers ──────────────────────────────────────────
   function fillSel(id, items, ph) {
     document.getElementById(id).innerHTML = `<option value="">${ph}</option>` +
       items.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
@@ -844,7 +844,7 @@
     return out.join('');
   }
 
-  // ── Table: Sheet 1 ───────────────────────────
+  // ── Table: Sheet 1 ───────────────────────────────────────────
   function renderTable() {
     const total = filtered.length;
     document.getElementById('resultCount').textContent =
@@ -879,7 +879,7 @@
   function goPage(p) { const max=Math.ceil(filtered.length/PAGE_SIZE); if(p<1||p>max)return; page=p; renderTable(); window.scrollTo({top:0,behavior:'smooth'}); }
   function sortBy(key) { sortDir=(sortKey===key&&sortDir==='asc')?'desc':'asc'; sortKey=key; applyFilters(); }
 
-  // ── Table: Sheet 2 ───────────────────────────
+  // ── Table: Sheet 2 ───────────────────────────────────────────
   function renderTable2() {
     const total = filtered2.length;
     document.getElementById('rbResultCount').textContent =
@@ -915,7 +915,7 @@
   function goPage2(p) { const max=Math.ceil(filtered2.length/PAGE_SIZE); if(p<1||p>max)return; page2=p; renderTable2(); window.scrollTo({top:0,behavior:'smooth'}); }
   function sortBy2(key) { sortDir2=(sortKey2===key&&sortDir2==='asc')?'desc':'asc'; sortKey2=key; applyFilters2(); }
 
-  // ── Sidebar ──────────────────────────────────
+  // ── Sidebar ──────────────────────────────────────────────────
   function renderSidebar() {
     const counts={};
     allRows.forEach(r=>{ const t=r[C.TECH]?.trim(); if(t) counts[t]=(counts[t]||0)+1; });
@@ -934,7 +934,7 @@
       </div>`).join('');
   }
 
-  // ── Analytics panel (Panel 1) ────────────────
+  // ── Analytics panel (Panel 1) ────────────────────────────
   function renderAnalytics() {
     const techData = {};
     allRows.forEach(r => {
@@ -1009,7 +1009,7 @@
     document.getElementById('analyticsCharts').style.display = 'grid';
   }
 
-  // ── Panel 0 charts ───────────────────────────
+  // ── Panel 0 charts ───────────────────────────────────────────
   function normalizeDate(raw) {
     if (!raw) return null;
     const parts = raw.trim().replace(/-/g,'/').split('/').map(Number).filter(n=>!isNaN(n));
@@ -1097,7 +1097,7 @@
     renderAnalyticsCharts();
   }
 
-  // ── RB charts ────────────────────────────────
+  // ── RB charts ────────────────────────────────────────────────
   function renderRbCharts() {
     const techCounts = {};
     allRows2.forEach(r => { const t=r[C2.TECH]?.trim(); if(t) techCounts[t]=(techCounts[t]||0)+1; });
@@ -1133,7 +1133,7 @@
     document.getElementById('rbChartsRow').style.display = 'grid';
   }
 
-  // ── Helpers ──────────────────────────────────
+  // ── Helpers ──────────────────────────────────────────────────
   function mapLink(val) {
     val=(val||'').trim(); if(!val) return '';
     const href=val.startsWith('http')?val:`https://www.google.com/maps?q=${encodeURIComponent(val)}`;
