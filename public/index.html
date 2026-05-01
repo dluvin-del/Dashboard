@@ -57,12 +57,28 @@
       z-index: 100;
     }
 
-    .header-brand h1 {
-      font-size: 1.25rem;
-      font-weight: 700;
-      letter-spacing: -.02em;
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 16px;
     }
-    .header-brand p { font-size: .75rem; opacity: .65; margin-top: 2px; }
+    .header-brand img {
+      height: 52px;
+      object-fit: contain;
+      filter: brightness(0) invert(1);
+    }
+    .header-divider {
+      width: 1px;
+      height: 36px;
+      background: rgba(255,255,255,0.25);
+    }
+    .header-title h1 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: -.01em;
+      line-height: 1.2;
+    }
+    .header-title p { font-size: .72rem; opacity: .6; margin-top: 2px; }
 
     .header-right {
       display: flex;
@@ -365,7 +381,12 @@
 
 <header>
   <div class="header-brand">
-    <img src="/logo" alt="American Irrigation" style="height:52px;object-fit:contain;" />
+    <img src="/logo" alt="American Irrigation" />
+    <div class="header-divider"></div>
+    <div class="header-title">
+      <h1>Mid-South</h1>
+      <p>Service Order Dashboard</p>
+    </div>
   </div>
   <div class="header-right">
     <span id="lastUpdated">Not loaded</span>
