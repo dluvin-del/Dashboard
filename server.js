@@ -9,12 +9,13 @@ const SHEET_ID = process.env.SHEET_ID || '1HWfIjPqARGR8UqUEtKlO5YZ_9_QyE6vjcSU4P
 const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
 const PUBLIC_DIR = path.join(__dirname, 'public');
 
-// Find logo file with any extension/capitalisation before static middleware runs
+// Find logo: tries logo.* first, then any image file in public/
 app.get('/logo', (req, res) => {
   const files = fs.readdirSync(PUBLIC_DIR);
-  const logo = files.find(f => /^logo\./i.test(f));
+  const logo = files.find(f => /^logo\./i.test(f))
+    || files.find(f => /\.(png|jpg|jpeg|svg|webp|gif)$/i.test(f));
   if (logo) return res.sendFile(path.join(PUBLIC_DIR, logo));
-  res.status(404).send('Logo not found — place a logo.png in the public/ folder');
+  res.status(404).json({ files, hint: 'Place your logo image in the public/ folder' });
 });
 
 app.use(express.static(PUBLIC_DIR));
