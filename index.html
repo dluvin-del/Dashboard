@@ -1009,6 +1009,18 @@
     return parts.length>=2 ? `${parts[0]}/${parts[1]}` : raw.trim();
   }
 
+  function makeBarLabelPlugin() {
+    return { id:'barLabels', afterDatasetsDraw(chart) {
+      const{ctx,data}=chart;
+      chart.getDatasetMeta(0).data.forEach((bar,i)=>{
+        const val=data.datasets[0].data[i]; if(!val) return;
+        ctx.save(); ctx.fillStyle='#334155'; ctx.font='bold 10px sans-serif';
+        ctx.textAlign='center'; ctx.textBaseline='bottom';
+        ctx.fillText(val, bar.x, bar.y-2); ctx.restore();
+      });
+    }};
+  }
+
   function makePctPlugin(totalRef) {
     return { id:'pct', afterDatasetsDraw(chart) {
       const{ctx,data}=chart;
@@ -1034,6 +1046,7 @@
     if(chartDate) chartDate.destroy();
     chartDate=new Chart(document.getElementById('chartDate'),{
       type:'bar',
+      plugins:[makeBarLabelPlugin()],
       data:{labels,datasets:[{label:'Jobs',data:labels.map(l=>dateCounts[l]),backgroundColor:'#2563eb',borderRadius:4,borderSkipped:false}]},
       options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
         scales:{x:{grid:{display:false},ticks:{font:{size:10},maxRotation:45}},y:{beginAtZero:true,ticks:{stepSize:1,font:{size:10}},grid:{color:'#f1f5f9'}}}}
