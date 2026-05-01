@@ -4,13 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>American Irrigation – Service Order Dashboard</title>
-  <script src="/chart.min.js"></script>
+  <script async src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"
+          onload="onChartJsLoad()"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
       --navy:        #1e3a5f;
-      --navy-dark:   #152b47;
       --blue:        #2563eb;
       --blue-hover:  #1d4ed8;
       --blue-light:  #dbeafe;
@@ -24,14 +24,11 @@
       --gray-50:     #f8fafc;
       --gray-100:    #f1f5f9;
       --gray-200:    #e2e8f0;
-      --gray-300:    #cbd5e1;
       --gray-500:    #64748b;
       --gray-700:    #334155;
       --gray-900:    #0f172a;
       --white:       #ffffff;
-      --shadow-sm:   0 1px 2px rgba(0,0,0,.07);
       --shadow:      0 1px 3px rgba(0,0,0,.10), 0 1px 2px rgba(0,0,0,.06);
-      --shadow-md:   0 4px 6px -1px rgba(0,0,0,.10), 0 2px 4px -2px rgba(0,0,0,.06);
       --radius:      10px;
     }
 
@@ -47,7 +44,7 @@
     header {
       background: var(--navy);
       color: #fff;
-      padding: 14px 24px;
+      padding: 12px 24px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -55,81 +52,115 @@
       box-shadow: 0 2px 8px rgba(0,0,0,.25);
       position: sticky;
       top: 0;
-      z-index: 100;
+      z-index: 200;
     }
-
-    .header-brand {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-    .header-brand .logo-wrap {
-      background: #fff;
-      border-radius: 7px;
-      padding: 4px 10px;
-      display: flex;
-      align-items: center;
-    }
-    .header-brand img {
-      height: 44px;
-      object-fit: contain;
-    }
-    .header-divider {
-      width: 1px;
-      height: 36px;
-      background: rgba(255,255,255,0.25);
-    }
-    .header-title h1 {
-      font-size: 1.1rem;
-      font-weight: 700;
-      letter-spacing: -.01em;
-      line-height: 1.2;
-    }
-    .header-title p { font-size: .72rem; opacity: .6; margin-top: 2px; }
-
-    .header-right {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-
-    #lastUpdated { font-size: .78rem; opacity: .65; white-space: nowrap; }
+    .header-brand { display: flex; align-items: center; gap: 16px; }
+    .logo-wrap { background: #fff; border-radius: 7px; padding: 4px 10px; display: flex; align-items: center; }
+    .logo-wrap img { height: 40px; object-fit: contain; }
+    .header-divider { width: 1px; height: 32px; background: rgba(255,255,255,.25); }
+    .header-title h1 { font-size: 1rem; font-weight: 700; }
+    .header-title p  { font-size: .7rem; opacity: .6; margin-top: 1px; }
+    .header-right { display: flex; align-items: center; gap: 12px; }
+    #lastUpdated { font-size: .75rem; opacity: .6; white-space: nowrap; }
 
     .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 8px 16px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: .85rem;
-      font-weight: 600;
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 7px 14px; border: none; border-radius: 6px;
+      cursor: pointer; font-size: .82rem; font-weight: 600;
       transition: background .15s, opacity .15s;
     }
     .btn-primary { background: var(--blue); color: #fff; }
     .btn-primary:hover { background: var(--blue-hover); }
     .btn-primary:disabled { opacity: .55; cursor: not-allowed; }
-
     .spin { animation: spin .9s linear infinite; display: inline-block; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── Main layout ─────────────────────────── */
-    main { padding: 20px 24px; max-width: 1700px; margin: 0 auto; }
+    /* ── Dashboard nav bar ───────────────────── */
+    .dash-chrome {
+      background: #152b47;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      position: sticky;
+      top: 64px;
+      z-index: 190;
+    }
+    .dash-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      gap: 16px;
+    }
+    .dash-tabs { display: flex; gap: 2px; }
+    .dash-tab {
+      padding: 10px 18px;
+      border: none;
+      background: transparent;
+      color: rgba(255,255,255,.5);
+      font-size: .82rem;
+      font-weight: 600;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: color .15s, border-color .15s;
+      white-space: nowrap;
+    }
+    .dash-tab:hover { color: rgba(255,255,255,.8); }
+    .dash-tab.active { color: #fff; border-bottom-color: var(--blue); }
 
-    /* ── Stats grid ─────────────────────────── */
+    .dash-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .rotate-btn {
+      background: rgba(255,255,255,.1);
+      border: none;
+      color: #fff;
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: .9rem;
+      display: flex; align-items: center; justify-content: center;
+      transition: background .15s;
+    }
+    .rotate-btn:hover { background: rgba(255,255,255,.2); }
+    .rotate-countdown {
+      font-size: .75rem;
+      color: rgba(255,255,255,.55);
+      min-width: 48px;
+      text-align: right;
+    }
+    .interval-select {
+      background: rgba(255,255,255,.1);
+      border: 1px solid rgba(255,255,255,.15);
+      color: rgba(255,255,255,.8);
+      padding: 4px 8px;
+      border-radius: 5px;
+      font-size: .75rem;
+      cursor: pointer;
+    }
+    .interval-select option { background: #1e3a5f; color: #fff; }
+
+    /* Progress bar */
+    .progress-bar { height: 3px; background: rgba(255,255,255,.08); }
+    .progress-fill { height: 100%; background: var(--blue); width: 0%; transition: width 1s linear; }
+
+    /* ── Panels ──────────────────────────────── */
+    .panels { position: relative; }
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    /* ── Panel inner layout ──────────────────── */
+    .panel-main { padding: 20px 24px; max-width: 1700px; margin: 0 auto; }
+
+    /* ── Stats ───────────────────────────────── */
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 14px;
-      margin-bottom: 20px;
+      gap: 14px; margin-bottom: 20px;
     }
-
     .stat-card {
-      background: var(--white);
-      border-radius: var(--radius);
-      padding: 18px 20px;
-      box-shadow: var(--shadow);
+      background: var(--white); border-radius: var(--radius);
+      padding: 18px 20px; box-shadow: var(--shadow);
       border-top: 3px solid transparent;
     }
     .stat-card.c-blue   { border-top-color: var(--blue); }
@@ -137,283 +168,180 @@
     .stat-card.c-amber  { border-top-color: #f59e0b; }
     .stat-card.c-navy   { border-top-color: var(--navy); }
     .stat-card.c-purple { border-top-color: #7c3aed; }
-
     .stat-label {
-      font-size: .68rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: .06em;
-      color: var(--gray-500);
-      margin-bottom: 8px;
+      font-size: .68rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .06em; color: var(--gray-500); margin-bottom: 8px;
     }
-    .stat-value {
-      font-size: 2rem;
-      font-weight: 800;
-      color: var(--gray-900);
-      line-height: 1;
+    .stat-value { font-size: 2rem; font-weight: 800; color: var(--gray-900); line-height: 1; }
+
+    /* ── Charts row ──────────────────────────── */
+    .charts-row {
+      display: grid; grid-template-columns: 2fr 1fr;
+      gap: 16px; margin-bottom: 18px;
+    }
+    @media (max-width: 900px) { .charts-row { grid-template-columns: 1fr; } }
+
+    .analytics-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 16px; margin-bottom: 18px;
+    }
+    @media (max-width: 900px) { .analytics-grid { grid-template-columns: 1fr; } }
+
+    .chart-card {
+      background: var(--white); border-radius: var(--radius);
+      padding: 18px 20px; box-shadow: var(--shadow);
+    }
+    .chart-title {
+      font-size: .68rem; font-weight: 800; text-transform: uppercase;
+      letter-spacing: .07em; color: var(--gray-500); margin-bottom: 14px;
     }
 
-    /* ── Body grid ───────────────────────────── */
-    .body-grid {
+    /* ── Tech cards (analytics panel) ───────── */
+    .tech-cards-grid {
       display: grid;
-      grid-template-columns: 1fr 250px;
-      gap: 18px;
-      align-items: start;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 14px;
+      margin-bottom: 18px;
     }
+    .tech-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      box-shadow: var(--shadow);
+      border-left: 4px solid var(--blue);
+    }
+    .tech-card-name {
+      font-weight: 700;
+      font-size: .9rem;
+      color: var(--navy);
+      margin-bottom: 10px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .tech-card-stats { display: flex; gap: 10px; }
+    .tech-card-stat { flex: 1; text-align: center; }
+    .tech-card-stat-val { font-size: 1.4rem; font-weight: 800; line-height: 1; }
+    .tech-card-stat-lbl { font-size: .65rem; color: var(--gray-500); text-transform: uppercase; letter-spacing: .04em; margin-top: 3px; }
+    .tc-total  .tech-card-stat-val { color: var(--navy); }
+    .tc-inv    .tech-card-stat-val { color: var(--green); }
+    .tc-pend   .tech-card-stat-val { color: var(--amber); }
+    .tech-rate-bar { margin-top: 10px; height: 4px; background: var(--gray-200); border-radius: 2px; overflow: hidden; }
+    .tech-rate-fill { height: 100%; background: var(--green); border-radius: 2px; }
+
+    /* ── Body grid (panel 0) ─────────────────── */
+    .body-grid { display: grid; grid-template-columns: 1fr 250px; gap: 18px; align-items: start; }
     @media (max-width: 1200px) { .body-grid { grid-template-columns: 1fr; } }
 
     /* ── Filters ─────────────────────────────── */
     .filters {
-      background: var(--white);
-      border-radius: var(--radius);
-      padding: 14px 18px;
-      box-shadow: var(--shadow);
-      margin-bottom: 14px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      align-items: flex-end;
+      background: var(--white); border-radius: var(--radius);
+      padding: 14px 18px; box-shadow: var(--shadow);
+      margin-bottom: 14px; display: flex; flex-wrap: wrap;
+      gap: 10px; align-items: flex-end;
     }
-
     .fg { display: flex; flex-direction: column; gap: 4px; }
     .fl { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--gray-500); }
-
     .fi, .fs {
-      padding: 7px 11px;
-      border: 1.5px solid var(--gray-200);
-      border-radius: 6px;
-      font-size: .85rem;
-      color: var(--gray-700);
-      background: var(--gray-50);
-      min-width: 150px;
-      transition: border-color .15s, box-shadow .15s;
+      padding: 7px 11px; border: 1.5px solid var(--gray-200);
+      border-radius: 6px; font-size: .85rem; color: var(--gray-700);
+      background: var(--gray-50); min-width: 150px;
     }
-    .fi:focus, .fs:focus {
-      outline: none;
-      border-color: var(--blue);
-      box-shadow: 0 0 0 3px var(--blue-light);
-    }
+    .fi:focus, .fs:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-light); }
     .fi-search { flex: 1; min-width: 200px; }
-
-    .result-count {
-      margin-left: auto;
-      font-size: .82rem;
-      color: var(--gray-500);
-      padding-bottom: 7px;
-      white-space: nowrap;
-    }
+    .result-count { margin-left: auto; font-size: .82rem; color: var(--gray-500); padding-bottom: 7px; white-space: nowrap; }
 
     /* ── Table ───────────────────────────────── */
-    .table-wrap {
-      background: var(--white);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      overflow: hidden;
-    }
-
+    .table-wrap { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
     .tscroll { overflow-x: auto; }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: .8rem;
-    }
-
+    table { width: 100%; border-collapse: collapse; font-size: .8rem; }
     thead th {
-      position: sticky;
-      top: 0;
-      background: var(--gray-50);
-      padding: 10px 13px;
-      text-align: left;
-      font-size: .68rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: .06em;
-      color: var(--gray-500);
+      background: var(--gray-50); padding: 10px 13px; text-align: left;
+      font-size: .68rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .06em; color: var(--gray-500);
       border-bottom: 2px solid var(--gray-200);
-      cursor: pointer;
-      user-select: none;
-      white-space: nowrap;
+      cursor: pointer; user-select: none; white-space: nowrap;
     }
     thead th:hover { background: var(--gray-100); color: var(--gray-700); }
     thead th.asc::after  { content: ' ↑'; }
     thead th.desc::after { content: ' ↓'; }
-
-    tbody tr {
-      border-bottom: 1px solid var(--gray-100);
-      transition: background .08s;
-    }
+    tbody tr { border-bottom: 1px solid var(--gray-100); transition: background .08s; }
     tbody tr.row-invoiced { background: var(--green-row); }
     tbody tr.row-pending  { background: var(--amber-row); }
     tbody tr:hover { filter: brightness(.96); }
-
     tbody td { padding: 9px 13px; vertical-align: middle; }
-
-    .badge {
-      display: inline-block;
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-size: .72rem;
-      font-weight: 700;
-      white-space: nowrap;
-    }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: .72rem; font-weight: 700; white-space: nowrap; }
     .badge-so       { background: var(--navy); color: #fff; }
     .badge-invoiced { background: var(--green-light); color: var(--green); }
     .badge-pending  { background: var(--amber-light); color: var(--amber); }
-
-    .cell-job {
-      max-width: 280px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .cell-comment {
-      max-width: 200px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      color: var(--gray-500);
-      font-style: italic;
-    }
-
+    .cell-job, .cell-comment { max-width: 280px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .cell-comment { max-width: 200px; color: var(--gray-500); font-style: italic; }
     .map-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 3px 9px;
-      background: var(--blue-light);
-      color: var(--blue);
-      border-radius: 4px;
-      font-size: .72rem;
-      font-weight: 600;
-      text-decoration: none;
-      white-space: nowrap;
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 9px; background: var(--blue-light); color: var(--blue);
+      border-radius: 4px; font-size: .72rem; font-weight: 600;
+      text-decoration: none; white-space: nowrap;
     }
     .map-btn:hover { background: #bfdbfe; }
+    .photo-btn {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 9px; background: #f3e8ff; color: #7c3aed;
+      border-radius: 4px; font-size: .72rem; font-weight: 600;
+      text-decoration: none; white-space: nowrap;
+    }
+    .photo-btn:hover { background: #ede9fe; }
 
     /* ── Pagination ──────────────────────────── */
     .table-footer {
-      padding: 12px 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-top: 1px solid var(--gray-200);
-      background: var(--gray-50);
+      padding: 12px 16px; display: flex; justify-content: space-between;
+      align-items: center; border-top: 1px solid var(--gray-200); background: var(--gray-50);
     }
-
     .page-info { font-size: .8rem; color: var(--gray-500); }
-
     .pagination { display: flex; gap: 4px; }
-
     .pb {
-      padding: 5px 11px;
-      border: 1px solid var(--gray-200);
-      border-radius: 5px;
-      background: var(--white);
-      cursor: pointer;
-      font-size: .82rem;
-      color: var(--gray-700);
+      padding: 5px 11px; border: 1px solid var(--gray-200); border-radius: 5px;
+      background: var(--white); cursor: pointer; font-size: .82rem; color: var(--gray-700);
     }
     .pb:hover { background: var(--gray-100); }
     .pb.active { background: var(--blue); color: #fff; border-color: var(--blue); font-weight: 700; }
     .pb:disabled { opacity: .4; cursor: not-allowed; }
 
-    /* ── Sidebar widgets ─────────────────────── */
+    /* ── Sidebar ─────────────────────────────── */
     .sidebar { display: flex; flex-direction: column; gap: 14px; }
-
-    .widget {
-      background: var(--white);
-      border-radius: var(--radius);
-      padding: 16px 18px;
-      box-shadow: var(--shadow);
-    }
-    .widget-title {
-      font-size: .68rem;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: .07em;
-      color: var(--gray-500);
-      margin-bottom: 12px;
-    }
-
+    .widget { background: var(--white); border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); }
+    .widget-title { font-size: .68rem; font-weight: 800; text-transform: uppercase; letter-spacing: .07em; color: var(--gray-500); margin-bottom: 12px; }
     .tech-list { list-style: none; }
-    .tech-item {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 5px 0;
-      border-bottom: 1px solid var(--gray-100);
-      font-size: .8rem;
-    }
+    .tech-item { display: flex; align-items: center; gap: 6px; padding: 5px 0; border-bottom: 1px solid var(--gray-100); font-size: .8rem; }
     .tech-item:last-child { border-bottom: none; }
     .tech-name { flex: 1; color: var(--gray-700); }
     .tech-bar-bg { width: 60px; height: 5px; background: var(--gray-200); border-radius: 3px; overflow: hidden; }
     .tech-bar-fill { height: 100%; background: var(--blue); border-radius: 3px; }
     .tech-count { font-weight: 700; color: var(--gray-700); min-width: 22px; text-align: right; font-size: .78rem; }
-
-    .recent-item {
-      padding: 6px 0;
-      border-bottom: 1px solid var(--gray-100);
-    }
+    .recent-item { padding: 6px 0; border-bottom: 1px solid var(--gray-100); }
     .recent-item:last-child { border-bottom: none; }
     .recent-so { font-weight: 700; font-size: .8rem; color: var(--navy); }
     .recent-sub { font-size: .72rem; color: var(--gray-500); margin-top: 1px; }
 
-    /* ── Status messages ─────────────────────── */
+    /* ── Messages ────────────────────────────── */
     .msg-box {
-      background: var(--white);
-      border-radius: var(--radius);
-      padding: 48px 24px;
-      text-align: center;
-      box-shadow: var(--shadow);
-      color: var(--gray-500);
+      background: var(--white); border-radius: var(--radius);
+      padding: 48px 24px; text-align: center; box-shadow: var(--shadow); color: var(--gray-500);
     }
-    .msg-box svg { margin-bottom: 12px; opacity: .4; }
-    .msg-box p { margin: 4px 0; }
     .msg-error { color: var(--red); }
     .msg-error .err-detail {
-      margin-top: 12px;
-      font-size: .8rem;
-      background: #fef2f2;
-      padding: 12px 16px;
-      border-radius: 6px;
-      text-align: left;
-      white-space: pre-wrap;
-      word-break: break-word;
+      margin-top: 12px; font-size: .8rem; background: #fef2f2;
+      padding: 12px 16px; border-radius: 6px; text-align: left;
+      white-space: pre-wrap; word-break: break-word;
     }
     .msg-error .err-hint { margin-top: 10px; font-size: .8rem; color: var(--gray-500); line-height: 1.6; }
-
-    /* ── Charts ──────────────────────────────── */
-    .charts-row {
-      display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 16px;
-      margin-bottom: 18px;
-    }
-    @media (max-width: 900px) { .charts-row { grid-template-columns: 1fr; } }
-
-    .chart-card {
-      background: var(--white);
-      border-radius: var(--radius);
-      padding: 18px 20px;
-      box-shadow: var(--shadow);
-    }
-    .chart-title {
-      font-size: .68rem;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: .07em;
-      color: var(--gray-500);
-      margin-bottom: 14px;
-    }
-    .chart-wrap { position: relative; }
   </style>
 </head>
 <body>
 
+<!-- ── Header ───────────────────────────────── -->
 <header>
   <div class="header-brand">
-    <div class="logo-wrap"><img src="/logo.png" alt="American Irrigation" /></div>
+    <div class="logo-wrap"><img src="logo.png" alt="American Irrigation" /></div>
     <div class="header-divider"></div>
     <div class="header-title">
       <h1>Mid-South</h1>
@@ -422,7 +350,7 @@
   </div>
   <div class="header-right">
     <span id="lastUpdated">Not loaded</span>
-    <button class="btn btn-primary" id="refreshBtn" onclick="loadData()">
+    <button class="btn btn-primary" id="refreshBtn" onclick="loadAll()">
       <svg id="refreshIcon" width="14" height="14" viewBox="0 0 24 24" fill="none"
            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <polyline points="23 4 23 10 17 10"></polyline>
@@ -433,67 +361,68 @@
   </div>
 </header>
 
-<main>
-  <!-- Stats -->
-  <div class="stats-grid">
-    <div class="stat-card c-blue">
-      <div class="stat-label">Total Orders</div>
-      <div class="stat-value" id="sTotal">—</div>
+<!-- ── Dashboard nav / rotation controls ────── -->
+<div class="dash-chrome">
+  <div class="dash-nav">
+    <div class="dash-tabs">
+      <button class="dash-tab active" onclick="selectPanel(0, true)">Service Orders</button>
+      <button class="dash-tab"        onclick="selectPanel(1, true)">Analytics</button>
+      <button class="dash-tab"        onclick="selectPanel(2, true)">RB W/O</button>
     </div>
-    <div class="stat-card c-green">
-      <div class="stat-label">Invoiced</div>
-      <div class="stat-value" id="sInvoiced">—</div>
-    </div>
-    <div class="stat-card c-amber">
-      <div class="stat-label">Pending</div>
-      <div class="stat-value" id="sPending">—</div>
-    </div>
-    <div class="stat-card c-navy">
-      <div class="stat-label">Technicians</div>
-      <div class="stat-value" id="sTechs">—</div>
-    </div>
-    <div class="stat-card c-purple">
-      <div class="stat-label">Customers</div>
-      <div class="stat-value" id="sCustomers">—</div>
+    <div class="dash-controls">
+      <select class="interval-select" id="intervalSel" onchange="setInterval_()">
+        <option value="120">2 min</option>
+        <option value="300" selected>5 min</option>
+        <option value="600">10 min</option>
+        <option value="1800">30 min</option>
+      </select>
+      <span class="rotate-countdown" id="rotateCountdown">5:00</span>
+      <button class="rotate-btn" id="rotateBtn" onclick="toggleRotate()" title="Pause/Resume rotation">⏸</button>
     </div>
   </div>
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+</div>
 
-  <!-- Charts -->
+<!-- ── Panels ────────────────────────────────── -->
+<div class="panels">
+
+<!-- ── Panel 0: Service Orders ───────────────── -->
+<div class="panel active" id="panel-0">
+<div class="panel-main">
+
+  <div class="stats-grid" id="statsGrid0">
+    <div class="stat-card c-blue">  <div class="stat-label">Total Orders</div><div class="stat-value" id="sTotal">—</div></div>
+    <div class="stat-card c-green"> <div class="stat-label">Invoiced</div>     <div class="stat-value" id="sInvoiced">—</div></div>
+    <div class="stat-card c-amber"> <div class="stat-label">Pending</div>      <div class="stat-value" id="sPending">—</div></div>
+    <div class="stat-card c-navy">  <div class="stat-label">Technicians</div>  <div class="stat-value" id="sTechs">—</div></div>
+    <div class="stat-card c-purple"><div class="stat-label">Customers</div>    <div class="stat-value" id="sCustomers">—</div></div>
+  </div>
+
   <div class="charts-row" id="chartsRow" style="display:none">
     <div class="chart-card">
       <div class="chart-title">Jobs by Date</div>
-      <div class="chart-wrap" style="height:220px">
-        <canvas id="chartDate"></canvas>
-      </div>
+      <div style="position:relative;height:200px"><canvas id="chartDate"></canvas></div>
     </div>
     <div class="chart-card">
       <div class="chart-title">Invoiced vs Open</div>
-      <div class="chart-wrap" style="height:220px">
-        <canvas id="chartStatus"></canvas>
-      </div>
+      <div style="position:relative;height:200px"><canvas id="chartStatus"></canvas></div>
     </div>
   </div>
 
   <div class="body-grid">
     <div id="mainCol">
-      <!-- Filters -->
       <div class="filters" id="filterBar" style="display:none">
         <div class="fg">
           <div class="fl">Search</div>
-          <input type="search" class="fi fi-search" id="qSearch"
-                 placeholder="Search any field…" oninput="applyFilters()" />
+          <input type="search" class="fi fi-search" id="qSearch" placeholder="Search any field…" oninput="applyFilters()" />
         </div>
         <div class="fg">
           <div class="fl">Technician</div>
-          <select class="fs" id="qTech" onchange="applyFilters()">
-            <option value="">All Techs</option>
-          </select>
+          <select class="fs" id="qTech" onchange="applyFilters()"><option value="">All Techs</option></select>
         </div>
         <div class="fg">
           <div class="fl">Customer</div>
-          <select class="fs" id="qCustomer" onchange="applyFilters()">
-            <option value="">All Customers</option>
-          </select>
+          <select class="fs" id="qCustomer" onchange="applyFilters()"><option value="">All Customers</option></select>
         </div>
         <div class="fg">
           <div class="fl">Status</div>
@@ -505,22 +434,10 @@
         </div>
         <span class="result-count" id="resultCount"></span>
       </div>
-
-      <!-- Table area -->
       <div id="tableArea">
-        <div class="msg-box" id="initMsg">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none"
-               stroke="currentColor" stroke-width="1.5">
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="12" y1="8" x2="12" y2="12"/>
-            <line x1="12" y1="16" x2="12.01" y2="16"/>
-          </svg>
-          <p><strong>Loading service orders…</strong></p>
-        </div>
+        <div class="msg-box" id="initMsg"><p><strong>Loading service orders…</strong></p></div>
       </div>
     </div>
-
-    <!-- Sidebar -->
     <div class="sidebar" id="sidebar" style="display:none">
       <div class="widget">
         <div class="widget-title">By Technician</div>
@@ -532,405 +449,680 @@
       </div>
     </div>
   </div>
-</main>
+
+</div>
+</div>
+
+<!-- ── Panel 1: Analytics ─────────────────────── -->
+<div class="panel" id="panel-1">
+<div class="panel-main">
+
+  <div class="stats-grid" id="statsGrid1">
+    <div class="stat-card c-blue">  <div class="stat-label">Total Orders</div><div class="stat-value" id="a-sTotal">—</div></div>
+    <div class="stat-card c-green"> <div class="stat-label">Invoiced</div>     <div class="stat-value" id="a-sInvoiced">—</div></div>
+    <div class="stat-card c-amber"> <div class="stat-label">Pending</div>      <div class="stat-value" id="a-sPending">—</div></div>
+    <div class="stat-card c-navy">  <div class="stat-label">Technicians</div>  <div class="stat-value" id="a-sTechs">—</div></div>
+    <div class="stat-card c-purple"><div class="stat-label">Customers</div>    <div class="stat-value" id="a-sCustomers">—</div></div>
+  </div>
+
+  <div class="analytics-grid" id="analyticsCharts" style="display:none">
+    <div class="chart-card">
+      <div class="chart-title">Jobs by Technician</div>
+      <div style="position:relative;height:300px"><canvas id="chartTech"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Top Customers</div>
+      <div style="position:relative;height:300px"><canvas id="chartCust"></canvas></div>
+    </div>
+  </div>
+
+  <div id="techCardsArea"></div>
+
+</div>
+</div>
+
+<!-- ── Panel 2: RB W/O ──────────────────────── -->
+<div class="panel" id="panel-2">
+<div class="panel-main">
+
+  <div class="stats-grid">
+    <div class="stat-card c-blue">  <div class="stat-label">Total Jobs</div>  <div class="stat-value" id="r-sTotal">—</div></div>
+    <div class="stat-card c-green"> <div class="stat-label">Invoiced</div>     <div class="stat-value" id="r-sInvoiced">—</div></div>
+    <div class="stat-card c-amber"> <div class="stat-label">Pending</div>      <div class="stat-value" id="r-sPending">—</div></div>
+    <div class="stat-card c-navy">  <div class="stat-label">Technicians</div>  <div class="stat-value" id="r-sTechs">—</div></div>
+    <div class="stat-card c-purple"><div class="stat-label">Customers</div>    <div class="stat-value" id="r-sCustomers">—</div></div>
+  </div>
+
+  <div class="charts-row" id="rbChartsRow" style="display:none">
+    <div class="chart-card">
+      <div class="chart-title">Jobs by Technician</div>
+      <div style="position:relative;height:220px"><canvas id="rbTechChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Invoiced vs Open</div>
+      <div style="position:relative;height:220px"><canvas id="rbStatusChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="filters" id="rbFilterBar" style="display:none">
+    <div class="fg">
+      <div class="fl">Search</div>
+      <input type="search" class="fi fi-search" id="rSearch" placeholder="Search any field…" oninput="applyFilters2()" />
+    </div>
+    <div class="fg">
+      <div class="fl">Technician</div>
+      <select class="fs" id="rTech" onchange="applyFilters2()"><option value="">All Techs</option></select>
+    </div>
+    <div class="fg">
+      <div class="fl">Customer</div>
+      <select class="fs" id="rCustomer" onchange="applyFilters2()"><option value="">All Customers</option></select>
+    </div>
+    <div class="fg">
+      <div class="fl">Status</div>
+      <select class="fs" id="rStatus" onchange="applyFilters2()">
+        <option value="">All</option>
+        <option value="invoiced">Invoiced</option>
+        <option value="pending">Pending</option>
+      </select>
+    </div>
+    <span class="result-count" id="rbResultCount"></span>
+  </div>
+
+  <div id="rbTableArea">
+    <div class="msg-box" id="rbInitMsg"><p><strong>Loading RB work orders…</strong></p></div>
+  </div>
+
+</div>
+</div>
+
+</div><!-- /panels -->
 
 <script>
-  const SHEET_COLS = {
-    DATE:           'M',
-    SO:             'SERVICE ORDER #',
-    INVOICE:        'INVOICE #',
-    INVOICE_AMOUNT: 'Invoice Amount',
-    CUSTOMER:       'CUSTOMER',
-    SITE:           'SITE NAME',
-    JOB:            'JOB INFO',
-    MAP:            'GOOGLE PIN LOCATION',
-    EST:            'EST #',
-    TECH:           'TECH.',
-    COMMENTS:       'COMMENTS',
+  // ── Config: Sheet 1 (Service Orders) ─────────
+  const SHEET_ID = '1HWfIjPqARGR8UqUEtKlO5YZ_9_QyE6vjcSU4P4Fd3rM';
+
+  const C = {
+    DATE: 'M', SO: 'SERVICE ORDER #', INVOICE: 'INVOICE #',
+    CUSTOMER: 'CUSTOMER', SITE: 'SITE NAME', JOB: 'JOB INFO',
+    MAP: 'GOOGLE PIN LOCATION', TECH: 'TECH.', COMMENTS: 'COMMENTS',
   };
 
   const TABLE_COLS = [
-    { key: SHEET_COLS.DATE,     label: 'Date' },
-    { key: SHEET_COLS.SO,       label: 'SO #' },
-    { key: SHEET_COLS.INVOICE,  label: 'Invoice #' },
-    { key: SHEET_COLS.CUSTOMER, label: 'Customer' },
-    { key: SHEET_COLS.SITE,     label: 'Site' },
-    { key: SHEET_COLS.JOB,      label: 'Job Info' },
-    { key: SHEET_COLS.TECH,     label: 'Tech' },
-    { key: SHEET_COLS.COMMENTS, label: 'Comments' },
-    { key: SHEET_COLS.MAP,      label: 'Map', nosort: true },
+    { key: C.DATE, label: 'Date' }, { key: C.SO, label: 'SO #' },
+    { key: C.INVOICE, label: 'Invoice #' }, { key: C.CUSTOMER, label: 'Customer' },
+    { key: C.SITE, label: 'Site' }, { key: C.JOB, label: 'Job Info' },
+    { key: C.TECH, label: 'Tech' }, { key: C.COMMENTS, label: 'Comments' },
+    { key: C.MAP, label: 'Map', nosort: true },
+  ];
+
+  // ── Config: Sheet 2 (RB W/O) ───────────────
+  const SHEET_ID_2   = '183p2yP9ViMqmJvGDH4YE0JB1EhocuPUt3PFCpr5_zyg';
+  const SHEET_NAME_2 = 'rbia w/o';
+
+  const C2 = {
+    DISC: 'DISC', CUSTOMER: 'CUSTOMER', SITE: 'SITE',
+    ORDER: 'ORDER #', JOB_LOC: 'JOB LOCATION', EST: 'EST. #',
+    PHOTO: 'PHOTO', TECH: 'TECH.', INVOICE: 'INVOICE #',
+  };
+
+  const TABLE_COLS_2 = [
+    { key: C2.ORDER,   label: 'Order #'  },
+    { key: C2.INVOICE, label: 'Invoice #'},
+    { key: C2.DISC,    label: 'Disc'     },
+    { key: C2.CUSTOMER,label: 'Customer' },
+    { key: C2.SITE,    label: 'Site'     },
+    { key: C2.JOB_LOC, label: 'Location', nosort: true },
+    { key: C2.EST,     label: 'Est. #'   },
+    { key: C2.TECH,    label: 'Tech'     },
+    { key: C2.PHOTO,   label: 'Photo',    nosort: true },
   ];
 
   const PAGE_SIZE = 50;
 
-  let allRows    = [];
-  let filtered   = [];
-  let sortKey    = SHEET_COLS.SO;
-  let sortDir    = 'asc';
-  let page       = 1;
+  // Sheet 1 state
+  let allRows = [], filtered = [], sortKey = C.SO, sortDir = 'asc', page = 1;
 
-  /* ── Data loading ──────────────────────────── */
-  async function loadData() {
-    const btn  = document.getElementById('refreshBtn');
-    const icon = document.getElementById('refreshIcon');
-    btn.disabled = true;
-    icon.classList.add('spin');
+  // Sheet 2 state
+  let allRows2 = [], filtered2 = [], sortKey2 = C2.ORDER, sortDir2 = 'asc', page2 = 1;
 
-    try {
-      const res  = await fetch('/api/data');
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
+  // Chart.js ready flag
+  let chartJsReady = false, chartsNeedRender = false, rbNeedRender = false;
+  let chartDate = null, chartStatus = null, chartTech = null, chartCust = null;
+  let rbTechChart = null, rbStatusChart = null;
 
-      allRows = json.rows || [];
+  // ── Rotation ─────────────────────────────────
+  const NUM_PANELS = 3;
+  let currentPanel = 0;
+  let autoRotate   = true;
+  let rotateIntervalSec = 300;
+  let rotateTimer  = null;
+  let progressTimer = null;
+  let progressStart = null;
 
-      const d = new Date(json.fetched);
-      document.getElementById('lastUpdated').textContent =
-        `Updated ${d.toLocaleDateString()} ${d.toLocaleTimeString()}`;
-
-      updateStats();
-      populateFilters();
-      applyFilters();
-      renderSidebar();
-
-      document.getElementById('filterBar').style.display = 'flex';
-      document.getElementById('sidebar').style.display   = 'flex';
-      document.getElementById('initMsg')?.remove();
-
-      // Charts are optional — don't let a failure here break the data display
-      try {
-        renderCharts();
-        document.getElementById('chartsRow').style.display = 'grid';
-      } catch (chartErr) {
-        console.warn('Charts unavailable:', chartErr.message);
-      }
-
-    } catch (err) {
-      document.getElementById('tableArea').innerHTML = `
-        <div class="msg-box msg-error">
-          <p><strong>Failed to load data</strong></p>
-          <div class="err-detail">${esc(err.message)}</div>
-          <p class="err-hint">
-            Make sure the Google Sheet is shared with <strong>"Anyone with the link can view"</strong>.<br>
-            Alternatively, add your <code>GOOGLE_API_KEY</code> to a <code>.env</code> file.
-          </p>
-        </div>`;
-    } finally {
-      btn.disabled = false;
-      icon.classList.remove('spin');
+  function selectPanel(idx, userInitiated = false) {
+    document.querySelectorAll('.panel').forEach((p, i) => p.classList.toggle('active', i === idx));
+    document.querySelectorAll('.dash-tab').forEach((t, i) => t.classList.toggle('active', i === idx));
+    currentPanel = idx;
+    if (userInitiated && autoRotate) {
+      stopRotation();
+      progressStart = Date.now();
+      updateProgress();
+      rotateTimer = setTimeout(() => startRotation(), 30000);
     }
   }
 
-  /* ── Stats ─────────────────────────────────── */
-  function updateStats() {
-    const invoiced = allRows.filter(r => r[SHEET_COLS.INVOICE]?.trim());
-    const techSet  = new Set(allRows.map(r => r[SHEET_COLS.TECH]?.trim()).filter(Boolean));
-    const custSet  = new Set(allRows.map(r => r[SHEET_COLS.CUSTOMER]?.trim()).filter(Boolean));
-
-    document.getElementById('sTotal').textContent     = allRows.length;
-    document.getElementById('sInvoiced').textContent  = invoiced.length;
-    document.getElementById('sPending').textContent   = allRows.length - invoiced.length;
-    document.getElementById('sTechs').textContent     = techSet.size;
-    document.getElementById('sCustomers').textContent = custSet.size;
+  function startRotation() {
+    stopRotation();
+    if (!autoRotate) return;
+    progressStart = Date.now();
+    rotateTimer = setTimeout(() => {
+      selectPanel((currentPanel + 1) % NUM_PANELS);
+      startRotation();
+    }, rotateIntervalSec * 1000);
+    progressTimer = setInterval(updateProgress, 500);
+    updateProgress();
   }
 
-  /* ── Filters ────────────────────────────────── */
-  function populateFilters() {
-    const techs = uniq(allRows.map(r => r[SHEET_COLS.TECH]?.trim())).sort();
-    const custs = uniq(allRows.map(r => r[SHEET_COLS.CUSTOMER]?.trim())).sort();
-
-    sel('qTech',     techs, 'All Techs');
-    sel('qCustomer', custs, 'All Customers');
+  function stopRotation() {
+    clearTimeout(rotateTimer);
+    clearInterval(progressTimer);
+    rotateTimer = null; progressTimer = null;
   }
 
-  function sel(id, items, placeholder) {
-    document.getElementById(id).innerHTML =
-      `<option value="">${placeholder}</option>` +
-      items.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
+  function updateProgress() {
+    const elapsed = progressStart ? (Date.now() - progressStart) / 1000 : 0;
+    const pct = Math.min(elapsed / rotateIntervalSec * 100, 100);
+    document.getElementById('progressFill').style.width = pct + '%';
+    const rem = Math.max(rotateIntervalSec - elapsed, 0);
+    const m = Math.floor(rem / 60), s = Math.floor(rem % 60);
+    document.getElementById('rotateCountdown').textContent =
+      autoRotate ? `${m}:${s.toString().padStart(2, '0')}` : 'Paused';
   }
 
-  function applyFilters() {
-    const q      = document.getElementById('qSearch').value.toLowerCase();
-    const tech   = document.getElementById('qTech').value;
-    const cust   = document.getElementById('qCustomer').value;
-    const status = document.getElementById('qStatus').value;
+  function toggleRotate() {
+    autoRotate = !autoRotate;
+    document.getElementById('rotateBtn').textContent = autoRotate ? '⏸' : '▶';
+    autoRotate ? startRotation() : stopRotation();
+    if (!autoRotate) updateProgress();
+  }
 
-    filtered = allRows.filter(row => {
-      if (tech   && row[SHEET_COLS.TECH]?.trim()     !== tech)   return false;
-      if (cust   && row[SHEET_COLS.CUSTOMER]?.trim() !== cust)   return false;
-      if (status === 'invoiced' && !row[SHEET_COLS.INVOICE]?.trim()) return false;
-      if (status === 'pending'  &&  row[SHEET_COLS.INVOICE]?.trim()) return false;
-      if (q) {
-        const flat = Object.values(row).join(' ').toLowerCase();
-        if (!flat.includes(q)) return false;
+  function setInterval_() {
+    rotateIntervalSec = parseInt(document.getElementById('intervalSel').value, 10);
+    if (autoRotate) startRotation();
+  }
+
+  // ── Sheet fetch helpers ──────────────────────
+  async function fetchGviz(sheetId, sheetName) {
+    let url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
+    if (sheetName) url += `&sheet=${encodeURIComponent(sheetName)}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`Google Sheets returned ${res.status}.\nEnsure the sheet is shared as "Anyone with the link can view".`);
+    const text = await res.text();
+    const match = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);?\s*$/);
+    if (!match) throw new Error('Unexpected response from Google Sheets.');
+    const { table } = JSON.parse(match[1]);
+    const headers = table.cols.map(c => (c.label || c.id).trim());
+    const rows = (table.rows || [])
+      .map(row => (row.c || []).map(cell => (!cell || cell.v == null) ? '' : (cell.f ?? String(cell.v))))
+      .filter(row => row.some(c => c.trim()));
+    return rows.map(row => {
+      const r = {}; headers.forEach((h, i) => { r[h] = row[i] ?? ''; }); return r;
+    });
+  }
+
+  // ── Load all sheets ──────────────────────────
+  async function loadAll() {
+    const btn = document.getElementById('refreshBtn');
+    const icon = document.getElementById('refreshIcon');
+    btn.disabled = true; icon.classList.add('spin');
+    const d = new Date();
+    await Promise.allSettled([loadData(false), loadData2(false)]);
+    document.getElementById('lastUpdated').textContent =
+      `Updated ${d.toLocaleDateString()} ${d.toLocaleTimeString()}`;
+    btn.disabled = false; icon.classList.remove('spin');
+    startRotation();
+  }
+
+  // ── Sheet 1: Service Orders ──────────────────
+  async function loadData(standalone = true) {
+    if (standalone) {
+      const btn = document.getElementById('refreshBtn');
+      const icon = document.getElementById('refreshIcon');
+      btn.disabled = true; icon.classList.add('spin');
+    }
+    try {
+      const all = await fetchGviz(SHEET_ID);
+      allRows = all.filter(r => r[C.DATE]?.trim() && r[C.CUSTOMER]?.trim());
+      updateStats(); populateFilters(); applyFilters(); renderSidebar();
+      document.getElementById('filterBar').style.display = 'flex';
+      document.getElementById('sidebar').style.display   = 'flex';
+      document.getElementById('initMsg')?.remove();
+      renderAnalytics();
+      if (chartJsReady) { renderCharts(); document.getElementById('chartsRow').style.display = 'grid'; }
+      else chartsNeedRender = true;
+    } catch (err) {
+      document.getElementById('tableArea').innerHTML = `
+        <div class="msg-box msg-error">
+          <p><strong>Failed to load service orders</strong></p>
+          <div class="err-detail">${esc(err.message)}</div>
+          <p class="err-hint">Make sure the sheet is shared as <strong>"Anyone with the link can view"</strong>.</p>
+        </div>`;
+    } finally {
+      if (standalone) {
+        const d = new Date();
+        document.getElementById('lastUpdated').textContent =
+          `Updated ${d.toLocaleDateString()} ${d.toLocaleTimeString()}`;
+        document.getElementById('refreshBtn').disabled = false;
+        document.getElementById('refreshIcon').classList.remove('spin');
+        startRotation();
       }
+    }
+  }
+
+  // ── Sheet 2: RB W/O ────────────────────────
+  async function loadData2(standalone = true) {
+    try {
+      const all = await fetchGviz(SHEET_ID_2, SHEET_NAME_2);
+      allRows2 = all.filter(r => r[C2.CUSTOMER]?.trim());
+      updateStats2(); populateFilters2(); applyFilters2();
+      document.getElementById('rbFilterBar').style.display = 'flex';
+      document.getElementById('rbInitMsg')?.remove();
+      if (chartJsReady) { renderRbCharts(); document.getElementById('rbChartsRow').style.display = 'grid'; }
+      else rbNeedRender = true;
+    } catch (err) {
+      document.getElementById('rbTableArea').innerHTML = `
+        <div class="msg-box msg-error">
+          <p><strong>Failed to load RB work orders</strong></p>
+          <div class="err-detail">${esc(err.message)}</div>
+          <p class="err-hint">Make sure the sheet is shared as <strong>"Anyone with the link can view"</strong> and the tab is named <strong>"rbia w/o"</strong>.</p>
+        </div>`;
+    }
+  }
+
+  function onChartJsLoad() {
+    chartJsReady = true;
+    if (chartsNeedRender && allRows.length) {
+      try { renderCharts(); document.getElementById('chartsRow').style.display = 'grid'; }
+      catch(e) { console.warn('Charts:', e.message); }
+      chartsNeedRender = false;
+    }
+    if (rbNeedRender && allRows2.length) {
+      try { renderRbCharts(); document.getElementById('rbChartsRow').style.display = 'grid'; }
+      catch(e) { console.warn('RB Charts:', e.message); }
+      rbNeedRender = false;
+    }
+  }
+
+  // ── Stats: Sheet 1 ───────────────────────────
+  function updateStats() {
+    const inv   = allRows.filter(r => r[C.INVOICE]?.trim());
+    const techs = new Set(allRows.map(r => r[C.TECH]?.trim()).filter(Boolean));
+    const custs = new Set(allRows.map(r => r[C.CUSTOMER]?.trim()).filter(Boolean));
+    const vals = [allRows.length, inv.length, allRows.length - inv.length, techs.size, custs.size];
+    ['sTotal','sInvoiced','sPending','sTechs','sCustomers'].forEach((id, i) => { document.getElementById(id).textContent = vals[i]; });
+    ['a-sTotal','a-sInvoiced','a-sPending','a-sTechs','a-sCustomers'].forEach((id, i) => { document.getElementById(id).textContent = vals[i]; });
+  }
+
+  // ── Stats: Sheet 2 ───────────────────────────
+  function updateStats2() {
+    const inv   = allRows2.filter(r => r[C2.INVOICE]?.trim());
+    const techs = new Set(allRows2.map(r => r[C2.TECH]?.trim()).filter(Boolean));
+    const custs = new Set(allRows2.map(r => r[C2.CUSTOMER]?.trim()).filter(Boolean));
+    const vals = [allRows2.length, inv.length, allRows2.length - inv.length, techs.size, custs.size];
+    ['r-sTotal','r-sInvoiced','r-sPending','r-sTechs','r-sCustomers'].forEach((id, i) => { document.getElementById(id).textContent = vals[i]; });
+  }
+
+  // ── Filters: Sheet 1 ─────────────────────────
+  function populateFilters() {
+    fillSel('qTech',     uniq(allRows.map(r => r[C.TECH]?.trim())).sort(),     'All Techs');
+    fillSel('qCustomer', uniq(allRows.map(r => r[C.CUSTOMER]?.trim())).sort(), 'All Customers');
+  }
+  function applyFilters() {
+    const q = document.getElementById('qSearch').value.toLowerCase();
+    const tech = document.getElementById('qTech').value;
+    const cust = document.getElementById('qCustomer').value;
+    const status = document.getElementById('qStatus').value;
+    filtered = allRows.filter(row => {
+      if (tech   && row[C.TECH]?.trim()     !== tech) return false;
+      if (cust   && row[C.CUSTOMER]?.trim() !== cust) return false;
+      if (status === 'invoiced' && !row[C.INVOICE]?.trim()) return false;
+      if (status === 'pending'  &&  row[C.INVOICE]?.trim()) return false;
+      if (q && !Object.values(row).join(' ').toLowerCase().includes(q)) return false;
       return true;
     });
-
     filtered.sort((a, b) => {
-      const av = a[sortKey] || '', bv = b[sortKey] || '';
-      const cmp = av.localeCompare(bv, undefined, { numeric: true, sensitivity: 'base' });
+      const cmp = (a[sortKey]||'').localeCompare(b[sortKey]||'', undefined, {numeric:true,sensitivity:'base'});
       return sortDir === 'asc' ? cmp : -cmp;
     });
-
-    page = 1;
-    renderTable();
+    page = 1; renderTable();
   }
 
-  /* ── Table rendering ────────────────────────── */
+  // ── Filters: Sheet 2 ─────────────────────────
+  function populateFilters2() {
+    fillSel('rTech',     uniq(allRows2.map(r => r[C2.TECH]?.trim())).sort(),     'All Techs');
+    fillSel('rCustomer', uniq(allRows2.map(r => r[C2.CUSTOMER]?.trim())).sort(), 'All Customers');
+  }
+  function applyFilters2() {
+    const q = document.getElementById('rSearch').value.toLowerCase();
+    const tech = document.getElementById('rTech').value;
+    const cust = document.getElementById('rCustomer').value;
+    const status = document.getElementById('rStatus').value;
+    filtered2 = allRows2.filter(row => {
+      if (tech   && row[C2.TECH]?.trim()     !== tech) return false;
+      if (cust   && row[C2.CUSTOMER]?.trim() !== cust) return false;
+      if (status === 'invoiced' && !row[C2.INVOICE]?.trim()) return false;
+      if (status === 'pending'  &&  row[C2.INVOICE]?.trim()) return false;
+      if (q && !Object.values(row).join(' ').toLowerCase().includes(q)) return false;
+      return true;
+    });
+    filtered2.sort((a, b) => {
+      const cmp = (a[sortKey2]||'').localeCompare(b[sortKey2]||'', undefined, {numeric:true,sensitivity:'base'});
+      return sortDir2 === 'asc' ? cmp : -cmp;
+    });
+    page2 = 1; renderTable2();
+  }
+
+  // ── Table helpers ────────────────────────────
+  function fillSel(id, items, ph) {
+    document.getElementById(id).innerHTML = `<option value="">${ph}</option>` +
+      items.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
+  }
+  function buildPages(cur, total, goFn) {
+    if (total<=1) return '';
+    const out=[`<button class="pb" onclick="${goFn}(${cur-1})" ${cur===1?'disabled':''}>&#8592;</button>`];
+    const nums=[];
+    for(let i=1;i<=total;i++) { if(i===1||i===total||Math.abs(i-cur)<=2) nums.push(i); else if(nums[nums.length-1]!=='…') nums.push('…'); }
+    nums.forEach(n=>out.push(n==='…'?`<span class="pb" style="cursor:default">…</span>`:`<button class="pb ${n===cur?'active':''}" onclick="${goFn}(${n})">${n}</button>`));
+    out.push(`<button class="pb" onclick="${goFn}(${cur+1})" ${cur===total?'disabled':''}>&#8594;</button>`);
+    return out.join('');
+  }
+
+  // ── Table: Sheet 1 ───────────────────────────
   function renderTable() {
     const total = filtered.length;
     document.getElementById('resultCount').textContent =
       total === allRows.length ? `${total} orders` : `${total} of ${allRows.length}`;
-
-    if (total === 0) {
-      document.getElementById('tableArea').innerHTML =
-        '<div class="msg-box"><p>No orders match the current filters.</p></div>';
-      return;
-    }
-
-    const start  = (page - 1) * PAGE_SIZE;
-    const slice  = filtered.slice(start, start + PAGE_SIZE);
-    const pages  = Math.ceil(total / PAGE_SIZE);
-
-    const thead = TABLE_COLS.map(c => {
-      const cls = sortKey === c.key ? sortDir : '';
-      const onclick = c.nosort ? '' : `onclick="sortBy('${c.key}')"`;
-      return `<th class="${cls}" ${onclick}>${c.label}</th>`;
-    }).join('');
-
+    if (!total) { document.getElementById('tableArea').innerHTML = '<div class="msg-box"><p>No orders match the current filters.</p></div>'; return; }
+    const start = (page-1)*PAGE_SIZE, slice = filtered.slice(start, start+PAGE_SIZE), pages = Math.ceil(total/PAGE_SIZE);
+    const thead = TABLE_COLS.map(c =>
+      `<th class="${sortKey===c.key?sortDir:''}" ${c.nosort?'':` onclick="sortBy('${c.key}')"`}>${c.label}</th>`
+    ).join('');
     const tbody = slice.map(row => {
-      const inv = row[SHEET_COLS.INVOICE]?.trim();
-      const cls = inv ? 'row-invoiced' : 'row-pending';
-      return `<tr class="${cls}">
-        <td style="white-space:nowrap">${esc(row[SHEET_COLS.DATE])}</td>
-        <td><span class="badge badge-so">${esc(row[SHEET_COLS.SO])}</span></td>
-        <td>${inv
-          ? `<span class="badge badge-invoiced">${esc(inv)}</span>`
-          : `<span class="badge badge-pending">Pending</span>`}</td>
-        <td>${esc(row[SHEET_COLS.CUSTOMER])}</td>
-        <td>${esc(row[SHEET_COLS.SITE])}</td>
-        <td><div class="cell-job" title="${esc(row[SHEET_COLS.JOB])}">${esc(row[SHEET_COLS.JOB])}</div></td>
-        <td style="white-space:nowrap">${esc(row[SHEET_COLS.TECH])}</td>
-        <td><div class="cell-comment" title="${esc(row[SHEET_COLS.COMMENTS])}">${esc(row[SHEET_COLS.COMMENTS])}</div></td>
-        <td>${mapLink(row[SHEET_COLS.MAP])}</td>
+      const inv = row[C.INVOICE]?.trim();
+      return `<tr class="${inv?'row-invoiced':'row-pending'}">
+        <td style="white-space:nowrap">${esc(row[C.DATE])}</td>
+        <td><span class="badge badge-so">${esc(row[C.SO])}</span></td>
+        <td>${inv?`<span class="badge badge-invoiced">${esc(inv)}</span>`:`<span class="badge badge-pending">Pending</span>`}</td>
+        <td>${esc(row[C.CUSTOMER])}</td><td>${esc(row[C.SITE])}</td>
+        <td><div class="cell-job" title="${esc(row[C.JOB])}">${esc(row[C.JOB])}</div></td>
+        <td style="white-space:nowrap">${esc(row[C.TECH])}</td>
+        <td><div class="cell-comment" title="${esc(row[C.COMMENTS])}">${esc(row[C.COMMENTS])}</div></td>
+        <td>${mapLink(row[C.MAP])}</td>
       </tr>`;
     }).join('');
-
     document.getElementById('tableArea').innerHTML = `
-      <div class="table-wrap">
-        <div class="tscroll">
-          <table>
-            <thead><tr>${thead}</tr></thead>
-            <tbody>${tbody}</tbody>
-          </table>
-        </div>
-        <div class="table-footer">
-          <span class="page-info">
-            Showing ${start + 1}–${Math.min(start + PAGE_SIZE, total)} of ${total}
-          </span>
-          <div class="pagination">${buildPages(page, pages)}</div>
-        </div>
-      </div>`;
+      <div class="table-wrap"><div class="tscroll">
+        <table><thead><tr>${thead}</tr></thead><tbody>${tbody}</tbody></table>
+      </div>
+      <div class="table-footer">
+        <span class="page-info">Showing ${start+1}–${Math.min(start+PAGE_SIZE,total)} of ${total}</span>
+        <div class="pagination">${buildPages(page,pages,'goPage')}</div>
+      </div></div>`;
   }
+  function goPage(p) { const max=Math.ceil(filtered.length/PAGE_SIZE); if(p<1||p>max)return; page=p; renderTable(); window.scrollTo({top:0,behavior:'smooth'}); }
+  function sortBy(key) { sortDir=(sortKey===key&&sortDir==='asc')?'desc':'asc'; sortKey=key; applyFilters(); }
 
-  function buildPages(cur, total) {
-    if (total <= 1) return '';
-    const btns = [`<button class="pb" onclick="goPage(${cur - 1})" ${cur === 1 ? 'disabled' : ''}>&#8592;</button>`];
-    const nums = [];
-    for (let i = 1; i <= total; i++) {
-      if (i === 1 || i === total || Math.abs(i - cur) <= 2) nums.push(i);
-      else if (nums[nums.length - 1] !== '…') nums.push('…');
-    }
-    nums.forEach(n => {
-      if (n === '…') btns.push(`<span class="pb" style="cursor:default">…</span>`);
-      else btns.push(`<button class="pb ${n === cur ? 'active' : ''}" onclick="goPage(${n})">${n}</button>`);
-    });
-    btns.push(`<button class="pb" onclick="goPage(${cur + 1})" ${cur === total ? 'disabled' : ''}>&#8594;</button>`);
-    return btns.join('');
+  // ── Table: Sheet 2 ───────────────────────────
+  function renderTable2() {
+    const total = filtered2.length;
+    document.getElementById('rbResultCount').textContent =
+      total === allRows2.length ? `${total} jobs` : `${total} of ${allRows2.length}`;
+    if (!total) { document.getElementById('rbTableArea').innerHTML = '<div class="msg-box"><p>No jobs match the current filters.</p></div>'; return; }
+    const start = (page2-1)*PAGE_SIZE, slice = filtered2.slice(start, start+PAGE_SIZE), pages = Math.ceil(total/PAGE_SIZE);
+    const thead = TABLE_COLS_2.map(c =>
+      `<th class="${sortKey2===c.key?sortDir2:''}" ${c.nosort?'':` onclick="sortBy2('${c.key}')"`}>${c.label}</th>`
+    ).join('');
+    const tbody = slice.map(row => {
+      const inv = row[C2.INVOICE]?.trim();
+      return `<tr class="${inv?'row-invoiced':'row-pending'}">
+        <td><span class="badge badge-so">${esc(row[C2.ORDER])}</span></td>
+        <td>${inv?`<span class="badge badge-invoiced">${esc(inv)}</span>`:`<span class="badge badge-pending">Pending</span>`}</td>
+        <td>${esc(row[C2.DISC])}</td>
+        <td>${esc(row[C2.CUSTOMER])}</td>
+        <td>${esc(row[C2.SITE])}</td>
+        <td>${mapLink(row[C2.JOB_LOC])}</td>
+        <td>${esc(row[C2.EST])}</td>
+        <td style="white-space:nowrap">${esc(row[C2.TECH])}</td>
+        <td>${photoLink(row[C2.PHOTO])}</td>
+      </tr>`;
+    }).join('');
+    document.getElementById('rbTableArea').innerHTML = `
+      <div class="table-wrap"><div class="tscroll">
+        <table><thead><tr>${thead}</tr></thead><tbody>${tbody}</tbody></table>
+      </div>
+      <div class="table-footer">
+        <span class="page-info">Showing ${start+1}–${Math.min(start+PAGE_SIZE,total)} of ${total}</span>
+        <div class="pagination">${buildPages(page2,pages,'goPage2')}</div>
+      </div></div>`;
   }
+  function goPage2(p) { const max=Math.ceil(filtered2.length/PAGE_SIZE); if(p<1||p>max)return; page2=p; renderTable2(); window.scrollTo({top:0,behavior:'smooth'}); }
+  function sortBy2(key) { sortDir2=(sortKey2===key&&sortDir2==='asc')?'desc':'asc'; sortKey2=key; applyFilters2(); }
 
-  function goPage(p) {
-    const max = Math.ceil(filtered.length / PAGE_SIZE);
-    if (p < 1 || p > max) return;
-    page = p;
-    renderTable();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-
-  function sortBy(key) {
-    sortDir = (sortKey === key && sortDir === 'asc') ? 'desc' : 'asc';
-    sortKey = key;
-    applyFilters();
-  }
-
-  /* ── Sidebar ────────────────────────────────── */
+  // ── Sidebar ──────────────────────────────────
   function renderSidebar() {
-    // Tech breakdown
-    const counts = {};
-    allRows.forEach(r => {
-      const t = r[SHEET_COLS.TECH]?.trim();
-      if (t) counts[t] = (counts[t] || 0) + 1;
-    });
-    const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-    const max = sorted[0]?.[1] || 1;
-
-    document.getElementById('wTechs').innerHTML = sorted.slice(0, 14).map(([t, n]) => `
+    const counts={};
+    allRows.forEach(r=>{ const t=r[C.TECH]?.trim(); if(t) counts[t]=(counts[t]||0)+1; });
+    const sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+    const max=sorted[0]?.[1]||1;
+    document.getElementById('wTechs').innerHTML=sorted.slice(0,14).map(([t,n])=>`
       <li class="tech-item">
         <span class="tech-name">${esc(t)}</span>
-        <div class="tech-bar-bg"><div class="tech-bar-fill" style="width:${Math.round(n / max * 100)}%"></div></div>
+        <div class="tech-bar-bg"><div class="tech-bar-fill" style="width:${Math.round(n/max*100)}%"></div></div>
         <span class="tech-count">${n}</span>
       </li>`).join('');
-
-    // Most recent entries
-    const recent = [...allRows].reverse().slice(0, 8);
-    document.getElementById('wRecent').innerHTML = recent.map(r => `
+    document.getElementById('wRecent').innerHTML=[...allRows].reverse().slice(0,8).map(r=>`
       <div class="recent-item">
-        <div class="recent-so">${esc(r[SHEET_COLS.SO])} ${r[SHEET_COLS.DATE] ? `<span style="font-weight:400;color:var(--gray-500)">${esc(r[SHEET_COLS.DATE])}</span>` : ''}</div>
-        <div class="recent-sub">${esc(r[SHEET_COLS.CUSTOMER])} · ${esc(r[SHEET_COLS.SITE])}</div>
+        <div class="recent-so">${esc(r[C.SO])} <span style="font-weight:400;color:var(--gray-500)">${esc(r[C.DATE])}</span></div>
+        <div class="recent-sub">${esc(r[C.CUSTOMER])} · ${esc(r[C.SITE])}</div>
       </div>`).join('');
   }
 
-  /* ── Charts ─────────────────────────────────── */
-  let chartDate = null, chartStatus = null;
+  // ── Analytics panel (Panel 1) ────────────────
+  function renderAnalytics() {
+    const techData = {};
+    allRows.forEach(r => {
+      const t = r[C.TECH]?.trim(); if (!t) return;
+      if (!techData[t]) techData[t] = { total:0, inv:0 };
+      techData[t].total++;
+      if (r[C.INVOICE]?.trim()) techData[t].inv++;
+    });
+    const techSorted = Object.entries(techData).sort((a,b) => b[1].total - a[1].total);
+    document.getElementById('techCardsArea').innerHTML = `
+      <div class="tech-cards-grid">${techSorted.map(([name, d]) => {
+        const pend = d.total - d.inv;
+        const rate = d.total ? Math.round(d.inv / d.total * 100) : 0;
+        return `<div class="tech-card">
+          <div class="tech-card-name">${esc(name)}</div>
+          <div class="tech-card-stats">
+            <div class="tech-card-stat tc-total"><div class="tech-card-stat-val">${d.total}</div><div class="tech-card-stat-lbl">Jobs</div></div>
+            <div class="tech-card-stat tc-inv">  <div class="tech-card-stat-val">${d.inv}</div>  <div class="tech-card-stat-lbl">Invoiced</div></div>
+            <div class="tech-card-stat tc-pend"> <div class="tech-card-stat-val">${pend}</div>   <div class="tech-card-stat-lbl">Pending</div></div>
+          </div>
+          <div class="tech-rate-bar"><div class="tech-rate-fill" style="width:${rate}%"></div></div>
+        </div>`;
+      }).join('')}</div>`;
 
+    if (chartJsReady) renderAnalyticsCharts();
+    else chartsNeedRender = true;
+  }
+
+  function renderAnalyticsCharts() {
+    const techCounts = {};
+    allRows.forEach(r => { const t=r[C.TECH]?.trim(); if(t) techCounts[t]=(techCounts[t]||0)+1; });
+    const techSorted = Object.entries(techCounts).sort((a,b)=>b[1]-a[1]).slice(0,15);
+
+    if (chartTech) chartTech.destroy();
+    chartTech = new Chart(document.getElementById('chartTech'), {
+      type: 'bar',
+      data: {
+        labels: techSorted.map(([t])=>t),
+        datasets:[{ label:'Jobs', data:techSorted.map(([,n])=>n), backgroundColor:'#2563eb', borderRadius:4, borderSkipped:false }]
+      },
+      options: {
+        indexAxis:'y', responsive:true, maintainAspectRatio:false,
+        plugins:{legend:{display:false}},
+        scales:{
+          x:{beginAtZero:true, ticks:{stepSize:1,font:{size:10}}, grid:{color:'#f1f5f9'}},
+          y:{grid:{display:false}, ticks:{font:{size:10}}}
+        }
+      }
+    });
+
+    const custCounts = {};
+    allRows.forEach(r => { const c=r[C.CUSTOMER]?.trim(); if(c) custCounts[c]=(custCounts[c]||0)+1; });
+    const custSorted = Object.entries(custCounts).sort((a,b)=>b[1]-a[1]).slice(0,15);
+
+    if (chartCust) chartCust.destroy();
+    chartCust = new Chart(document.getElementById('chartCust'), {
+      type: 'bar',
+      data: {
+        labels: custSorted.map(([c])=>c),
+        datasets:[{ label:'Jobs', data:custSorted.map(([,n])=>n), backgroundColor:'#7c3aed', borderRadius:4, borderSkipped:false }]
+      },
+      options: {
+        indexAxis:'y', responsive:true, maintainAspectRatio:false,
+        plugins:{legend:{display:false}},
+        scales:{
+          x:{beginAtZero:true, ticks:{stepSize:1,font:{size:10}}, grid:{color:'#f1f5f9'}},
+          y:{grid:{display:false}, ticks:{font:{size:10}}}
+        }
+      }
+    });
+
+    document.getElementById('analyticsCharts').style.display = 'grid';
+  }
+
+  // ── Panel 0 charts ───────────────────────────
   function normalizeDate(raw) {
     if (!raw) return null;
-    const d = raw.trim().replace(/-/g, '/');
-    const parts = d.split('/').map(p => parseInt(p, 10)).filter(n => !isNaN(n));
-    if (parts.length >= 2) {
-      // M/D or M/D/YY or M/D/YYYY — just return M/D
-      return `${parts[0]}/${parts[1]}`;
-    }
-    return d;
+    const parts = raw.trim().replace(/-/g,'/').split('/').map(Number).filter(n=>!isNaN(n));
+    return parts.length>=2 ? `${parts[0]}/${parts[1]}` : raw.trim();
+  }
+
+  function makeBarLabelPlugin() {
+    return { id:'barLabels', afterDatasetsDraw(chart) {
+      const{ctx,data}=chart;
+      chart.getDatasetMeta(0).data.forEach((bar,i)=>{
+        const val=data.datasets[0].data[i]; if(!val) return;
+        ctx.save(); ctx.fillStyle='#334155'; ctx.font='bold 10px sans-serif';
+        ctx.textAlign='center'; ctx.textBaseline='bottom';
+        ctx.fillText(val, bar.x, bar.y-2); ctx.restore();
+      });
+    }};
+  }
+
+  function makePctPlugin(totalRef) {
+    return { id:'pct', afterDatasetsDraw(chart) {
+      const{ctx,data}=chart;
+      const total = data.datasets[0].data.reduce((a,b)=>a+b,0);
+      chart.getDatasetMeta(0).data.forEach((arc,i)=>{
+        const val=data.datasets[0].data[i], pct=Math.round(val/total*100);
+        if(pct<4) return;
+        const mid=(arc.startAngle+arc.endAngle)/2, r=(arc.outerRadius+arc.innerRadius)/2;
+        ctx.save(); ctx.fillStyle='#fff'; ctx.font='bold 13px sans-serif';
+        ctx.textAlign='center'; ctx.textBaseline='middle';
+        ctx.fillText(`${pct}%`, arc.x+r*Math.cos(mid), arc.y+r*Math.sin(mid)); ctx.restore();
+      });
+    }};
   }
 
   function renderCharts() {
-    // ── Jobs by Date (bar chart) ──
-    const dateCounts = {};
-    allRows.forEach(r => {
-      const d = normalizeDate(r[SHEET_COLS.DATE]);
-      if (d) dateCounts[d] = (dateCounts[d] || 0) + 1;
+    const dateCounts={};
+    allRows.forEach(r=>{ const d=normalizeDate(r[C.DATE]); if(d) dateCounts[d]=(dateCounts[d]||0)+1; });
+    const labels=Object.keys(dateCounts).sort((a,b)=>{
+      const[am,ad]=a.split('/').map(Number),[bm,bd]=b.split('/').map(Number);
+      return am!==bm?am-bm:ad-bd;
+    });
+    if(chartDate) chartDate.destroy();
+    chartDate=new Chart(document.getElementById('chartDate'),{
+      type:'bar',
+      plugins:[makeBarLabelPlugin()],
+      data:{labels,datasets:[{label:'Jobs',data:labels.map(l=>dateCounts[l]),backgroundColor:'#2563eb',borderRadius:4,borderSkipped:false}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+        scales:{x:{grid:{display:false},ticks:{font:{size:10},maxRotation:45}},y:{beginAtZero:true,ticks:{stepSize:1,font:{size:10}},grid:{color:'#f1f5f9'}}}}
     });
 
-    // Sort by month then day
-    const dateLabels = Object.keys(dateCounts).sort((a, b) => {
-      const [am, ad] = a.split('/').map(Number);
-      const [bm, bd] = b.split('/').map(Number);
-      return am !== bm ? am - bm : ad - bd;
-    });
-    const dateValues = dateLabels.map(l => dateCounts[l]);
-
-    if (chartDate) chartDate.destroy();
-    chartDate = new Chart(document.getElementById('chartDate'), {
-      type: 'bar',
-      data: {
-        labels: dateLabels,
-        datasets: [{
-          label: 'Jobs',
-          data: dateValues,
-          backgroundColor: '#2563eb',
-          borderRadius: 4,
-          borderSkipped: false,
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: {
-          x: {
-            grid: { display: false },
-            ticks: { font: { size: 10 }, maxRotation: 45 }
-          },
-          y: {
-            beginAtZero: true,
-            ticks: { stepSize: 1, font: { size: 10 } },
-            grid: { color: '#f1f5f9' }
-          }
-        }
-      }
+    const inv=allRows.filter(r=>r[C.INVOICE]?.trim()).length, open=allRows.length-inv;
+    if(chartStatus) chartStatus.destroy();
+    chartStatus=new Chart(document.getElementById('chartStatus'),{
+      type:'doughnut', plugins:[makePctPlugin()],
+      data:{labels:['Invoiced','Open'],datasets:[{data:[inv,open],backgroundColor:['#16a34a','#f59e0b'],borderWidth:2,borderColor:'#fff',hoverOffset:6}]},
+      options:{responsive:true,maintainAspectRatio:false,cutout:'62%',
+        plugins:{legend:{position:'bottom',labels:{font:{size:11},padding:14,usePointStyle:true}},
+          tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${ctx.parsed} (${Math.round(ctx.parsed/(inv+open)*100)}%)`}}}}
     });
 
-    // ── Invoiced vs Open (doughnut chart) ──
-    const invoiced = allRows.filter(r => r[SHEET_COLS.INVOICE]?.trim()).length;
-    const open     = allRows.length - invoiced;
-
-    const total = invoiced + open;
-    const pctPlugin = {
-      id: 'pctLabels',
-      afterDatasetsDraw(chart) {
-        const { ctx, data } = chart;
-        chart.getDatasetMeta(0).data.forEach((arc, i) => {
-          const val = data.datasets[0].data[i];
-          const pct = Math.round(val / total * 100);
-          if (pct < 4) return;
-          const mid = (arc.startAngle + arc.endAngle) / 2;
-          const r   = (arc.outerRadius + arc.innerRadius) / 2;
-          ctx.save();
-          ctx.fillStyle = '#fff';
-          ctx.font = 'bold 13px sans-serif';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(`${pct}%`, arc.x + r * Math.cos(mid), arc.y + r * Math.sin(mid));
-          ctx.restore();
-        });
-      }
-    };
-
-    if (chartStatus) chartStatus.destroy();
-    chartStatus = new Chart(document.getElementById('chartStatus'), {
-      type: 'doughnut',
-      plugins: [pctPlugin],
-      data: {
-        labels: ['Invoiced', 'Open'],
-        datasets: [{
-          data: [invoiced, open],
-          backgroundColor: ['#16a34a', '#f59e0b'],
-          borderWidth: 2,
-          borderColor: '#fff',
-          hoverOffset: 6,
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        cutout: '62%',
-        plugins: {
-          legend: {
-            position: 'bottom',
-            labels: { font: { size: 11 }, padding: 14, usePointStyle: true }
-          },
-          tooltip: {
-            callbacks: {
-              label: ctx => ` ${ctx.label}: ${ctx.parsed} (${Math.round(ctx.parsed / total * 100)}%)`
-            }
-          }
-        }
-      }
-    });
+    renderAnalyticsCharts();
   }
 
-  /* ── Helpers ────────────────────────────────── */
+  // ── RB charts ────────────────────────────────
+  function renderRbCharts() {
+    const techCounts = {};
+    allRows2.forEach(r => { const t=r[C2.TECH]?.trim(); if(t) techCounts[t]=(techCounts[t]||0)+1; });
+    const techSorted = Object.entries(techCounts).sort((a,b)=>b[1]-a[1]).slice(0,15);
+
+    if (rbTechChart) rbTechChart.destroy();
+    rbTechChart = new Chart(document.getElementById('rbTechChart'), {
+      type: 'bar',
+      data: {
+        labels: techSorted.map(([t])=>t),
+        datasets:[{ label:'Jobs', data:techSorted.map(([,n])=>n), backgroundColor:'#2563eb', borderRadius:4, borderSkipped:false }]
+      },
+      options: {
+        indexAxis:'y', responsive:true, maintainAspectRatio:false,
+        plugins:{legend:{display:false}},
+        scales:{
+          x:{beginAtZero:true, ticks:{stepSize:1,font:{size:10}}, grid:{color:'#f1f5f9'}},
+          y:{grid:{display:false}, ticks:{font:{size:10}}}
+        }
+      }
+    });
+
+    const inv = allRows2.filter(r=>r[C2.INVOICE]?.trim()).length, open = allRows2.length - inv;
+    if (rbStatusChart) rbStatusChart.destroy();
+    rbStatusChart = new Chart(document.getElementById('rbStatusChart'), {
+      type: 'doughnut', plugins:[makePctPlugin()],
+      data:{labels:['Invoiced','Open'],datasets:[{data:[inv,open],backgroundColor:['#16a34a','#f59e0b'],borderWidth:2,borderColor:'#fff',hoverOffset:6}]},
+      options:{responsive:true,maintainAspectRatio:false,cutout:'62%',
+        plugins:{legend:{position:'bottom',labels:{font:{size:11},padding:14,usePointStyle:true}},
+          tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${ctx.parsed} (${Math.round(ctx.parsed/(inv+open)*100)}%)`}}}}
+    });
+
+    document.getElementById('rbChartsRow').style.display = 'grid';
+  }
+
+  // ── Helpers ──────────────────────────────────
   function mapLink(val) {
-    val = (val || '').trim();
-    if (!val) return '';
-    const href = val.startsWith('http') ? val : `https://www.google.com/maps?q=${encodeURIComponent(val)}`;
+    val=(val||'').trim(); if(!val) return '';
+    const href=val.startsWith('http')?val:`https://www.google.com/maps?q=${encodeURIComponent(val)}`;
     return `<a class="map-btn" href="${href}" target="_blank" rel="noopener noreferrer">
       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
         <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
       </svg>Map</a>`;
   }
-
-  function esc(s) {
-    return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  function photoLink(val) {
+    val=(val||'').trim(); if(!val) return '';
+    if (!val.startsWith('http')) return `<span style="font-size:.78rem;color:var(--gray-500)">${esc(val)}</span>`;
+    return `<a class="photo-btn" href="${val}" target="_blank" rel="noopener noreferrer">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
+        <polyline points="21 15 16 10 5 21"/>
+      </svg>Photo</a>`;
   }
+  function esc(s) { return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function uniq(arr) { return [...new Set(arr.filter(Boolean))]; }
 
-  function uniq(arr) {
-    return [...new Set(arr.filter(Boolean))];
-  }
-
-  // Auto-load on open
-  loadData();
+  loadAll();
 </script>
 </body>
 </html>
