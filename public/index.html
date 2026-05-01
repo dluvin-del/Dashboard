@@ -408,6 +408,12 @@
       <div style="position:relative;height:200px"><canvas id="chartStatus"></canvas></div>
     </div>
   </div>
+  <div class="charts-row" id="amountChartsRow" style="display:none">
+    <div class="chart-card" style="grid-column:1/-1">
+      <div class="chart-title">Invoice Amount by Date</div>
+      <div style="position:relative;height:200px"><canvas id="chartAmount"></canvas></div>
+    </div>
+  </div>
 
   <div class="body-grid">
     <div id="mainCol">
@@ -545,6 +551,7 @@
     DATE: 'M', SO: 'SERVICE ORDER #', INVOICE: 'INVOICE #',
     CUSTOMER: 'CUSTOMER', SITE: 'SITE NAME', JOB: 'JOB INFO',
     MAP: 'GOOGLE PIN LOCATION', TECH: 'TECH.', COMMENTS: 'COMMENTS',
+    AMOUNT: 'INVOICE AMOUNT',
   };
 
   const TABLE_COLS = [
@@ -587,7 +594,7 @@
 
   // Chart.js ready flag
   let chartJsReady = false, chartsNeedRender = false, rbNeedRender = false;
-  let chartDate = null, chartStatus = null, chartTech = null, chartCust = null;
+  let chartDate = null, chartStatus = null, chartTech = null, chartCust = null, chartAmount = null;
   let rbTechChart = null, rbStatusChart = null;
 
   // ── Rotation ─────────────────────────────────
@@ -698,7 +705,7 @@
       document.getElementById('sidebar').style.display   = 'flex';
       document.getElementById('initMsg')?.remove();
       renderAnalytics();
-      if (chartJsReady) { renderCharts(); document.getElementById('chartsRow').style.display = 'grid'; }
+      if (chartJsReady) { renderCharts(); document.getElementById('chartsRow').style.display = 'grid'; document.getElementById('amountChartsRow').style.display = 'grid'; }
       else chartsNeedRender = true;
     } catch (err) {
       document.getElementById('tableArea').innerHTML = `
@@ -742,7 +749,7 @@
   function onChartJsLoad() {
     chartJsReady = true;
     if (chartsNeedRender && allRows.length) {
-      try { renderCharts(); document.getElementById('chartsRow').style.display = 'grid'; }
+      try { renderCharts(); document.getElementById('chartsRow').style.display = 'grid'; document.getElementById('amountChartsRow').style.display = 'grid'; }
       catch(e) { console.warn('Charts:', e.message); }
       chartsNeedRender = false;
     }
@@ -1009,14 +1016,15 @@
     return parts.length>=2 ? `${parts[0]}/${parts[1]}` : raw.trim();
   }
 
-  function makeBarLabelPlugin() {
+  function makeBarLabelPlugin(fmt) {
     return { id:'barLabels', afterDatasetsDraw(chart) {
       const{ctx,data}=chart;
       chart.getDatasetMeta(0).data.forEach((bar,i)=>{
         const val=data.datasets[0].data[i]; if(!val) return;
+        const label=fmt?fmt(val):val;
         ctx.save(); ctx.fillStyle='#334155'; ctx.font='bold 10px sans-serif';
         ctx.textAlign='center'; ctx.textBaseline='bottom';
-        ctx.fillText(val, bar.x, bar.y-2); ctx.restore();
+        ctx.fillText(label, bar.x, bar.y-2); ctx.restore();
       });
     }};
   }
@@ -1060,6 +1068,30 @@
       options:{responsive:true,maintainAspectRatio:false,cutout:'62%',
         plugins:{legend:{position:'bottom',labels:{font:{size:11},padding:14,usePointStyle:true}},
           tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${ctx.parsed} (${Math.round(ctx.parsed/(inv+open)*100)}%)`}}}}
+    });
+
+    const amountByDate={};
+    allRows.forEach(r=>{
+      const d=normalizeDate(r[C.DATE]); if(!d) return;
+      const raw=String(r[C.AMOUNT]||'').replace(/[$,\s]/g,'');
+      const n=parseFloat(raw); if(!isNaN(n)&&n>0) amountByDate[d]=(amountByDate[d]||0)+n;
+    });
+    const aLabels=Object.keys(amountByDate).sort((a,b)=>{
+      const[am,ad]=a.split('/').map(Number),[bm,bd]=b.split('/').map(Number);
+      return am!==bm?am-bm:ad-bd;
+    });
+    if(chartAmount) chartAmount.destroy();
+    chartAmount=new Chart(document.getElementById('chartAmount'),{
+      type:'bar',
+      plugins:[makeBarLabelPlugin(v=>v>=1000?'$'+(v/1000).toFixed(1)+'K':'$'+v.toFixed(0))],
+      data:{labels:aLabels,datasets:[{label:'Invoice Amount',data:aLabels.map(l=>+amountByDate[l].toFixed(2)),backgroundColor:'#16a34a',borderRadius:4,borderSkipped:false}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+        scales:{
+          x:{grid:{display:false},ticks:{font:{size:10},maxRotation:45}},
+          y:{beginAtZero:true,ticks:{font:{size:10},callback:v=>'$'+v.toLocaleString()},grid:{color:'#f1f5f9'}}
+        },
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' $'+ctx.parsed.y.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}}}
+      }
     });
 
     renderAnalyticsCharts();
