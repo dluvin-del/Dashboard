@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>American Irrigation – Service Order Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -375,6 +376,31 @@
       word-break: break-word;
     }
     .msg-error .err-hint { margin-top: 10px; font-size: .8rem; color: var(--gray-500); line-height: 1.6; }
+
+    /* ── Charts ──────────────────────────────── */
+    .charts-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+    @media (max-width: 900px) { .charts-row { grid-template-columns: 1fr; } }
+
+    .chart-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      box-shadow: var(--shadow);
+    }
+    .chart-title {
+      font-size: .68rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: var(--gray-500);
+      margin-bottom: 14px;
+    }
+    .chart-wrap { position: relative; }
   </style>
 </head>
 <body>
@@ -423,6 +449,22 @@
     <div class="stat-card c-purple">
       <div class="stat-label">Customers</div>
       <div class="stat-value" id="sCustomers">—</div>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="charts-row" id="chartsRow" style="display:none">
+    <div class="chart-card">
+      <div class="chart-title">Jobs by Date</div>
+      <div class="chart-wrap" style="height:220px">
+        <canvas id="chartDate"></canvas>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Invoiced vs Open</div>
+      <div class="chart-wrap" style="height:220px">
+        <canvas id="chartStatus"></canvas>
+      </div>
     </div>
   </div>
 
@@ -542,9 +584,11 @@
       populateFilters();
       applyFilters();
       renderSidebar();
+      renderCharts();
 
       document.getElementById('filterBar').style.display = 'flex';
       document.getElementById('sidebar').style.display   = 'flex';
+      document.getElementById('chartsRow').style.display = 'grid';
       document.getElementById('initMsg')?.remove();
 
     } catch (err) {
@@ -731,6 +775,107 @@
         <div class="recent-so">${esc(r[SHEET_COLS.SO])} ${r[SHEET_COLS.DATE] ? `<span style="font-weight:400;color:var(--gray-500)">${esc(r[SHEET_COLS.DATE])}</span>` : ''}</div>
         <div class="recent-sub">${esc(r[SHEET_COLS.CUSTOMER])} · ${esc(r[SHEET_COLS.SITE])}</div>
       </div>`).join('');
+  }
+
+  /* ── Charts ─────────────────────────────────── */
+  let chartDate = null, chartStatus = null;
+
+  function normalizeDate(raw) {
+    if (!raw) return null;
+    const d = raw.trim().replace(/-/g, '/');
+    const parts = d.split('/').map(p => parseInt(p, 10)).filter(n => !isNaN(n));
+    if (parts.length >= 2) {
+      // M/D or M/D/YY or M/D/YYYY — just return M/D
+      return `${parts[0]}/${parts[1]}`;
+    }
+    return d;
+  }
+
+  function renderCharts() {
+    // ── Jobs by Date (bar chart) ──
+    const dateCounts = {};
+    allRows.forEach(r => {
+      const d = normalizeDate(r[SHEET_COLS.DATE]);
+      if (d) dateCounts[d] = (dateCounts[d] || 0) + 1;
+    });
+
+    // Sort by month then day
+    const dateLabels = Object.keys(dateCounts).sort((a, b) => {
+      const [am, ad] = a.split('/').map(Number);
+      const [bm, bd] = b.split('/').map(Number);
+      return am !== bm ? am - bm : ad - bd;
+    });
+    const dateValues = dateLabels.map(l => dateCounts[l]);
+
+    if (chartDate) chartDate.destroy();
+    chartDate = new Chart(document.getElementById('chartDate'), {
+      type: 'bar',
+      data: {
+        labels: dateLabels,
+        datasets: [{
+          label: 'Jobs',
+          data: dateValues,
+          backgroundColor: '#2563eb',
+          borderRadius: 4,
+          borderSkipped: false,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: { font: { size: 10 }, maxRotation: 45 }
+          },
+          y: {
+            beginAtZero: true,
+            ticks: { stepSize: 1, font: { size: 10 } },
+            grid: { color: '#f1f5f9' }
+          }
+        }
+      }
+    });
+
+    // ── Invoiced vs Open (doughnut chart) ──
+    const invoiced = allRows.filter(r => r[SHEET_COLS.INVOICE]?.trim()).length;
+    const open     = allRows.length - invoiced;
+
+    if (chartStatus) chartStatus.destroy();
+    chartStatus = new Chart(document.getElementById('chartStatus'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Invoiced', 'Open'],
+        datasets: [{
+          data: [invoiced, open],
+          backgroundColor: ['#16a34a', '#f59e0b'],
+          borderWidth: 2,
+          borderColor: '#fff',
+          hoverOffset: 6,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '62%',
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { font: { size: 11 }, padding: 14, usePointStyle: true }
+          },
+          tooltip: {
+            callbacks: {
+              label: ctx => {
+                const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                const pct = Math.round(ctx.parsed / total * 100);
+                return ` ${ctx.label}: ${ctx.parsed} (${pct}%)`;
+              }
+            }
+          }
+        }
+      }
+    });
   }
 
   /* ── Helpers ────────────────────────────────── */
