@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Service Order Dashboard</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy:        #1e3a5f;
+      --navy-dark:   #152b47;
+      --blue:        #2563eb;
+      --blue-hover:  #1d4ed8;
+      --blue-light:  #dbeafe;
+      --green:       #16a34a;
+      --green-light: #dcfce7;
+      --amber:       #b45309;
+      --amber-light: #fef3c7;
+      --amber-row:   #fffbeb;
+      --green-row:   #f0fdf4;
+      --red:         #dc2626;
+      --gray-50:     #f8fafc;
+      --gray-100:    #f1f5f9;
+      --gray-200:    #e2e8f0;
+      --gray-300:    #cbd5e1;
+      --gray-500:    #64748b;
+      --gray-700:    #334155;
+      --gray-900:    #0f172a;
+      --white:       #ffffff;
+      --shadow-sm:   0 1px 2px rgba(0,0,0,.07);
+      --shadow:      0 1px 3px rgba(0,0,0,.10), 0 1px 2px rgba(0,0,0,.06);
+      --shadow-md:   0 4px 6px -1px rgba(0,0,0,.10), 0 2px 4px -2px rgba(0,0,0,.06);
+      --radius:      10px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--gray-100);
+      color: var(--gray-900);
+      min-height: 100vh;
+      font-size: 14px;
+    }
+
+    /* ── Header ─────────────────────────────── */
+    header {
+      background: var(--navy);
+      color: #fff;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.25);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-brand h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -.02em;
+    }
+    .header-brand p { font-size: .75rem; opacity: .65; margin-top: 2px; }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    #lastUpdated { font-size: .78rem; opacity: .65; white-space: nowrap; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: .85rem;
+      font-weight: 600;
+      transition: background .15s, opacity .15s;
+    }
+    .btn-primary { background: var(--blue); color: #fff; }
+    .btn-primary:hover { background: var(--blue-hover); }
+    .btn-primary:disabled { opacity: .55; cursor: not-allowed; }
+
+    .spin { animation: spin .9s linear infinite; display: inline-block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Main layout ─────────────────────────── */
+    main { padding: 20px 24px; max-width: 1700px; margin: 0 auto; }
+
+    /* ── Stats grid ─────────────────────────── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      box-shadow: var(--shadow);
+      border-top: 3px solid transparent;
+    }
+    .stat-card.c-blue   { border-top-color: var(--blue); }
+    .stat-card.c-green  { border-top-color: var(--green); }
+    .stat-card.c-amber  { border-top-color: #f59e0b; }
+    .stat-card.c-navy   { border-top-color: var(--navy); }
+    .stat-card.c-purple { border-top-color: #7c3aed; }
+
+    .stat-label {
+      font-size: .68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--gray-500);
+      margin-bottom: 8px;
+    }
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--gray-900);
+      line-height: 1;
+    }
+
+    /* ── Body grid ───────────────────────────── */
+    .body-grid {
+      display: grid;
+      grid-template-columns: 1fr 250px;
+      gap: 18px;
+      align-items: start;
+    }
+    @media (max-width: 1200px) { .body-grid { grid-template-columns: 1fr; } }
+
+    /* ── Filters ─────────────────────────────── */
+    .filters {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      box-shadow: var(--shadow);
+      margin-bottom: 14px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: flex-end;
+    }
+
+    .fg { display: flex; flex-direction: column; gap: 4px; }
+    .fl { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--gray-500); }
+
+    .fi, .fs {
+      padding: 7px 11px;
+      border: 1.5px solid var(--gray-200);
+      border-radius: 6px;
+      font-size: .85rem;
+      color: var(--gray-700);
+      background: var(--gray-50);
+      min-width: 150px;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .fi:focus, .fs:focus {
+      outline: none;
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px var(--blue-light);
+    }
+    .fi-search { flex: 1; min-width: 200px; }
+
+    .result-count {
+      margin-left: auto;
+      font-size: .82rem;
+      color: var(--gray-500);
+      padding-bottom: 7px;
+      white-space: nowrap;
+    }
+
+    /* ── Table ───────────────────────────────── */
+    .table-wrap {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .tscroll { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .8rem;
+    }
+
+    thead th {
+      position: sticky;
+      top: 0;
+      background: var(--gray-50);
+      padding: 10px 13px;
+      text-align: left;
+      font-size: .68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--gray-500);
+      border-bottom: 2px solid var(--gray-200);
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
+    }
+    thead th:hover { background: var(--gray-100); color: var(--gray-700); }
+    thead th.asc::after  { content: ' ↑'; }
+    thead th.desc::after { content: ' ↓'; }
+
+    tbody tr {
+      border-bottom: 1px solid var(--gray-100);
+      transition: background .08s;
+    }
+    tbody tr.row-invoiced { background: var(--green-row); }
+    tbody tr.row-pending  { background: var(--amber-row); }
+    tbody tr:hover { filter: brightness(.96); }
+
+    tbody td { padding: 9px 13px; vertical-align: middle; }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: .72rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .badge-so       { background: var(--navy); color: #fff; }
+    .badge-invoiced { background: var(--green-light); color: var(--green); }
+    .badge-pending  { background: var(--amber-light); color: var(--amber); }
+
+    .cell-job {
+      max-width: 280px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .cell-comment {
+      max-width: 200px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: var(--gray-500);
+      font-style: italic;
+    }
+
+    .map-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 9px;
+      background: var(--blue-light);
+      color: var(--blue);
+      border-radius: 4px;
+      font-size: .72rem;
+      font-weight: 600;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .map-btn:hover { background: #bfdbfe; }
+
+    /* ── Pagination ──────────────────────────── */
+    .table-footer {
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid var(--gray-200);
+      background: var(--gray-50);
+    }
+
+    .page-info { font-size: .8rem; color: var(--gray-500); }
+
+    .pagination { display: flex; gap: 4px; }
+
+    .pb {
+      padding: 5px 11px;
+      border: 1px solid var(--gray-200);
+      border-radius: 5px;
+      background: var(--white);
+      cursor: pointer;
+      font-size: .82rem;
+      color: var(--gray-700);
+    }
+    .pb:hover { background: var(--gray-100); }
+    .pb.active { background: var(--blue); color: #fff; border-color: var(--blue); font-weight: 700; }
+    .pb:disabled { opacity: .4; cursor: not-allowed; }
+
+    /* ── Sidebar widgets ─────────────────────── */
+    .sidebar { display: flex; flex-direction: column; gap: 14px; }
+
+    .widget {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      box-shadow: var(--shadow);
+    }
+    .widget-title {
+      font-size: .68rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: var(--gray-500);
+      margin-bottom: 12px;
+    }
+
+    .tech-list { list-style: none; }
+    .tech-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 0;
+      border-bottom: 1px solid var(--gray-100);
+      font-size: .8rem;
+    }
+    .tech-item:last-child { border-bottom: none; }
+    .tech-name { flex: 1; color: var(--gray-700); }
+    .tech-bar-bg { width: 60px; height: 5px; background: var(--gray-200); border-radius: 3px; overflow: hidden; }
+    .tech-bar-fill { height: 100%; background: var(--blue); border-radius: 3px; }
+    .tech-count { font-weight: 700; color: var(--gray-700); min-width: 22px; text-align: right; font-size: .78rem; }
+
+    .recent-item {
+      padding: 6px 0;
+      border-bottom: 1px solid var(--gray-100);
+    }
+    .recent-item:last-child { border-bottom: none; }
+    .recent-so { font-weight: 700; font-size: .8rem; color: var(--navy); }
+    .recent-sub { font-size: .72rem; color: var(--gray-500); margin-top: 1px; }
+
+    /* ── Status messages ─────────────────────── */
+    .msg-box {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 48px 24px;
+      text-align: center;
+      box-shadow: var(--shadow);
+      color: var(--gray-500);
+    }
+    .msg-box svg { margin-bottom: 12px; opacity: .4; }
+    .msg-box p { margin: 4px 0; }
+    .msg-error { color: var(--red); }
+    .msg-error .err-detail {
+      margin-top: 12px;
+      font-size: .8rem;
+      background: #fef2f2;
+      padding: 12px 16px;
+      border-radius: 6px;
+      text-align: left;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .msg-error .err-hint { margin-top: 10px; font-size: .8rem; color: var(--gray-500); line-height: 1.6; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-brand">
+    <h1>Service Order Dashboard</h1>
+    <p>Live sync from Google Sheets</p>
+  </div>
+  <div class="header-right">
+    <span id="lastUpdated">Not loaded</span>
+    <button class="btn btn-primary" id="refreshBtn" onclick="loadData()">
+      <svg id="refreshIcon" width="14" height="14" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="23 4 23 10 17 10"></polyline>
+        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+      </svg>
+      Refresh
+    </button>
+  </div>
+</header>
+
+<main>
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-card c-blue">
+      <div class="stat-label">Total Orders</div>
+      <div class="stat-value" id="sTotal">—</div>
+    </div>
+    <div class="stat-card c-green">
+      <div class="stat-label">Invoiced</div>
+      <div class="stat-value" id="sInvoiced">—</div>
+    </div>
+    <div class="stat-card c-amber">
+      <div class="stat-label">Pending</div>
+      <div class="stat-value" id="sPending">—</div>
+    </div>
+    <div class="stat-card c-navy">
+      <div class="stat-label">Technicians</div>
+      <div class="stat-value" id="sTechs">—</div>
+    </div>
+    <div class="stat-card c-purple">
+      <div class="stat-label">Customers</div>
+      <div class="stat-value" id="sCustomers">—</div>
+    </div>
+  </div>
+
+  <div class="body-grid">
+    <div id="mainCol">
+      <!-- Filters -->
+      <div class="filters" id="filterBar" style="display:none">
+        <div class="fg">
+          <div class="fl">Search</div>
+          <input type="search" class="fi fi-search" id="qSearch"
+                 placeholder="Search any field…" oninput="applyFilters()" />
+        </div>
+        <div class="fg">
+          <div class="fl">Technician</div>
+          <select class="fs" id="qTech" onchange="applyFilters()">
+            <option value="">All Techs</option>
+          </select>
+        </div>
+        <div class="fg">
+          <div class="fl">Customer</div>
+          <select class="fs" id="qCustomer" onchange="applyFilters()">
+            <option value="">All Customers</option>
+          </select>
+        </div>
+        <div class="fg">
+          <div class="fl">Status</div>
+          <select class="fs" id="qStatus" onchange="applyFilters()">
+            <option value="">All</option>
+            <option value="invoiced">Invoiced</option>
+            <option value="pending">Pending</option>
+          </select>
+        </div>
+        <span class="result-count" id="resultCount"></span>
+      </div>
+
+      <!-- Table area -->
+      <div id="tableArea">
+        <div class="msg-box" id="initMsg">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="1.5">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <p><strong>Loading service orders…</strong></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar" style="display:none">
+      <div class="widget">
+        <div class="widget-title">By Technician</div>
+        <ul class="tech-list" id="wTechs"></ul>
+      </div>
+      <div class="widget">
+        <div class="widget-title">Most Recent</div>
+        <div id="wRecent"></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+  const SHEET_COLS = {
+    DATE:     'M',
+    SO:       'SERVICE ORDER #',
+    INVOICE:  'INVOICE #',
+    CUSTOMER: 'CUSTOMER',
+    SITE:     'SITE NAME',
+    JOB:      'JOB INFO',
+    MAP:      'GOOGLE PIN LOCATION',
+    EST:      'EST #',
+    TECH:     'TECH.',
+    COMMENTS: 'COMMENTS',
+  };
+
+  const TABLE_COLS = [
+    { key: SHEET_COLS.DATE,     label: 'Date' },
+    { key: SHEET_COLS.SO,       label: 'SO #' },
+    { key: SHEET_COLS.INVOICE,  label: 'Invoice #' },
+    { key: SHEET_COLS.CUSTOMER, label: 'Customer' },
+    { key: SHEET_COLS.SITE,     label: 'Site' },
+    { key: SHEET_COLS.JOB,      label: 'Job Info' },
+    { key: SHEET_COLS.TECH,     label: 'Tech' },
+    { key: SHEET_COLS.COMMENTS, label: 'Comments' },
+    { key: SHEET_COLS.MAP,      label: 'Map', nosort: true },
+  ];
+
+  const PAGE_SIZE = 50;
+
+  let allRows    = [];
+  let filtered   = [];
+  let sortKey    = SHEET_COLS.SO;
+  let sortDir    = 'asc';
+  let page       = 1;
+
+  /* ── Data loading ──────────────────────────── */
+  async function loadData() {
+    const btn  = document.getElementById('refreshBtn');
+    const icon = document.getElementById('refreshIcon');
+    btn.disabled = true;
+    icon.classList.add('spin');
+
+    try {
+      const res  = await fetch('/api/data');
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
+
+      allRows = json.rows || [];
+
+      const d = new Date(json.fetched);
+      document.getElementById('lastUpdated').textContent =
+        `Updated ${d.toLocaleDateString()} ${d.toLocaleTimeString()}`;
+
+      updateStats();
+      populateFilters();
+      applyFilters();
+      renderSidebar();
+
+      document.getElementById('filterBar').style.display = 'flex';
+      document.getElementById('sidebar').style.display   = 'flex';
+      document.getElementById('initMsg')?.remove();
+
+    } catch (err) {
+      document.getElementById('tableArea').innerHTML = `
+        <div class="msg-box msg-error">
+          <p><strong>Failed to load data</strong></p>
+          <div class="err-detail">${esc(err.message)}</div>
+          <p class="err-hint">
+            Make sure the Google Sheet is shared with <strong>"Anyone with the link can view"</strong>.<br>
+            Alternatively, add your <code>GOOGLE_API_KEY</code> to a <code>.env</code> file.
+          </p>
+        </div>`;
+    } finally {
+      btn.disabled = false;
+      icon.classList.remove('spin');
+    }
+  }
+
+  /* ── Stats ─────────────────────────────────── */
+  function updateStats() {
+    const invoiced  = allRows.filter(r => r[SHEET_COLS.INVOICE]?.trim());
+    const techSet   = new Set(allRows.map(r => r[SHEET_COLS.TECH]?.trim()).filter(Boolean));
+    const custSet   = new Set(allRows.map(r => r[SHEET_COLS.CUSTOMER]?.trim()).filter(Boolean));
+
+    document.getElementById('sTotal').textContent     = allRows.length;
+    document.getElementById('sInvoiced').textContent  = invoiced.length;
+    document.getElementById('sPending').textContent   = allRows.length - invoiced.length;
+    document.getElementById('sTechs').textContent     = techSet.size;
+    document.getElementById('sCustomers').textContent = custSet.size;
+  }
+
+  /* ── Filters ────────────────────────────────── */
+  function populateFilters() {
+    const techs = uniq(allRows.map(r => r[SHEET_COLS.TECH]?.trim())).sort();
+    const custs = uniq(allRows.map(r => r[SHEET_COLS.CUSTOMER]?.trim())).sort();
+
+    sel('qTech',     techs, 'All Techs');
+    sel('qCustomer', custs, 'All Customers');
+  }
+
+  function sel(id, items, placeholder) {
+    document.getElementById(id).innerHTML =
+      `<option value="">${placeholder}</option>` +
+      items.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
+  }
+
+  function applyFilters() {
+    const q      = document.getElementById('qSearch').value.toLowerCase();
+    const tech   = document.getElementById('qTech').value;
+    const cust   = document.getElementById('qCustomer').value;
+    const status = document.getElementById('qStatus').value;
+
+    filtered = allRows.filter(row => {
+      if (tech   && row[SHEET_COLS.TECH]?.trim()     !== tech)   return false;
+      if (cust   && row[SHEET_COLS.CUSTOMER]?.trim() !== cust)   return false;
+      if (status === 'invoiced' && !row[SHEET_COLS.INVOICE]?.trim()) return false;
+      if (status === 'pending'  &&  row[SHEET_COLS.INVOICE]?.trim()) return false;
+      if (q) {
+        const flat = Object.values(row).join(' ').toLowerCase();
+        if (!flat.includes(q)) return false;
+      }
+      return true;
+    });
+
+    filtered.sort((a, b) => {
+      const av = a[sortKey] || '', bv = b[sortKey] || '';
+      const cmp = av.localeCompare(bv, undefined, { numeric: true, sensitivity: 'base' });
+      return sortDir === 'asc' ? cmp : -cmp;
+    });
+
+    page = 1;
+    renderTable();
+  }
+
+  /* ── Table rendering ────────────────────────── */
+  function renderTable() {
+    const total = filtered.length;
+    document.getElementById('resultCount').textContent =
+      total === allRows.length ? `${total} orders` : `${total} of ${allRows.length}`;
+
+    if (total === 0) {
+      document.getElementById('tableArea').innerHTML =
+        '<div class="msg-box"><p>No orders match the current filters.</p></div>';
+      return;
+    }
+
+    const start  = (page - 1) * PAGE_SIZE;
+    const slice  = filtered.slice(start, start + PAGE_SIZE);
+    const pages  = Math.ceil(total / PAGE_SIZE);
+
+    const thead = TABLE_COLS.map(c => {
+      const cls = sortKey === c.key ? sortDir : '';
+      const onclick = c.nosort ? '' : `onclick="sortBy('${c.key}')"`;
+      return `<th class="${cls}" ${onclick}>${c.label}</th>`;
+    }).join('');
+
+    const tbody = slice.map(row => {
+      const inv = row[SHEET_COLS.INVOICE]?.trim();
+      const cls = inv ? 'row-invoiced' : 'row-pending';
+      return `<tr class="${cls}">
+        <td style="white-space:nowrap">${esc(row[SHEET_COLS.DATE])}</td>
+        <td><span class="badge badge-so">${esc(row[SHEET_COLS.SO])}</span></td>
+        <td>${inv
+          ? `<span class="badge badge-invoiced">${esc(inv)}</span>`
+          : `<span class="badge badge-pending">Pending</span>`}</td>
+        <td>${esc(row[SHEET_COLS.CUSTOMER])}</td>
+        <td>${esc(row[SHEET_COLS.SITE])}</td>
+        <td><div class="cell-job" title="${esc(row[SHEET_COLS.JOB])}">${esc(row[SHEET_COLS.JOB])}</div></td>
+        <td style="white-space:nowrap">${esc(row[SHEET_COLS.TECH])}</td>
+        <td><div class="cell-comment" title="${esc(row[SHEET_COLS.COMMENTS])}">${esc(row[SHEET_COLS.COMMENTS])}</div></td>
+        <td>${mapLink(row[SHEET_COLS.MAP])}</td>
+      </tr>`;
+    }).join('');
+
+    document.getElementById('tableArea').innerHTML = `
+      <div class="table-wrap">
+        <div class="tscroll">
+          <table>
+            <thead><tr>${thead}</tr></thead>
+            <tbody>${tbody}</tbody>
+          </table>
+        </div>
+        <div class="table-footer">
+          <span class="page-info">
+            Showing ${start + 1}–${Math.min(start + PAGE_SIZE, total)} of ${total}
+          </span>
+          <div class="pagination">${buildPages(page, pages)}</div>
+        </div>
+      </div>`;
+  }
+
+  function buildPages(cur, total) {
+    if (total <= 1) return '';
+    const btns = [`<button class="pb" onclick="goPage(${cur - 1})" ${cur === 1 ? 'disabled' : ''}>&#8592;</button>`];
+    const nums = [];
+    for (let i = 1; i <= total; i++) {
+      if (i === 1 || i === total || Math.abs(i - cur) <= 2) nums.push(i);
+      else if (nums[nums.length - 1] !== '…') nums.push('…');
+    }
+    nums.forEach(n => {
+      if (n === '…') btns.push(`<span class="pb" style="cursor:default">…</span>`);
+      else btns.push(`<button class="pb ${n === cur ? 'active' : ''}" onclick="goPage(${n})">${n}</button>`);
+    });
+    btns.push(`<button class="pb" onclick="goPage(${cur + 1})" ${cur === total ? 'disabled' : ''}>&#8594;</button>`);
+    return btns.join('');
+  }
+
+  function goPage(p) {
+    const max = Math.ceil(filtered.length / PAGE_SIZE);
+    if (p < 1 || p > max) return;
+    page = p;
+    renderTable();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function sortBy(key) {
+    sortDir = (sortKey === key && sortDir === 'asc') ? 'desc' : 'asc';
+    sortKey = key;
+    applyFilters();
+  }
+
+  /* ── Sidebar ────────────────────────────────── */
+  function renderSidebar() {
+    // Tech breakdown
+    const counts = {};
+    allRows.forEach(r => {
+      const t = r[SHEET_COLS.TECH]?.trim();
+      if (t) counts[t] = (counts[t] || 0) + 1;
+    });
+    const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+    const max = sorted[0]?.[1] || 1;
+
+    document.getElementById('wTechs').innerHTML = sorted.slice(0, 14).map(([t, n]) => `
+      <li class="tech-item">
+        <span class="tech-name">${esc(t)}</span>
+        <div class="tech-bar-bg"><div class="tech-bar-fill" style="width:${Math.round(n / max * 100)}%"></div></div>
+        <span class="tech-count">${n}</span>
+      </li>`).join('');
+
+    // Most recent entries
+    const recent = [...allRows].reverse().slice(0, 8);
+    document.getElementById('wRecent').innerHTML = recent.map(r => `
+      <div class="recent-item">
+        <div class="recent-so">${esc(r[SHEET_COLS.SO])} ${r[SHEET_COLS.DATE] ? `<span style="font-weight:400;color:var(--gray-500)">${esc(r[SHEET_COLS.DATE])}</span>` : ''}</div>
+        <div class="recent-sub">${esc(r[SHEET_COLS.CUSTOMER])} · ${esc(r[SHEET_COLS.SITE])}</div>
+      </div>`).join('');
+  }
+
+  /* ── Helpers ────────────────────────────────── */
+  function mapLink(val) {
+    val = (val || '').trim();
+    if (!val) return '';
+    const href = val.startsWith('http') ? val : `https://www.google.com/maps?q=${encodeURIComponent(val)}`;
+    return `<a class="map-btn" href="${href}" target="_blank" rel="noopener noreferrer">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+      </svg>Map</a>`;
+  }
+
+  function esc(s) {
+    return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function uniq(arr) {
+    return [...new Set(arr.filter(Boolean))];
+  }
+
+  // Auto-load on open
+  loadData();
+</script>
+</body>
+</html>
