@@ -584,12 +584,18 @@
       populateFilters();
       applyFilters();
       renderSidebar();
-      renderCharts();
 
       document.getElementById('filterBar').style.display = 'flex';
       document.getElementById('sidebar').style.display   = 'flex';
-      document.getElementById('chartsRow').style.display = 'grid';
       document.getElementById('initMsg')?.remove();
+
+      // Charts are optional — don't let a failure here break the data display
+      try {
+        renderCharts();
+        document.getElementById('chartsRow').style.display = 'grid';
+      } catch (chartErr) {
+        console.warn('Charts unavailable:', chartErr.message);
+      }
 
     } catch (err) {
       document.getElementById('tableArea').innerHTML = `
