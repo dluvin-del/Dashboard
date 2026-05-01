@@ -1,34 +1,30 @@
 require('dotenv').config();
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const SHEET_ID = process.env.SHEET_ID || '1HWfIjPqARGR8UqUEtKlO5YZ_9_QyE6vjcSU4P4Fd3rM';
 const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
+const PUBLIC_DIR = path.join(__dirname, 'public');
 
-app.use(express.static(path.join(__dirname, 'public')));
-
-const fs = require('fs');
-// Serve logo regardless of file extension case
-app.get('/logo.:ext', (req, res) => {
-  const exts = [req.params.ext, req.params.ext.toUpperCase(), req.params.ext.toLowerCase()];
-  for (const ext of exts) {
-    const file = path.join(__dirname, 'public', `logo.${ext}`);
-    if (fs.existsSync(file)) return res.sendFile(file);
-  }
-  res.status(404).send('Logo not found');
+// Find logo file with any extension/capitalisation before static middleware runs
+app.get('/logo', (req, res) => {
+  const files = fs.readdirSync(PUBLIC_DIR);
+  const logo = files.find(f => /^logo\./i.test(f));
+  if (logo) return res.sendFile(path.join(PUBLIC_DIR, logo));
+  res.status(404).send('Logo not found — place a logo.png in the public/ folder');
 });
+
+app.use(express.static(PUBLIC_DIR));
 
 async function fetchViaGviz() {
   const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
-  const res = await fetch(url, {
-    headers: { 'User-Agent': 'Mozilla/5.0' }
-  });
+  const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
   if (!res.ok) throw new Error(`Google Sheets returned ${res.status}. Ensure the sheet is shared with "Anyone with the link can view".`);
 
   const text = await res.text();
-  // Strip JSONP wrapper: /*O_o*/google.visualization.Query.setResponse({...});
   const match = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);?\s*$/);
   if (!match) throw new Error('Unexpected response format from Google Sheets.');
 
@@ -60,29 +56,55 @@ async function fetchViaSheetsAPI() {
   };
 }
 
+function buildRecords(headers, rows) {
+  return rows.map(row => {
+    const record = {};
+    headers.forEach((h, i) => { record[h] = row[i] ?? ''; });
+    return record;
+  });
+}
+
 app.get('/api/data', async (req, res) => {
   try {
     const { headers, rows } = GOOGLE_API_KEY
       ? await fetchViaSheetsAPI()
       : await fetchViaGviz();
 
-    const records = rows
-      .map(row => {
-        const record = {};
-        headers.forEach((h, i) => { record[h] = row[i] ?? ''; });
-        return record;
-      })
-      // Keep only rows with at least 3 non-empty fields (excludes pre-allocated placeholder rows)
-      .filter(r => Object.values(r).filter(v => String(v).trim()).length >= 3);
+    const all = buildRecords(headers, rows);
+
+    // Only count rows that have a date (col 0) AND a customer (col 3) — by position, not name
+    const active = all.filter(r => {
+      const vals = Object.values(r);
+      return vals[0]?.trim() && vals[3]?.trim();
+    });
 
     res.json({
       headers,
-      rows: records,
-      total: records.length,
+      rows: active,
+      total: active.length,
       fetched: new Date().toISOString()
     });
   } catch (err) {
     console.error('[api/data]', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Debug endpoint — visit http://localhost:3000/api/debug to inspect raw data
+app.get('/api/debug', async (req, res) => {
+  try {
+    const { headers, rows } = GOOGLE_API_KEY
+      ? await fetchViaSheetsAPI()
+      : await fetchViaGviz();
+    const all = buildRecords(headers, rows);
+    res.json({
+      headers,
+      totalRawRows: rows.length,
+      first5: all.slice(0, 5),
+      last5: all.slice(-5),
+      publicFiles: fs.readdirSync(PUBLIC_DIR)
+    });
+  } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
