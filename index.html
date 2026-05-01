@@ -40,7 +40,7 @@
       font-size: 14px;
     }
 
-    /* ── Header ─────────────────────────────── */
+    /* ── Header ────────────────────────────────────────── */
     header {
       background: var(--navy);
       color: #fff;
@@ -75,7 +75,7 @@
     .spin { animation: spin .9s linear infinite; display: inline-block; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── Dashboard nav bar ───────────────────── */
+    /* ── Dashboard nav bar ──────────────────────────────────── */
     .dash-chrome {
       background: #152b47;
       border-bottom: 1px solid rgba(255,255,255,.08);
@@ -144,15 +144,15 @@
     .progress-bar { height: 3px; background: rgba(255,255,255,.08); }
     .progress-fill { height: 100%; background: var(--blue); width: 0%; transition: width 1s linear; }
 
-    /* ── Panels ──────────────────────────────── */
+    /* ── Panels ──────────────────────────────────────────── */
     .panels { position: relative; }
     .panel { display: none; }
     .panel.active { display: block; }
 
-    /* ── Panel inner layout ──────────────────── */
+    /* ── Panel inner layout ──────────────────────────────────── */
     .panel-main { padding: 20px 24px; max-width: 1700px; margin: 0 auto; }
 
-    /* ── Stats ───────────────────────────────── */
+    /* ── Stats ─────────────────────────────────────────────── */
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -174,7 +174,7 @@
     }
     .stat-value { font-size: 2rem; font-weight: 800; color: var(--gray-900); line-height: 1; }
 
-    /* ── Charts row ──────────────────────────── */
+    /* ── Charts row ──────────────────────────────────────────── */
     .charts-row {
       display: grid; grid-template-columns: 2fr 1fr;
       gap: 16px; margin-bottom: 18px;
@@ -196,7 +196,7 @@
       letter-spacing: .07em; color: var(--gray-500); margin-bottom: 14px;
     }
 
-    /* ── Tech cards (analytics panel) ───────── */
+    /* ── Tech cards (analytics panel) ──────────────────────── */
     .tech-cards-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -229,11 +229,11 @@
     .tech-rate-bar { margin-top: 10px; height: 4px; background: var(--gray-200); border-radius: 2px; overflow: hidden; }
     .tech-rate-fill { height: 100%; background: var(--green); border-radius: 2px; }
 
-    /* ── Body grid (panel 0) ─────────────────── */
+    /* ── Body grid (panel 0) ─────────────────────────────────── */
     .body-grid { display: grid; grid-template-columns: 1fr 250px; gap: 18px; align-items: start; }
     @media (max-width: 1200px) { .body-grid { grid-template-columns: 1fr; } }
 
-    /* ── Filters ─────────────────────────────── */
+    /* ── Filters ─────────────────────────────────────────────── */
     .filters {
       background: var(--white); border-radius: var(--radius);
       padding: 14px 18px; box-shadow: var(--shadow);
@@ -251,7 +251,7 @@
     .fi-search { flex: 1; min-width: 200px; }
     .result-count { margin-left: auto; font-size: .82rem; color: var(--gray-500); padding-bottom: 7px; white-space: nowrap; }
 
-    /* ── Table ───────────────────────────────── */
+    /* ── Table ───────────────────────────────────────────────── */
     .table-wrap { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
     .tscroll { overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; font-size: .8rem; }
@@ -291,7 +291,7 @@
     }
     .photo-btn:hover { background: #ede9fe; }
 
-    /* ── Pagination ──────────────────────────── */
+    /* ── Pagination ──────────────────────────────────────────── */
     .table-footer {
       padding: 12px 16px; display: flex; justify-content: space-between;
       align-items: center; border-top: 1px solid var(--gray-200); background: var(--gray-50);
@@ -306,7 +306,7 @@
     .pb.active { background: var(--blue); color: #fff; border-color: var(--blue); font-weight: 700; }
     .pb:disabled { opacity: .4; cursor: not-allowed; }
 
-    /* ── Sidebar ─────────────────────────────── */
+    /* ── Sidebar ─────────────────────────────────────────────── */
     .sidebar { display: flex; flex-direction: column; gap: 14px; }
     .widget { background: var(--white); border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); }
     .widget-title { font-size: .68rem; font-weight: 800; text-transform: uppercase; letter-spacing: .07em; color: var(--gray-500); margin-bottom: 12px; }
@@ -322,7 +322,7 @@
     .recent-so { font-weight: 700; font-size: .8rem; color: var(--navy); }
     .recent-sub { font-size: .72rem; color: var(--gray-500); margin-top: 1px; }
 
-    /* ── Messages ────────────────────────────── */
+    /* ── Messages ──────────────────────────────────────────── */
     .msg-box {
       background: var(--white); border-radius: var(--radius);
       padding: 48px 24px; text-align: center; box-shadow: var(--shadow); color: var(--gray-500);
@@ -338,7 +338,7 @@
 </head>
 <body>
 
-<!-- ── Header ───────────────────────────────── -->
+<!-- ── Header ───────────────────────────────────────────── -->
 <header>
   <div class="header-brand">
     <div class="logo-wrap"><img src="logo.png" alt="American Irrigation" /></div>
@@ -361,13 +361,13 @@
   </div>
 </header>
 
-<!-- ── Dashboard nav / rotation controls ────── -->
+<!-- ── Dashboard nav / rotation controls ────────────── -->
 <div class="dash-chrome">
   <div class="dash-nav">
     <div class="dash-tabs">
       <button class="dash-tab active" onclick="selectPanel(0, true)">Service Orders</button>
       <button class="dash-tab"        onclick="selectPanel(1, true)">Analytics</button>
-      <button class="dash-tab"        onclick="selectPanel(2, true)">RBIA W/O</button>
+      <button class="dash-tab"        onclick="selectPanel(2, true)">RB W/O</button>
     </div>
     <div class="dash-controls">
       <select class="interval-select" id="intervalSel" onchange="setInterval_()">
@@ -383,10 +383,10 @@
   <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
 </div>
 
-<!-- ── Panels ────────────────────────────────── -->
+<!-- ── Panels ────────────────────────────────────────────── -->
 <div class="panels">
 
-<!-- ── Panel 0: Service Orders ───────────────── -->
+<!-- ── Panel 0: Service Orders ─────────────────────────── -->
 <div class="panel active" id="panel-0">
 <div class="panel-main">
 
@@ -406,6 +406,12 @@
     <div class="chart-card">
       <div class="chart-title">Invoiced vs Open</div>
       <div style="position:relative;height:200px"><canvas id="chartStatus"></canvas></div>
+    </div>
+  </div>
+  <div class="charts-row" id="amountChartsRow" style="display:none">
+    <div class="chart-card" style="grid-column:1/-1">
+      <div class="chart-title">Invoice Amount by Date</div>
+      <div style="position:relative;height:200px"><canvas id="chartAmount"></canvas></div>
     </div>
   </div>
 
@@ -453,7 +459,7 @@
 </div>
 </div>
 
-<!-- ── Panel 1: Analytics ─────────────────────── -->
+<!-- ── Panel 1: Analytics ─────────────────────────────────── -->
 <div class="panel" id="panel-1">
 <div class="panel-main">
 
@@ -481,7 +487,7 @@
 </div>
 </div>
 
-<!-- ── Panel 2: RBIA W/O ──────────────────────── -->
+<!-- ── Panel 2: RB W/O ─────────────────────────────────────── -->
 <div class="panel" id="panel-2">
 <div class="panel-main">
 
@@ -493,18 +499,18 @@
     <div class="stat-card c-purple"><div class="stat-label">Customers</div>    <div class="stat-value" id="r-sCustomers">—</div></div>
   </div>
 
-  <div class="charts-row" id="rbiaChartsRow" style="display:none">
+  <div class="charts-row" id="rbChartsRow" style="display:none">
     <div class="chart-card">
       <div class="chart-title">Jobs by Technician</div>
-      <div style="position:relative;height:220px"><canvas id="rbiaTechChart"></canvas></div>
+      <div style="position:relative;height:220px"><canvas id="rbTechChart"></canvas></div>
     </div>
     <div class="chart-card">
       <div class="chart-title">Invoiced vs Open</div>
-      <div style="position:relative;height:220px"><canvas id="rbiaStatusChart"></canvas></div>
+      <div style="position:relative;height:220px"><canvas id="rbStatusChart"></canvas></div>
     </div>
   </div>
 
-  <div class="filters" id="rbiaFilterBar" style="display:none">
+  <div class="filters" id="rbFilterBar" style="display:none">
     <div class="fg">
       <div class="fl">Search</div>
       <input type="search" class="fi fi-search" id="rSearch" placeholder="Search any field…" oninput="applyFilters2()" />
@@ -525,11 +531,11 @@
         <option value="pending">Pending</option>
       </select>
     </div>
-    <span class="result-count" id="rbiaResultCount"></span>
+    <span class="result-count" id="rbResultCount"></span>
   </div>
 
-  <div id="rbiaTableArea">
-    <div class="msg-box" id="rbiaInitMsg"><p><strong>Loading RBIA work orders…</strong></p></div>
+  <div id="rbTableArea">
+    <div class="msg-box" id="rbInitMsg"><p><strong>Loading RB work orders…</strong></p></div>
   </div>
 
 </div>
@@ -545,6 +551,7 @@
     DATE: 'M', SO: 'SERVICE ORDER #', INVOICE: 'INVOICE #',
     CUSTOMER: 'CUSTOMER', SITE: 'SITE NAME', JOB: 'JOB INFO',
     MAP: 'GOOGLE PIN LOCATION', TECH: 'TECH.', COMMENTS: 'COMMENTS',
+    AMOUNT: 'INVOICE AMOUNT',
   };
 
   const TABLE_COLS = [
@@ -555,7 +562,7 @@
     { key: C.MAP, label: 'Map', nosort: true },
   ];
 
-  // ── Config: Sheet 2 (RBIA W/O) ───────────────
+  // ── Config: Sheet 2 (RB W/O) ───────────
   const SHEET_ID_2   = '183p2yP9ViMqmJvGDH4YE0JB1EhocuPUt3PFCpr5_zyg';
   const SHEET_NAME_2 = 'rbia w/o';
 
@@ -586,11 +593,11 @@
   let allRows2 = [], filtered2 = [], sortKey2 = C2.ORDER, sortDir2 = 'asc', page2 = 1;
 
   // Chart.js ready flag
-  let chartJsReady = false, chartsNeedRender = false, rbiaNeedRender = false;
-  let chartDate = null, chartStatus = null, chartTech = null, chartCust = null;
-  let rbiaTechChart = null, rbiaStatusChart = null;
+  let chartJsReady = false, chartsNeedRender = false, rbNeedRender = false;
+  let chartDate = null, chartStatus = null, chartTech = null, chartCust = null, chartAmount = null;
+  let rbTechChart = null, rbStatusChart = null;
 
-  // ── Rotation ─────────────────────────────────
+  // ── Rotation ───────────────────────────────────────────
   const NUM_PANELS = 3;
   let currentPanel = 0;
   let autoRotate   = true;
@@ -651,7 +658,7 @@
     if (autoRotate) startRotation();
   }
 
-  // ── Sheet fetch helpers ──────────────────────
+  // ── Sheet fetch helpers ────────────────────────────
   async function fetchGviz(sheetId, sheetName) {
     let url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
     if (sheetName) url += `&sheet=${encodeURIComponent(sheetName)}`;
@@ -670,7 +677,7 @@
     });
   }
 
-  // ── Load all sheets ──────────────────────────
+  // ── Load all sheets ──────────────────────────────
   async function loadAll() {
     const btn = document.getElementById('refreshBtn');
     const icon = document.getElementById('refreshIcon');
@@ -683,7 +690,7 @@
     startRotation();
   }
 
-  // ── Sheet 1: Service Orders ──────────────────
+  // ── Sheet 1: Service Orders ──────────────────────────
   async function loadData(standalone = true) {
     if (standalone) {
       const btn = document.getElementById('refreshBtn');
@@ -698,7 +705,7 @@
       document.getElementById('sidebar').style.display   = 'flex';
       document.getElementById('initMsg')?.remove();
       renderAnalytics();
-      if (chartJsReady) { renderCharts(); document.getElementById('chartsRow').style.display = 'grid'; }
+      if (chartJsReady) { renderCharts(); document.getElementById('chartsRow').style.display = 'grid'; document.getElementById('amountChartsRow').style.display = 'grid'; }
       else chartsNeedRender = true;
     } catch (err) {
       document.getElementById('tableArea').innerHTML = `
@@ -719,20 +726,20 @@
     }
   }
 
-  // ── Sheet 2: RBIA W/O ────────────────────────
+  // ── Sheet 2: RB W/O ────────────────────────────────
   async function loadData2(standalone = true) {
     try {
       const all = await fetchGviz(SHEET_ID_2, SHEET_NAME_2);
       allRows2 = all.filter(r => r[C2.CUSTOMER]?.trim());
       updateStats2(); populateFilters2(); applyFilters2();
-      document.getElementById('rbiaFilterBar').style.display = 'flex';
-      document.getElementById('rbiaInitMsg')?.remove();
-      if (chartJsReady) { renderRbiaCharts(); document.getElementById('rbiaChartsRow').style.display = 'grid'; }
-      else rbiaNeedRender = true;
+      document.getElementById('rbFilterBar').style.display = 'flex';
+      document.getElementById('rbInitMsg')?.remove();
+      if (chartJsReady) { renderRbCharts(); document.getElementById('rbChartsRow').style.display = 'grid'; }
+      else rbNeedRender = true;
     } catch (err) {
-      document.getElementById('rbiaTableArea').innerHTML = `
+      document.getElementById('rbTableArea').innerHTML = `
         <div class="msg-box msg-error">
-          <p><strong>Failed to load RBIA work orders</strong></p>
+          <p><strong>Failed to load RB work orders</strong></p>
           <div class="err-detail">${esc(err.message)}</div>
           <p class="err-hint">Make sure the sheet is shared as <strong>"Anyone with the link can view"</strong> and the tab is named <strong>"rbia w/o"</strong>.</p>
         </div>`;
@@ -742,18 +749,18 @@
   function onChartJsLoad() {
     chartJsReady = true;
     if (chartsNeedRender && allRows.length) {
-      try { renderCharts(); document.getElementById('chartsRow').style.display = 'grid'; }
+      try { renderCharts(); document.getElementById('chartsRow').style.display = 'grid'; document.getElementById('amountChartsRow').style.display = 'grid'; }
       catch(e) { console.warn('Charts:', e.message); }
       chartsNeedRender = false;
     }
-    if (rbiaNeedRender && allRows2.length) {
-      try { renderRbiaCharts(); document.getElementById('rbiaChartsRow').style.display = 'grid'; }
-      catch(e) { console.warn('RBIA Charts:', e.message); }
-      rbiaNeedRender = false;
+    if (rbNeedRender && allRows2.length) {
+      try { renderRbCharts(); document.getElementById('rbChartsRow').style.display = 'grid'; }
+      catch(e) { console.warn('RB Charts:', e.message); }
+      rbNeedRender = false;
     }
   }
 
-  // ── Stats: Sheet 1 ───────────────────────────
+  // ── Stats: Sheet 1 ─────────────────────────────────────────
   function updateStats() {
     const inv   = allRows.filter(r => r[C.INVOICE]?.trim());
     const techs = new Set(allRows.map(r => r[C.TECH]?.trim()).filter(Boolean));
@@ -763,7 +770,7 @@
     ['a-sTotal','a-sInvoiced','a-sPending','a-sTechs','a-sCustomers'].forEach((id, i) => { document.getElementById(id).textContent = vals[i]; });
   }
 
-  // ── Stats: Sheet 2 ───────────────────────────
+  // ── Stats: Sheet 2 ─────────────────────────────────────────
   function updateStats2() {
     const inv   = allRows2.filter(r => r[C2.INVOICE]?.trim());
     const techs = new Set(allRows2.map(r => r[C2.TECH]?.trim()).filter(Boolean));
@@ -772,7 +779,7 @@
     ['r-sTotal','r-sInvoiced','r-sPending','r-sTechs','r-sCustomers'].forEach((id, i) => { document.getElementById(id).textContent = vals[i]; });
   }
 
-  // ── Filters: Sheet 1 ─────────────────────────
+  // ── Filters: Sheet 1 ─────────────────────────────────────────
   function populateFilters() {
     fillSel('qTech',     uniq(allRows.map(r => r[C.TECH]?.trim())).sort(),     'All Techs');
     fillSel('qCustomer', uniq(allRows.map(r => r[C.CUSTOMER]?.trim())).sort(), 'All Customers');
@@ -797,7 +804,7 @@
     page = 1; renderTable();
   }
 
-  // ── Filters: Sheet 2 ─────────────────────────
+  // ── Filters: Sheet 2 ─────────────────────────────────────────
   function populateFilters2() {
     fillSel('rTech',     uniq(allRows2.map(r => r[C2.TECH]?.trim())).sort(),     'All Techs');
     fillSel('rCustomer', uniq(allRows2.map(r => r[C2.CUSTOMER]?.trim())).sort(), 'All Customers');
@@ -822,7 +829,7 @@
     page2 = 1; renderTable2();
   }
 
-  // ── Table helpers ────────────────────────────
+  // ── Table helpers ──────────────────────────────────────────
   function fillSel(id, items, ph) {
     document.getElementById(id).innerHTML = `<option value="">${ph}</option>` +
       items.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
@@ -837,7 +844,7 @@
     return out.join('');
   }
 
-  // ── Table: Sheet 1 ───────────────────────────
+  // ── Table: Sheet 1 ───────────────────────────────────────────
   function renderTable() {
     const total = filtered.length;
     document.getElementById('resultCount').textContent =
@@ -872,12 +879,12 @@
   function goPage(p) { const max=Math.ceil(filtered.length/PAGE_SIZE); if(p<1||p>max)return; page=p; renderTable(); window.scrollTo({top:0,behavior:'smooth'}); }
   function sortBy(key) { sortDir=(sortKey===key&&sortDir==='asc')?'desc':'asc'; sortKey=key; applyFilters(); }
 
-  // ── Table: Sheet 2 ───────────────────────────
+  // ── Table: Sheet 2 ───────────────────────────────────────────
   function renderTable2() {
     const total = filtered2.length;
-    document.getElementById('rbiaResultCount').textContent =
+    document.getElementById('rbResultCount').textContent =
       total === allRows2.length ? `${total} jobs` : `${total} of ${allRows2.length}`;
-    if (!total) { document.getElementById('rbiaTableArea').innerHTML = '<div class="msg-box"><p>No jobs match the current filters.</p></div>'; return; }
+    if (!total) { document.getElementById('rbTableArea').innerHTML = '<div class="msg-box"><p>No jobs match the current filters.</p></div>'; return; }
     const start = (page2-1)*PAGE_SIZE, slice = filtered2.slice(start, start+PAGE_SIZE), pages = Math.ceil(total/PAGE_SIZE);
     const thead = TABLE_COLS_2.map(c =>
       `<th class="${sortKey2===c.key?sortDir2:''}" ${c.nosort?'':` onclick="sortBy2('${c.key}')"`}>${c.label}</th>`
@@ -896,7 +903,7 @@
         <td>${photoLink(row[C2.PHOTO])}</td>
       </tr>`;
     }).join('');
-    document.getElementById('rbiaTableArea').innerHTML = `
+    document.getElementById('rbTableArea').innerHTML = `
       <div class="table-wrap"><div class="tscroll">
         <table><thead><tr>${thead}</tr></thead><tbody>${tbody}</tbody></table>
       </div>
@@ -908,7 +915,7 @@
   function goPage2(p) { const max=Math.ceil(filtered2.length/PAGE_SIZE); if(p<1||p>max)return; page2=p; renderTable2(); window.scrollTo({top:0,behavior:'smooth'}); }
   function sortBy2(key) { sortDir2=(sortKey2===key&&sortDir2==='asc')?'desc':'asc'; sortKey2=key; applyFilters2(); }
 
-  // ── Sidebar ──────────────────────────────────
+  // ── Sidebar ──────────────────────────────────────────────────
   function renderSidebar() {
     const counts={};
     allRows.forEach(r=>{ const t=r[C.TECH]?.trim(); if(t) counts[t]=(counts[t]||0)+1; });
@@ -927,7 +934,7 @@
       </div>`).join('');
   }
 
-  // ── Analytics panel (Panel 1) ────────────────
+  // ── Analytics panel (Panel 1) ────────────────────────────
   function renderAnalytics() {
     const techData = {};
     allRows.forEach(r => {
@@ -1002,11 +1009,24 @@
     document.getElementById('analyticsCharts').style.display = 'grid';
   }
 
-  // ── Panel 0 charts ───────────────────────────
+  // ── Panel 0 charts ───────────────────────────────────────────
   function normalizeDate(raw) {
     if (!raw) return null;
     const parts = raw.trim().replace(/-/g,'/').split('/').map(Number).filter(n=>!isNaN(n));
     return parts.length>=2 ? `${parts[0]}/${parts[1]}` : raw.trim();
+  }
+
+  function makeBarLabelPlugin(fmt) {
+    return { id:'barLabels', afterDatasetsDraw(chart) {
+      const{ctx,data}=chart;
+      chart.getDatasetMeta(0).data.forEach((bar,i)=>{
+        const val=data.datasets[0].data[i]; if(!val) return;
+        const label=fmt?fmt(val):val;
+        ctx.save(); ctx.fillStyle='#334155'; ctx.font='bold 10px sans-serif';
+        ctx.textAlign='center'; ctx.textBaseline='bottom';
+        ctx.fillText(label, bar.x, bar.y-2); ctx.restore();
+      });
+    }};
   }
 
   function makePctPlugin(totalRef) {
@@ -1034,6 +1054,7 @@
     if(chartDate) chartDate.destroy();
     chartDate=new Chart(document.getElementById('chartDate'),{
       type:'bar',
+      plugins:[makeBarLabelPlugin()],
       data:{labels,datasets:[{label:'Jobs',data:labels.map(l=>dateCounts[l]),backgroundColor:'#2563eb',borderRadius:4,borderSkipped:false}]},
       options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
         scales:{x:{grid:{display:false},ticks:{font:{size:10},maxRotation:45}},y:{beginAtZero:true,ticks:{stepSize:1,font:{size:10}},grid:{color:'#f1f5f9'}}}}
@@ -1049,17 +1070,41 @@
           tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${ctx.parsed} (${Math.round(ctx.parsed/(inv+open)*100)}%)`}}}}
     });
 
+    const amountByDate={};
+    allRows.forEach(r=>{
+      const d=normalizeDate(r[C.DATE]); if(!d) return;
+      const raw=String(r[C.AMOUNT]||'').replace(/[$,\s]/g,'');
+      const n=parseFloat(raw); if(!isNaN(n)&&n>0) amountByDate[d]=(amountByDate[d]||0)+n;
+    });
+    const aLabels=Object.keys(amountByDate).sort((a,b)=>{
+      const[am,ad]=a.split('/').map(Number),[bm,bd]=b.split('/').map(Number);
+      return am!==bm?am-bm:ad-bd;
+    });
+    if(chartAmount) chartAmount.destroy();
+    chartAmount=new Chart(document.getElementById('chartAmount'),{
+      type:'bar',
+      plugins:[makeBarLabelPlugin(v=>v>=1000?'$'+(v/1000).toFixed(1)+'K':'$'+v.toFixed(0))],
+      data:{labels:aLabels,datasets:[{label:'Invoice Amount',data:aLabels.map(l=>+amountByDate[l].toFixed(2)),backgroundColor:'#16a34a',borderRadius:4,borderSkipped:false}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+        scales:{
+          x:{grid:{display:false},ticks:{font:{size:10},maxRotation:45}},
+          y:{beginAtZero:true,ticks:{font:{size:10},callback:v=>'$'+v.toLocaleString()},grid:{color:'#f1f5f9'}}
+        },
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' $'+ctx.parsed.y.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}}}
+      }
+    });
+
     renderAnalyticsCharts();
   }
 
-  // ── RBIA charts ──────────────────────────────
-  function renderRbiaCharts() {
+  // ── RB charts ────────────────────────────────────────────────
+  function renderRbCharts() {
     const techCounts = {};
     allRows2.forEach(r => { const t=r[C2.TECH]?.trim(); if(t) techCounts[t]=(techCounts[t]||0)+1; });
     const techSorted = Object.entries(techCounts).sort((a,b)=>b[1]-a[1]).slice(0,15);
 
-    if (rbiaTechChart) rbiaTechChart.destroy();
-    rbiaTechChart = new Chart(document.getElementById('rbiaTechChart'), {
+    if (rbTechChart) rbTechChart.destroy();
+    rbTechChart = new Chart(document.getElementById('rbTechChart'), {
       type: 'bar',
       data: {
         labels: techSorted.map(([t])=>t),
@@ -1076,8 +1121,8 @@
     });
 
     const inv = allRows2.filter(r=>r[C2.INVOICE]?.trim()).length, open = allRows2.length - inv;
-    if (rbiaStatusChart) rbiaStatusChart.destroy();
-    rbiaStatusChart = new Chart(document.getElementById('rbiaStatusChart'), {
+    if (rbStatusChart) rbStatusChart.destroy();
+    rbStatusChart = new Chart(document.getElementById('rbStatusChart'), {
       type: 'doughnut', plugins:[makePctPlugin()],
       data:{labels:['Invoiced','Open'],datasets:[{data:[inv,open],backgroundColor:['#16a34a','#f59e0b'],borderWidth:2,borderColor:'#fff',hoverOffset:6}]},
       options:{responsive:true,maintainAspectRatio:false,cutout:'62%',
@@ -1085,10 +1130,10 @@
           tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${ctx.parsed} (${Math.round(ctx.parsed/(inv+open)*100)}%)`}}}}
     });
 
-    document.getElementById('rbiaChartsRow').style.display = 'grid';
+    document.getElementById('rbChartsRow').style.display = 'grid';
   }
 
-  // ── Helpers ──────────────────────────────────
+  // ── Helpers ──────────────────────────────────────────────────
   function mapLink(val) {
     val=(val||'').trim(); if(!val) return '';
     const href=val.startsWith('http')?val:`https://www.google.com/maps?q=${encodeURIComponent(val)}`;
