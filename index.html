@@ -283,6 +283,13 @@
       text-decoration: none; white-space: nowrap;
     }
     .map-btn:hover { background: #bfdbfe; }
+    .photo-btn {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 9px; background: #f3e8ff; color: #7c3aed;
+      border-radius: 4px; font-size: .72rem; font-weight: 600;
+      text-decoration: none; white-space: nowrap;
+    }
+    .photo-btn:hover { background: #ede9fe; }
 
     /* ── Pagination ──────────────────────────── */
     .table-footer {
@@ -343,7 +350,7 @@
   </div>
   <div class="header-right">
     <span id="lastUpdated">Not loaded</span>
-    <button class="btn btn-primary" id="refreshBtn" onclick="loadData()">
+    <button class="btn btn-primary" id="refreshBtn" onclick="loadAll()">
       <svg id="refreshIcon" width="14" height="14" viewBox="0 0 24 24" fill="none"
            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <polyline points="23 4 23 10 17 10"></polyline>
@@ -360,6 +367,7 @@
     <div class="dash-tabs">
       <button class="dash-tab active" onclick="selectPanel(0, true)">Service Orders</button>
       <button class="dash-tab"        onclick="selectPanel(1, true)">Analytics</button>
+      <button class="dash-tab"        onclick="selectPanel(2, true)">RBIA W/O</button>
     </div>
     <div class="dash-controls">
       <select class="interval-select" id="intervalSel" onchange="setInterval_()">
@@ -375,8 +383,10 @@
   <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
 </div>
 
-<!-- ── Panel 0: Service Orders ───────────────── -->
+<!-- ── Panels ────────────────────────────────── -->
 <div class="panels">
+
+<!-- ── Panel 0: Service Orders ───────────────── -->
 <div class="panel active" id="panel-0">
 <div class="panel-main">
 
@@ -470,10 +480,65 @@
 
 </div>
 </div>
+
+<!-- ── Panel 2: RBIA W/O ──────────────────────── -->
+<div class="panel" id="panel-2">
+<div class="panel-main">
+
+  <div class="stats-grid">
+    <div class="stat-card c-blue">  <div class="stat-label">Total Jobs</div>  <div class="stat-value" id="r-sTotal">—</div></div>
+    <div class="stat-card c-green"> <div class="stat-label">Invoiced</div>     <div class="stat-value" id="r-sInvoiced">—</div></div>
+    <div class="stat-card c-amber"> <div class="stat-label">Pending</div>      <div class="stat-value" id="r-sPending">—</div></div>
+    <div class="stat-card c-navy">  <div class="stat-label">Technicians</div>  <div class="stat-value" id="r-sTechs">—</div></div>
+    <div class="stat-card c-purple"><div class="stat-label">Customers</div>    <div class="stat-value" id="r-sCustomers">—</div></div>
+  </div>
+
+  <div class="charts-row" id="rbiaChartsRow" style="display:none">
+    <div class="chart-card">
+      <div class="chart-title">Jobs by Technician</div>
+      <div style="position:relative;height:220px"><canvas id="rbiaTechChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Invoiced vs Open</div>
+      <div style="position:relative;height:220px"><canvas id="rbiaStatusChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="filters" id="rbiaFilterBar" style="display:none">
+    <div class="fg">
+      <div class="fl">Search</div>
+      <input type="search" class="fi fi-search" id="rSearch" placeholder="Search any field…" oninput="applyFilters2()" />
+    </div>
+    <div class="fg">
+      <div class="fl">Technician</div>
+      <select class="fs" id="rTech" onchange="applyFilters2()"><option value="">All Techs</option></select>
+    </div>
+    <div class="fg">
+      <div class="fl">Customer</div>
+      <select class="fs" id="rCustomer" onchange="applyFilters2()"><option value="">All Customers</option></select>
+    </div>
+    <div class="fg">
+      <div class="fl">Status</div>
+      <select class="fs" id="rStatus" onchange="applyFilters2()">
+        <option value="">All</option>
+        <option value="invoiced">Invoiced</option>
+        <option value="pending">Pending</option>
+      </select>
+    </div>
+    <span class="result-count" id="rbiaResultCount"></span>
+  </div>
+
+  <div id="rbiaTableArea">
+    <div class="msg-box" id="rbiaInitMsg"><p><strong>Loading RBIA work orders…</strong></p></div>
+  </div>
+
+</div>
+</div>
+
 </div><!-- /panels -->
 
 <script>
-  // ── Config ───────────────────────────────────
+  // ── Config: Sheet 1 (Service Orders) ─────────
   const SHEET_ID = '1HWfIjPqARGR8UqUEtKlO5YZ_9_QyE6vjcSU4P4Fd3rM';
 
   const C = {
@@ -490,13 +555,43 @@
     { key: C.MAP, label: 'Map', nosort: true },
   ];
 
+  // ── Config: Sheet 2 (RBIA W/O) ───────────────
+  const SHEET_ID_2   = '183p2yP9ViMqmJvGDH4YE0JB1EhocuPUt3PFCpr5_zyg';
+  const SHEET_NAME_2 = 'rbia w/o';
+
+  const C2 = {
+    DISC: 'DISC', CUSTOMER: 'CUSTOMER', SITE: 'SITE',
+    ORDER: 'ORDER #', JOB_LOC: 'JOB LOCATION', EST: 'EST. #',
+    PHOTO: 'PHOTO', TECH: 'TECH.', INVOICE: 'INVOICE #',
+  };
+
+  const TABLE_COLS_2 = [
+    { key: C2.ORDER,   label: 'Order #'  },
+    { key: C2.INVOICE, label: 'Invoice #'},
+    { key: C2.DISC,    label: 'Disc'     },
+    { key: C2.CUSTOMER,label: 'Customer' },
+    { key: C2.SITE,    label: 'Site'     },
+    { key: C2.JOB_LOC, label: 'Location', nosort: true },
+    { key: C2.EST,     label: 'Est. #'   },
+    { key: C2.TECH,    label: 'Tech'     },
+    { key: C2.PHOTO,   label: 'Photo',    nosort: true },
+  ];
+
   const PAGE_SIZE = 50;
+
+  // Sheet 1 state
   let allRows = [], filtered = [], sortKey = C.SO, sortDir = 'asc', page = 1;
-  let chartJsReady = false, chartsNeedRender = false;
+
+  // Sheet 2 state
+  let allRows2 = [], filtered2 = [], sortKey2 = C2.ORDER, sortDir2 = 'asc', page2 = 1;
+
+  // Chart.js ready flag
+  let chartJsReady = false, chartsNeedRender = false, rbiaNeedRender = false;
   let chartDate = null, chartStatus = null, chartTech = null, chartCust = null;
+  let rbiaTechChart = null, rbiaStatusChart = null;
 
   // ── Rotation ─────────────────────────────────
-  const NUM_PANELS = 2;
+  const NUM_PANELS = 3;
   let currentPanel = 0;
   let autoRotate   = true;
   let rotateIntervalSec = 300;
@@ -512,7 +607,6 @@
       stopRotation();
       progressStart = Date.now();
       updateProgress();
-      // Resume auto-rotation after 30s of manual inactivity
       rotateTimer = setTimeout(() => startRotation(), 30000);
     }
   }
@@ -557,9 +651,10 @@
     if (autoRotate) startRotation();
   }
 
-  // ── Sheet fetch ──────────────────────────────
-  async function fetchSheet() {
-    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
+  // ── Sheet fetch helpers ──────────────────────
+  async function fetchGviz(sheetId, sheetName) {
+    let url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
+    if (sheetName) url += `&sheet=${encodeURIComponent(sheetName)}`;
     const res = await fetch(url);
     if (!res.ok) throw new Error(`Google Sheets returned ${res.status}.\nEnsure the sheet is shared as "Anyone with the link can view".`);
     const text = await res.text();
@@ -570,22 +665,34 @@
     const rows = (table.rows || [])
       .map(row => (row.c || []).map(cell => (!cell || cell.v == null) ? '' : (cell.f ?? String(cell.v))))
       .filter(row => row.some(c => c.trim()));
-    const all = rows.map(row => {
+    return rows.map(row => {
       const r = {}; headers.forEach((h, i) => { r[h] = row[i] ?? ''; }); return r;
     });
-    return all.filter(r => r[C.DATE]?.trim() && r[C.CUSTOMER]?.trim());
   }
 
-  // ── Load / refresh ───────────────────────────
-  async function loadData() {
+  // ── Load all sheets ──────────────────────────
+  async function loadAll() {
     const btn = document.getElementById('refreshBtn');
     const icon = document.getElementById('refreshIcon');
     btn.disabled = true; icon.classList.add('spin');
+    const d = new Date();
+    await Promise.allSettled([loadData(false), loadData2(false)]);
+    document.getElementById('lastUpdated').textContent =
+      `Updated ${d.toLocaleDateString()} ${d.toLocaleTimeString()}`;
+    btn.disabled = false; icon.classList.remove('spin');
+    startRotation();
+  }
+
+  // ── Sheet 1: Service Orders ──────────────────
+  async function loadData(standalone = true) {
+    if (standalone) {
+      const btn = document.getElementById('refreshBtn');
+      const icon = document.getElementById('refreshIcon');
+      btn.disabled = true; icon.classList.add('spin');
+    }
     try {
-      allRows = await fetchSheet();
-      const d = new Date();
-      document.getElementById('lastUpdated').textContent =
-        `Updated ${d.toLocaleDateString()} ${d.toLocaleTimeString()}`;
+      const all = await fetchGviz(SHEET_ID);
+      allRows = all.filter(r => r[C.DATE]?.trim() && r[C.CUSTOMER]?.trim());
       updateStats(); populateFilters(); applyFilters(); renderSidebar();
       document.getElementById('filterBar').style.display = 'flex';
       document.getElementById('sidebar').style.display   = 'flex';
@@ -593,15 +700,43 @@
       renderAnalytics();
       if (chartJsReady) { renderCharts(); document.getElementById('chartsRow').style.display = 'grid'; }
       else chartsNeedRender = true;
-      startRotation();
     } catch (err) {
       document.getElementById('tableArea').innerHTML = `
         <div class="msg-box msg-error">
-          <p><strong>Failed to load data</strong></p>
+          <p><strong>Failed to load service orders</strong></p>
           <div class="err-detail">${esc(err.message)}</div>
           <p class="err-hint">Make sure the sheet is shared as <strong>"Anyone with the link can view"</strong>.</p>
         </div>`;
-    } finally { btn.disabled = false; icon.classList.remove('spin'); }
+    } finally {
+      if (standalone) {
+        const d = new Date();
+        document.getElementById('lastUpdated').textContent =
+          `Updated ${d.toLocaleDateString()} ${d.toLocaleTimeString()}`;
+        document.getElementById('refreshBtn').disabled = false;
+        document.getElementById('refreshIcon').classList.remove('spin');
+        startRotation();
+      }
+    }
+  }
+
+  // ── Sheet 2: RBIA W/O ────────────────────────
+  async function loadData2(standalone = true) {
+    try {
+      const all = await fetchGviz(SHEET_ID_2, SHEET_NAME_2);
+      allRows2 = all.filter(r => r[C2.CUSTOMER]?.trim());
+      updateStats2(); populateFilters2(); applyFilters2();
+      document.getElementById('rbiaFilterBar').style.display = 'flex';
+      document.getElementById('rbiaInitMsg')?.remove();
+      if (chartJsReady) { renderRbiaCharts(); document.getElementById('rbiaChartsRow').style.display = 'grid'; }
+      else rbiaNeedRender = true;
+    } catch (err) {
+      document.getElementById('rbiaTableArea').innerHTML = `
+        <div class="msg-box msg-error">
+          <p><strong>Failed to load RBIA work orders</strong></p>
+          <div class="err-detail">${esc(err.message)}</div>
+          <p class="err-hint">Make sure the sheet is shared as <strong>"Anyone with the link can view"</strong> and the tab is named <strong>"rbia w/o"</strong>.</p>
+        </div>`;
+    }
   }
 
   function onChartJsLoad() {
@@ -611,28 +746,36 @@
       catch(e) { console.warn('Charts:', e.message); }
       chartsNeedRender = false;
     }
+    if (rbiaNeedRender && allRows2.length) {
+      try { renderRbiaCharts(); document.getElementById('rbiaChartsRow').style.display = 'grid'; }
+      catch(e) { console.warn('RBIA Charts:', e.message); }
+      rbiaNeedRender = false;
+    }
   }
 
-  // ── Stats ────────────────────────────────────
+  // ── Stats: Sheet 1 ───────────────────────────
   function updateStats() {
     const inv   = allRows.filter(r => r[C.INVOICE]?.trim());
     const techs = new Set(allRows.map(r => r[C.TECH]?.trim()).filter(Boolean));
     const custs = new Set(allRows.map(r => r[C.CUSTOMER]?.trim()).filter(Boolean));
     const vals = [allRows.length, inv.length, allRows.length - inv.length, techs.size, custs.size];
-    const ids0 = ['sTotal','sInvoiced','sPending','sTechs','sCustomers'];
-    const ids1 = ['a-sTotal','a-sInvoiced','a-sPending','a-sTechs','a-sCustomers'];
-    ids0.forEach((id, i) => document.getElementById(id).textContent = vals[i]);
-    ids1.forEach((id, i) => document.getElementById(id).textContent = vals[i]);
+    ['sTotal','sInvoiced','sPending','sTechs','sCustomers'].forEach((id, i) => { document.getElementById(id).textContent = vals[i]; });
+    ['a-sTotal','a-sInvoiced','a-sPending','a-sTechs','a-sCustomers'].forEach((id, i) => { document.getElementById(id).textContent = vals[i]; });
   }
 
-  // ── Filters ──────────────────────────────────
+  // ── Stats: Sheet 2 ───────────────────────────
+  function updateStats2() {
+    const inv   = allRows2.filter(r => r[C2.INVOICE]?.trim());
+    const techs = new Set(allRows2.map(r => r[C2.TECH]?.trim()).filter(Boolean));
+    const custs = new Set(allRows2.map(r => r[C2.CUSTOMER]?.trim()).filter(Boolean));
+    const vals = [allRows2.length, inv.length, allRows2.length - inv.length, techs.size, custs.size];
+    ['r-sTotal','r-sInvoiced','r-sPending','r-sTechs','r-sCustomers'].forEach((id, i) => { document.getElementById(id).textContent = vals[i]; });
+  }
+
+  // ── Filters: Sheet 1 ─────────────────────────
   function populateFilters() {
     fillSel('qTech',     uniq(allRows.map(r => r[C.TECH]?.trim())).sort(),     'All Techs');
     fillSel('qCustomer', uniq(allRows.map(r => r[C.CUSTOMER]?.trim())).sort(), 'All Customers');
-  }
-  function fillSel(id, items, ph) {
-    document.getElementById(id).innerHTML = `<option value="">${ph}</option>` +
-      items.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
   }
   function applyFilters() {
     const q = document.getElementById('qSearch').value.toLowerCase();
@@ -654,7 +797,47 @@
     page = 1; renderTable();
   }
 
-  // ── Table ────────────────────────────────────
+  // ── Filters: Sheet 2 ─────────────────────────
+  function populateFilters2() {
+    fillSel('rTech',     uniq(allRows2.map(r => r[C2.TECH]?.trim())).sort(),     'All Techs');
+    fillSel('rCustomer', uniq(allRows2.map(r => r[C2.CUSTOMER]?.trim())).sort(), 'All Customers');
+  }
+  function applyFilters2() {
+    const q = document.getElementById('rSearch').value.toLowerCase();
+    const tech = document.getElementById('rTech').value;
+    const cust = document.getElementById('rCustomer').value;
+    const status = document.getElementById('rStatus').value;
+    filtered2 = allRows2.filter(row => {
+      if (tech   && row[C2.TECH]?.trim()     !== tech) return false;
+      if (cust   && row[C2.CUSTOMER]?.trim() !== cust) return false;
+      if (status === 'invoiced' && !row[C2.INVOICE]?.trim()) return false;
+      if (status === 'pending'  &&  row[C2.INVOICE]?.trim()) return false;
+      if (q && !Object.values(row).join(' ').toLowerCase().includes(q)) return false;
+      return true;
+    });
+    filtered2.sort((a, b) => {
+      const cmp = (a[sortKey2]||'').localeCompare(b[sortKey2]||'', undefined, {numeric:true,sensitivity:'base'});
+      return sortDir2 === 'asc' ? cmp : -cmp;
+    });
+    page2 = 1; renderTable2();
+  }
+
+  // ── Table helpers ────────────────────────────
+  function fillSel(id, items, ph) {
+    document.getElementById(id).innerHTML = `<option value="">${ph}</option>` +
+      items.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
+  }
+  function buildPages(cur, total, goFn) {
+    if (total<=1) return '';
+    const out=[`<button class="pb" onclick="${goFn}(${cur-1})" ${cur===1?'disabled':''}>&#8592;</button>`];
+    const nums=[];
+    for(let i=1;i<=total;i++) { if(i===1||i===total||Math.abs(i-cur)<=2) nums.push(i); else if(nums[nums.length-1]!=='…') nums.push('…'); }
+    nums.forEach(n=>out.push(n==='…'?`<span class="pb" style="cursor:default">…</span>`:`<button class="pb ${n===cur?'active':''}" onclick="${goFn}(${n})">${n}</button>`));
+    out.push(`<button class="pb" onclick="${goFn}(${cur+1})" ${cur===total?'disabled':''}>&#8594;</button>`);
+    return out.join('');
+  }
+
+  // ── Table: Sheet 1 ───────────────────────────
   function renderTable() {
     const total = filtered.length;
     document.getElementById('resultCount').textContent =
@@ -683,20 +866,47 @@
       </div>
       <div class="table-footer">
         <span class="page-info">Showing ${start+1}–${Math.min(start+PAGE_SIZE,total)} of ${total}</span>
-        <div class="pagination">${buildPages(page,pages)}</div>
+        <div class="pagination">${buildPages(page,pages,'goPage')}</div>
       </div></div>`;
-  }
-  function buildPages(cur, total) {
-    if (total<=1) return '';
-    const out=[`<button class="pb" onclick="goPage(${cur-1})" ${cur===1?'disabled':''}>&#8592;</button>`];
-    const nums=[];
-    for(let i=1;i<=total;i++) { if(i===1||i===total||Math.abs(i-cur)<=2) nums.push(i); else if(nums[nums.length-1]!=='…') nums.push('…'); }
-    nums.forEach(n=>out.push(n==='…'?`<span class="pb" style="cursor:default">…</span>`:`<button class="pb ${n===cur?'active':''}" onclick="goPage(${n})">${n}</button>`));
-    out.push(`<button class="pb" onclick="goPage(${cur+1})" ${cur===total?'disabled':''}>&#8594;</button>`);
-    return out.join('');
   }
   function goPage(p) { const max=Math.ceil(filtered.length/PAGE_SIZE); if(p<1||p>max)return; page=p; renderTable(); window.scrollTo({top:0,behavior:'smooth'}); }
   function sortBy(key) { sortDir=(sortKey===key&&sortDir==='asc')?'desc':'asc'; sortKey=key; applyFilters(); }
+
+  // ── Table: Sheet 2 ───────────────────────────
+  function renderTable2() {
+    const total = filtered2.length;
+    document.getElementById('rbiaResultCount').textContent =
+      total === allRows2.length ? `${total} jobs` : `${total} of ${allRows2.length}`;
+    if (!total) { document.getElementById('rbiaTableArea').innerHTML = '<div class="msg-box"><p>No jobs match the current filters.</p></div>'; return; }
+    const start = (page2-1)*PAGE_SIZE, slice = filtered2.slice(start, start+PAGE_SIZE), pages = Math.ceil(total/PAGE_SIZE);
+    const thead = TABLE_COLS_2.map(c =>
+      `<th class="${sortKey2===c.key?sortDir2:''}" ${c.nosort?'':` onclick="sortBy2('${c.key}')"`}>${c.label}</th>`
+    ).join('');
+    const tbody = slice.map(row => {
+      const inv = row[C2.INVOICE]?.trim();
+      return `<tr class="${inv?'row-invoiced':'row-pending'}">
+        <td><span class="badge badge-so">${esc(row[C2.ORDER])}</span></td>
+        <td>${inv?`<span class="badge badge-invoiced">${esc(inv)}</span>`:`<span class="badge badge-pending">Pending</span>`}</td>
+        <td>${esc(row[C2.DISC])}</td>
+        <td>${esc(row[C2.CUSTOMER])}</td>
+        <td>${esc(row[C2.SITE])}</td>
+        <td>${mapLink(row[C2.JOB_LOC])}</td>
+        <td>${esc(row[C2.EST])}</td>
+        <td style="white-space:nowrap">${esc(row[C2.TECH])}</td>
+        <td>${photoLink(row[C2.PHOTO])}</td>
+      </tr>`;
+    }).join('');
+    document.getElementById('rbiaTableArea').innerHTML = `
+      <div class="table-wrap"><div class="tscroll">
+        <table><thead><tr>${thead}</tr></thead><tbody>${tbody}</tbody></table>
+      </div>
+      <div class="table-footer">
+        <span class="page-info">Showing ${start+1}–${Math.min(start+PAGE_SIZE,total)} of ${total}</span>
+        <div class="pagination">${buildPages(page2,pages,'goPage2')}</div>
+      </div></div>`;
+  }
+  function goPage2(p) { const max=Math.ceil(filtered2.length/PAGE_SIZE); if(p<1||p>max)return; page2=p; renderTable2(); window.scrollTo({top:0,behavior:'smooth'}); }
+  function sortBy2(key) { sortDir2=(sortKey2===key&&sortDir2==='asc')?'desc':'asc'; sortKey2=key; applyFilters2(); }
 
   // ── Sidebar ──────────────────────────────────
   function renderSidebar() {
@@ -717,9 +927,8 @@
       </div>`).join('');
   }
 
-  // ── Analytics panel ──────────────────────────
+  // ── Analytics panel (Panel 1) ────────────────
   function renderAnalytics() {
-    // Tech cards
     const techData = {};
     allRows.forEach(r => {
       const t = r[C.TECH]?.trim(); if (!t) return;
@@ -748,7 +957,6 @@
   }
 
   function renderAnalyticsCharts() {
-    // Jobs by tech (horizontal bar)
     const techCounts = {};
     allRows.forEach(r => { const t=r[C.TECH]?.trim(); if(t) techCounts[t]=(techCounts[t]||0)+1; });
     const techSorted = Object.entries(techCounts).sort((a,b)=>b[1]-a[1]).slice(0,15);
@@ -770,7 +978,6 @@
       }
     });
 
-    // Top customers (horizontal bar)
     const custCounts = {};
     allRows.forEach(r => { const c=r[C.CUSTOMER]?.trim(); if(c) custCounts[c]=(custCounts[c]||0)+1; });
     const custSorted = Object.entries(custCounts).sort((a,b)=>b[1]-a[1]).slice(0,15);
@@ -802,6 +1009,21 @@
     return parts.length>=2 ? `${parts[0]}/${parts[1]}` : raw.trim();
   }
 
+  function makePctPlugin(totalRef) {
+    return { id:'pct', afterDatasetsDraw(chart) {
+      const{ctx,data}=chart;
+      const total = data.datasets[0].data.reduce((a,b)=>a+b,0);
+      chart.getDatasetMeta(0).data.forEach((arc,i)=>{
+        const val=data.datasets[0].data[i], pct=Math.round(val/total*100);
+        if(pct<4) return;
+        const mid=(arc.startAngle+arc.endAngle)/2, r=(arc.outerRadius+arc.innerRadius)/2;
+        ctx.save(); ctx.fillStyle='#fff'; ctx.font='bold 13px sans-serif';
+        ctx.textAlign='center'; ctx.textBaseline='middle';
+        ctx.fillText(`${pct}%`, arc.x+r*Math.cos(mid), arc.y+r*Math.sin(mid)); ctx.restore();
+      });
+    }};
+  }
+
   function renderCharts() {
     const dateCounts={};
     allRows.forEach(r=>{ const d=normalizeDate(r[C.DATE]); if(d) dateCounts[d]=(dateCounts[d]||0)+1; });
@@ -817,28 +1039,53 @@
         scales:{x:{grid:{display:false},ticks:{font:{size:10},maxRotation:45}},y:{beginAtZero:true,ticks:{stepSize:1,font:{size:10}},grid:{color:'#f1f5f9'}}}}
     });
 
-    const inv=allRows.filter(r=>r[C.INVOICE]?.trim()).length, open=allRows.length-inv, total=inv+open;
-    const pctPlugin={id:'pct',afterDatasetsDraw(chart){
-      const{ctx,data}=chart;
-      chart.getDatasetMeta(0).data.forEach((arc,i)=>{
-        const val=data.datasets[0].data[i], pct=Math.round(val/total*100);
-        if(pct<4) return;
-        const mid=(arc.startAngle+arc.endAngle)/2, r=(arc.outerRadius+arc.innerRadius)/2;
-        ctx.save(); ctx.fillStyle='#fff'; ctx.font='bold 13px sans-serif';
-        ctx.textAlign='center'; ctx.textBaseline='middle';
-        ctx.fillText(`${pct}%`, arc.x+r*Math.cos(mid), arc.y+r*Math.sin(mid)); ctx.restore();
-      });
-    }};
+    const inv=allRows.filter(r=>r[C.INVOICE]?.trim()).length, open=allRows.length-inv;
     if(chartStatus) chartStatus.destroy();
     chartStatus=new Chart(document.getElementById('chartStatus'),{
-      type:'doughnut', plugins:[pctPlugin],
+      type:'doughnut', plugins:[makePctPlugin()],
       data:{labels:['Invoiced','Open'],datasets:[{data:[inv,open],backgroundColor:['#16a34a','#f59e0b'],borderWidth:2,borderColor:'#fff',hoverOffset:6}]},
       options:{responsive:true,maintainAspectRatio:false,cutout:'62%',
         plugins:{legend:{position:'bottom',labels:{font:{size:11},padding:14,usePointStyle:true}},
-          tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${ctx.parsed} (${Math.round(ctx.parsed/total*100)}%)`}}}}
+          tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${ctx.parsed} (${Math.round(ctx.parsed/(inv+open)*100)}%)`}}}}
     });
 
     renderAnalyticsCharts();
+  }
+
+  // ── RBIA charts ──────────────────────────────
+  function renderRbiaCharts() {
+    const techCounts = {};
+    allRows2.forEach(r => { const t=r[C2.TECH]?.trim(); if(t) techCounts[t]=(techCounts[t]||0)+1; });
+    const techSorted = Object.entries(techCounts).sort((a,b)=>b[1]-a[1]).slice(0,15);
+
+    if (rbiaTechChart) rbiaTechChart.destroy();
+    rbiaTechChart = new Chart(document.getElementById('rbiaTechChart'), {
+      type: 'bar',
+      data: {
+        labels: techSorted.map(([t])=>t),
+        datasets:[{ label:'Jobs', data:techSorted.map(([,n])=>n), backgroundColor:'#2563eb', borderRadius:4, borderSkipped:false }]
+      },
+      options: {
+        indexAxis:'y', responsive:true, maintainAspectRatio:false,
+        plugins:{legend:{display:false}},
+        scales:{
+          x:{beginAtZero:true, ticks:{stepSize:1,font:{size:10}}, grid:{color:'#f1f5f9'}},
+          y:{grid:{display:false}, ticks:{font:{size:10}}}
+        }
+      }
+    });
+
+    const inv = allRows2.filter(r=>r[C2.INVOICE]?.trim()).length, open = allRows2.length - inv;
+    if (rbiaStatusChart) rbiaStatusChart.destroy();
+    rbiaStatusChart = new Chart(document.getElementById('rbiaStatusChart'), {
+      type: 'doughnut', plugins:[makePctPlugin()],
+      data:{labels:['Invoiced','Open'],datasets:[{data:[inv,open],backgroundColor:['#16a34a','#f59e0b'],borderWidth:2,borderColor:'#fff',hoverOffset:6}]},
+      options:{responsive:true,maintainAspectRatio:false,cutout:'62%',
+        plugins:{legend:{position:'bottom',labels:{font:{size:11},padding:14,usePointStyle:true}},
+          tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${ctx.parsed} (${Math.round(ctx.parsed/(inv+open)*100)}%)`}}}}
+    });
+
+    document.getElementById('rbiaChartsRow').style.display = 'grid';
   }
 
   // ── Helpers ──────────────────────────────────
@@ -850,10 +1097,19 @@
         <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
       </svg>Map</a>`;
   }
+  function photoLink(val) {
+    val=(val||'').trim(); if(!val) return '';
+    if (!val.startsWith('http')) return `<span style="font-size:.78rem;color:var(--gray-500)">${esc(val)}</span>`;
+    return `<a class="photo-btn" href="${val}" target="_blank" rel="noopener noreferrer">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
+        <polyline points="21 15 16 10 5 21"/>
+      </svg>Photo</a>`;
+  }
   function esc(s) { return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
   function uniq(arr) { return [...new Set(arr.filter(Boolean))]; }
 
-  loadData();
+  loadAll();
 </script>
 </body>
 </html>
