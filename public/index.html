@@ -63,10 +63,16 @@
       align-items: center;
       gap: 16px;
     }
+    .header-brand .logo-wrap {
+      background: #fff;
+      border-radius: 7px;
+      padding: 4px 10px;
+      display: flex;
+      align-items: center;
+    }
     .header-brand img {
-      height: 52px;
+      height: 44px;
       object-fit: contain;
-      filter: brightness(0) invert(1);
     }
     .header-divider {
       width: 1px;
@@ -407,7 +413,7 @@
 
 <header>
   <div class="header-brand">
-    <img src="/logo.png" alt="American Irrigation" />
+    <div class="logo-wrap"><img src="/logo.png" alt="American Irrigation" /></div>
     <div class="header-divider"></div>
     <div class="header-title">
       <h1>Mid-South</h1>
@@ -849,9 +855,32 @@
     const invoiced = allRows.filter(r => r[SHEET_COLS.INVOICE]?.trim()).length;
     const open     = allRows.length - invoiced;
 
+    const total = invoiced + open;
+    const pctPlugin = {
+      id: 'pctLabels',
+      afterDatasetsDraw(chart) {
+        const { ctx, data } = chart;
+        chart.getDatasetMeta(0).data.forEach((arc, i) => {
+          const val = data.datasets[0].data[i];
+          const pct = Math.round(val / total * 100);
+          if (pct < 4) return;
+          const mid = (arc.startAngle + arc.endAngle) / 2;
+          const r   = (arc.outerRadius + arc.innerRadius) / 2;
+          ctx.save();
+          ctx.fillStyle = '#fff';
+          ctx.font = 'bold 13px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(`${pct}%`, arc.x + r * Math.cos(mid), arc.y + r * Math.sin(mid));
+          ctx.restore();
+        });
+      }
+    };
+
     if (chartStatus) chartStatus.destroy();
     chartStatus = new Chart(document.getElementById('chartStatus'), {
       type: 'doughnut',
+      plugins: [pctPlugin],
       data: {
         labels: ['Invoiced', 'Open'],
         datasets: [{
@@ -873,11 +902,7 @@
           },
           tooltip: {
             callbacks: {
-              label: ctx => {
-                const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
-                const pct = Math.round(ctx.parsed / total * 100);
-                return ` ${ctx.label}: ${ctx.parsed} (${pct}%)`;
-              }
+              label: ctx => ` ${ctx.label}: ${ctx.parsed} (${Math.round(ctx.parsed / total * 100)}%)`
             }
           }
         }
