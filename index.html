@@ -367,7 +367,7 @@
     <div class="dash-tabs">
       <button class="dash-tab active" onclick="selectPanel(0, true)">Service Orders</button>
       <button class="dash-tab"        onclick="selectPanel(1, true)">Analytics</button>
-      <button class="dash-tab"        onclick="selectPanel(2, true)">RB W/O</button>
+      <button class="dash-tab"        onclick="selectPanel(2, true)">RBIA W/O</button>
     </div>
     <div class="dash-controls">
       <select class="interval-select" id="intervalSel" onchange="setInterval_()">
@@ -406,12 +406,6 @@
     <div class="chart-card">
       <div class="chart-title">Invoiced vs Open</div>
       <div style="position:relative;height:200px"><canvas id="chartStatus"></canvas></div>
-    </div>
-  </div>
-  <div class="charts-row" id="amountChartsRow" style="display:none">
-    <div class="chart-card" style="grid-column:1/-1">
-      <div class="chart-title">Invoice Amount by Date</div>
-      <div style="position:relative;height:200px"><canvas id="chartAmount"></canvas></div>
     </div>
   </div>
 
@@ -487,7 +481,7 @@
 </div>
 </div>
 
-<!-- ── Panel 2: RB W/O ──────────────────────── -->
+<!-- ── Panel 2: RBIA W/O ──────────────────────── -->
 <div class="panel" id="panel-2">
 <div class="panel-main">
 
@@ -499,18 +493,18 @@
     <div class="stat-card c-purple"><div class="stat-label">Customers</div>    <div class="stat-value" id="r-sCustomers">—</div></div>
   </div>
 
-  <div class="charts-row" id="rbChartsRow" style="display:none">
+  <div class="charts-row" id="rbiaChartsRow" style="display:none">
     <div class="chart-card">
       <div class="chart-title">Jobs by Technician</div>
-      <div style="position:relative;height:220px"><canvas id="rbTechChart"></canvas></div>
+      <div style="position:relative;height:220px"><canvas id="rbiaTechChart"></canvas></div>
     </div>
     <div class="chart-card">
       <div class="chart-title">Invoiced vs Open</div>
-      <div style="position:relative;height:220px"><canvas id="rbStatusChart"></canvas></div>
+      <div style="position:relative;height:220px"><canvas id="rbiaStatusChart"></canvas></div>
     </div>
   </div>
 
-  <div class="filters" id="rbFilterBar" style="display:none">
+  <div class="filters" id="rbiaFilterBar" style="display:none">
     <div class="fg">
       <div class="fl">Search</div>
       <input type="search" class="fi fi-search" id="rSearch" placeholder="Search any field…" oninput="applyFilters2()" />
@@ -531,11 +525,11 @@
         <option value="pending">Pending</option>
       </select>
     </div>
-    <span class="result-count" id="rbResultCount"></span>
+    <span class="result-count" id="rbiaResultCount"></span>
   </div>
 
-  <div id="rbTableArea">
-    <div class="msg-box" id="rbInitMsg"><p><strong>Loading RB work orders…</strong></p></div>
+  <div id="rbiaTableArea">
+    <div class="msg-box" id="rbiaInitMsg"><p><strong>Loading RBIA work orders…</strong></p></div>
   </div>
 
 </div>
@@ -551,7 +545,6 @@
     DATE: 'M', SO: 'SERVICE ORDER #', INVOICE: 'INVOICE #',
     CUSTOMER: 'CUSTOMER', SITE: 'SITE NAME', JOB: 'JOB INFO',
     MAP: 'GOOGLE PIN LOCATION', TECH: 'TECH.', COMMENTS: 'COMMENTS',
-    AMOUNT: 'INVOICE AMOUNT',
   };
 
   const TABLE_COLS = [
@@ -562,7 +555,7 @@
     { key: C.MAP, label: 'Map', nosort: true },
   ];
 
-  // ── Config: Sheet 2 (RB W/O) ───────────────
+  // ── Config: Sheet 2 (RBIA W/O) ───────────────
   const SHEET_ID_2   = '183p2yP9ViMqmJvGDH4YE0JB1EhocuPUt3PFCpr5_zyg';
   const SHEET_NAME_2 = 'rbia w/o';
 
@@ -593,9 +586,9 @@
   let allRows2 = [], filtered2 = [], sortKey2 = C2.ORDER, sortDir2 = 'asc', page2 = 1;
 
   // Chart.js ready flag
-  let chartJsReady = false, chartsNeedRender = false, rbNeedRender = false;
-  let chartDate = null, chartStatus = null, chartTech = null, chartCust = null, chartAmount = null;
-  let rbTechChart = null, rbStatusChart = null;
+  let chartJsReady = false, chartsNeedRender = false, rbiaNeedRender = false;
+  let chartDate = null, chartStatus = null, chartTech = null, chartCust = null;
+  let rbiaTechChart = null, rbiaStatusChart = null;
 
   // ── Rotation ─────────────────────────────────
   const NUM_PANELS = 3;
@@ -705,7 +698,7 @@
       document.getElementById('sidebar').style.display   = 'flex';
       document.getElementById('initMsg')?.remove();
       renderAnalytics();
-      if (chartJsReady) { renderCharts(); document.getElementById('chartsRow').style.display = 'grid'; document.getElementById('amountChartsRow').style.display = 'grid'; }
+      if (chartJsReady) { renderCharts(); document.getElementById('chartsRow').style.display = 'grid'; }
       else chartsNeedRender = true;
     } catch (err) {
       document.getElementById('tableArea').innerHTML = `
@@ -726,20 +719,20 @@
     }
   }
 
-  // ── Sheet 2: RB W/O ────────────────────────
+  // ── Sheet 2: RBIA W/O ────────────────────────
   async function loadData2(standalone = true) {
     try {
       const all = await fetchGviz(SHEET_ID_2, SHEET_NAME_2);
       allRows2 = all.filter(r => r[C2.CUSTOMER]?.trim());
       updateStats2(); populateFilters2(); applyFilters2();
-      document.getElementById('rbFilterBar').style.display = 'flex';
-      document.getElementById('rbInitMsg')?.remove();
-      if (chartJsReady) { renderRbCharts(); document.getElementById('rbChartsRow').style.display = 'grid'; }
-      else rbNeedRender = true;
+      document.getElementById('rbiaFilterBar').style.display = 'flex';
+      document.getElementById('rbiaInitMsg')?.remove();
+      if (chartJsReady) { renderRbiaCharts(); document.getElementById('rbiaChartsRow').style.display = 'grid'; }
+      else rbiaNeedRender = true;
     } catch (err) {
-      document.getElementById('rbTableArea').innerHTML = `
+      document.getElementById('rbiaTableArea').innerHTML = `
         <div class="msg-box msg-error">
-          <p><strong>Failed to load RB work orders</strong></p>
+          <p><strong>Failed to load RBIA work orders</strong></p>
           <div class="err-detail">${esc(err.message)}</div>
           <p class="err-hint">Make sure the sheet is shared as <strong>"Anyone with the link can view"</strong> and the tab is named <strong>"rbia w/o"</strong>.</p>
         </div>`;
@@ -749,14 +742,14 @@
   function onChartJsLoad() {
     chartJsReady = true;
     if (chartsNeedRender && allRows.length) {
-      try { renderCharts(); document.getElementById('chartsRow').style.display = 'grid'; document.getElementById('amountChartsRow').style.display = 'grid'; }
+      try { renderCharts(); document.getElementById('chartsRow').style.display = 'grid'; }
       catch(e) { console.warn('Charts:', e.message); }
       chartsNeedRender = false;
     }
-    if (rbNeedRender && allRows2.length) {
-      try { renderRbCharts(); document.getElementById('rbChartsRow').style.display = 'grid'; }
-      catch(e) { console.warn('RB Charts:', e.message); }
-      rbNeedRender = false;
+    if (rbiaNeedRender && allRows2.length) {
+      try { renderRbiaCharts(); document.getElementById('rbiaChartsRow').style.display = 'grid'; }
+      catch(e) { console.warn('RBIA Charts:', e.message); }
+      rbiaNeedRender = false;
     }
   }
 
@@ -882,9 +875,9 @@
   // ── Table: Sheet 2 ───────────────────────────
   function renderTable2() {
     const total = filtered2.length;
-    document.getElementById('rbResultCount').textContent =
+    document.getElementById('rbiaResultCount').textContent =
       total === allRows2.length ? `${total} jobs` : `${total} of ${allRows2.length}`;
-    if (!total) { document.getElementById('rbTableArea').innerHTML = '<div class="msg-box"><p>No jobs match the current filters.</p></div>'; return; }
+    if (!total) { document.getElementById('rbiaTableArea').innerHTML = '<div class="msg-box"><p>No jobs match the current filters.</p></div>'; return; }
     const start = (page2-1)*PAGE_SIZE, slice = filtered2.slice(start, start+PAGE_SIZE), pages = Math.ceil(total/PAGE_SIZE);
     const thead = TABLE_COLS_2.map(c =>
       `<th class="${sortKey2===c.key?sortDir2:''}" ${c.nosort?'':` onclick="sortBy2('${c.key}')"`}>${c.label}</th>`
@@ -903,7 +896,7 @@
         <td>${photoLink(row[C2.PHOTO])}</td>
       </tr>`;
     }).join('');
-    document.getElementById('rbTableArea').innerHTML = `
+    document.getElementById('rbiaTableArea').innerHTML = `
       <div class="table-wrap"><div class="tscroll">
         <table><thead><tr>${thead}</tr></thead><tbody>${tbody}</tbody></table>
       </div>
@@ -1016,19 +1009,6 @@
     return parts.length>=2 ? `${parts[0]}/${parts[1]}` : raw.trim();
   }
 
-  function makeBarLabelPlugin(fmt) {
-    return { id:'barLabels', afterDatasetsDraw(chart) {
-      const{ctx,data}=chart;
-      chart.getDatasetMeta(0).data.forEach((bar,i)=>{
-        const val=data.datasets[0].data[i]; if(!val) return;
-        const label=fmt?fmt(val):val;
-        ctx.save(); ctx.fillStyle='#334155'; ctx.font='bold 10px sans-serif';
-        ctx.textAlign='center'; ctx.textBaseline='bottom';
-        ctx.fillText(label, bar.x, bar.y-2); ctx.restore();
-      });
-    }};
-  }
-
   function makePctPlugin(totalRef) {
     return { id:'pct', afterDatasetsDraw(chart) {
       const{ctx,data}=chart;
@@ -1054,7 +1034,6 @@
     if(chartDate) chartDate.destroy();
     chartDate=new Chart(document.getElementById('chartDate'),{
       type:'bar',
-      plugins:[makeBarLabelPlugin()],
       data:{labels,datasets:[{label:'Jobs',data:labels.map(l=>dateCounts[l]),backgroundColor:'#2563eb',borderRadius:4,borderSkipped:false}]},
       options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
         scales:{x:{grid:{display:false},ticks:{font:{size:10},maxRotation:45}},y:{beginAtZero:true,ticks:{stepSize:1,font:{size:10}},grid:{color:'#f1f5f9'}}}}
@@ -1070,41 +1049,17 @@
           tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${ctx.parsed} (${Math.round(ctx.parsed/(inv+open)*100)}%)`}}}}
     });
 
-    const amountByDate={};
-    allRows.forEach(r=>{
-      const d=normalizeDate(r[C.DATE]); if(!d) return;
-      const raw=String(r[C.AMOUNT]||'').replace(/[$,\s]/g,'');
-      const n=parseFloat(raw); if(!isNaN(n)&&n>0) amountByDate[d]=(amountByDate[d]||0)+n;
-    });
-    const aLabels=Object.keys(amountByDate).sort((a,b)=>{
-      const[am,ad]=a.split('/').map(Number),[bm,bd]=b.split('/').map(Number);
-      return am!==bm?am-bm:ad-bd;
-    });
-    if(chartAmount) chartAmount.destroy();
-    chartAmount=new Chart(document.getElementById('chartAmount'),{
-      type:'bar',
-      plugins:[makeBarLabelPlugin(v=>v>=1000?'$'+(v/1000).toFixed(1)+'K':'$'+v.toFixed(0))],
-      data:{labels:aLabels,datasets:[{label:'Invoice Amount',data:aLabels.map(l=>+amountByDate[l].toFixed(2)),backgroundColor:'#16a34a',borderRadius:4,borderSkipped:false}]},
-      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
-        scales:{
-          x:{grid:{display:false},ticks:{font:{size:10},maxRotation:45}},
-          y:{beginAtZero:true,ticks:{font:{size:10},callback:v=>'$'+v.toLocaleString()},grid:{color:'#f1f5f9'}}
-        },
-        plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' $'+ctx.parsed.y.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}}}
-      }
-    });
-
     renderAnalyticsCharts();
   }
 
-  // ── RB charts ────────────────────────────────
-  function renderRbCharts() {
+  // ── RBIA charts ──────────────────────────────
+  function renderRbiaCharts() {
     const techCounts = {};
     allRows2.forEach(r => { const t=r[C2.TECH]?.trim(); if(t) techCounts[t]=(techCounts[t]||0)+1; });
     const techSorted = Object.entries(techCounts).sort((a,b)=>b[1]-a[1]).slice(0,15);
 
-    if (rbTechChart) rbTechChart.destroy();
-    rbTechChart = new Chart(document.getElementById('rbTechChart'), {
+    if (rbiaTechChart) rbiaTechChart.destroy();
+    rbiaTechChart = new Chart(document.getElementById('rbiaTechChart'), {
       type: 'bar',
       data: {
         labels: techSorted.map(([t])=>t),
@@ -1121,8 +1076,8 @@
     });
 
     const inv = allRows2.filter(r=>r[C2.INVOICE]?.trim()).length, open = allRows2.length - inv;
-    if (rbStatusChart) rbStatusChart.destroy();
-    rbStatusChart = new Chart(document.getElementById('rbStatusChart'), {
+    if (rbiaStatusChart) rbiaStatusChart.destroy();
+    rbiaStatusChart = new Chart(document.getElementById('rbiaStatusChart'), {
       type: 'doughnut', plugins:[makePctPlugin()],
       data:{labels:['Invoiced','Open'],datasets:[{data:[inv,open],backgroundColor:['#16a34a','#f59e0b'],borderWidth:2,borderColor:'#fff',hoverOffset:6}]},
       options:{responsive:true,maintainAspectRatio:false,cutout:'62%',
@@ -1130,7 +1085,7 @@
           tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${ctx.parsed} (${Math.round(ctx.parsed/(inv+open)*100)}%)`}}}}
     });
 
-    document.getElementById('rbChartsRow').style.display = 'grid';
+    document.getElementById('rbiaChartsRow').style.display = 'grid';
   }
 
   // ── Helpers ──────────────────────────────────
