@@ -9,6 +9,17 @@ const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
 
 app.use(express.static(path.join(__dirname, 'public')));
 
+const fs = require('fs');
+// Serve logo regardless of file extension case
+app.get('/logo.:ext', (req, res) => {
+  const exts = [req.params.ext, req.params.ext.toUpperCase(), req.params.ext.toLowerCase()];
+  for (const ext of exts) {
+    const file = path.join(__dirname, 'public', `logo.${ext}`);
+    if (fs.existsSync(file)) return res.sendFile(file);
+  }
+  res.status(404).send('Logo not found');
+});
+
 async function fetchViaGviz() {
   const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
   const res = await fetch(url, {
@@ -55,11 +66,14 @@ app.get('/api/data', async (req, res) => {
       ? await fetchViaSheetsAPI()
       : await fetchViaGviz();
 
-    const records = rows.map(row => {
-      const record = {};
-      headers.forEach((h, i) => { record[h] = row[i] ?? ''; });
-      return record;
-    });
+    const records = rows
+      .map(row => {
+        const record = {};
+        headers.forEach((h, i) => { record[h] = row[i] ?? ''; });
+        return record;
+      })
+      // Keep only rows with at least 3 non-empty fields (excludes pre-allocated placeholder rows)
+      .filter(r => Object.values(r).filter(v => String(v).trim()).length >= 3);
 
     res.json({
       headers,

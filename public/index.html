@@ -365,7 +365,9 @@
 
 <header>
   <div class="header-brand">
-    <img src="/logo.png" alt="American Irrigation" style="height:48px;object-fit:contain;" />
+    <img src="/logo.png" alt="American Irrigation"
+         style="height:52px;object-fit:contain;"
+         onerror="this.src='/logo.PNG';this.onerror=null;" />
   </div>
   <div class="header-right">
     <span id="lastUpdated">Not loaded</span>
@@ -544,14 +546,13 @@
 
   /* ── Stats ─────────────────────────────────── */
   function updateStats() {
-    const active    = allRows.filter(r => r[SHEET_COLS.DATE]?.trim() && r[SHEET_COLS.CUSTOMER]?.trim());
-    const invoiced  = active.filter(r => r[SHEET_COLS.INVOICE]?.trim());
-    const techSet   = new Set(allRows.map(r => r[SHEET_COLS.TECH]?.trim()).filter(Boolean));
-    const custSet   = new Set(allRows.map(r => r[SHEET_COLS.CUSTOMER]?.trim()).filter(Boolean));
+    const invoiced = allRows.filter(r => r[SHEET_COLS.INVOICE]?.trim());
+    const techSet  = new Set(allRows.map(r => r[SHEET_COLS.TECH]?.trim()).filter(Boolean));
+    const custSet  = new Set(allRows.map(r => r[SHEET_COLS.CUSTOMER]?.trim()).filter(Boolean));
 
-    document.getElementById('sTotal').textContent     = active.length;
+    document.getElementById('sTotal').textContent     = allRows.length;
     document.getElementById('sInvoiced').textContent  = invoiced.length;
-    document.getElementById('sPending').textContent   = active.length - invoiced.length;
+    document.getElementById('sPending').textContent   = allRows.length - invoiced.length;
     document.getElementById('sTechs').textContent     = techSet.size;
     document.getElementById('sCustomers').textContent = custSet.size;
   }
