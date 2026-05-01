@@ -26,7 +26,8 @@ async function fetchViaGviz() {
   if (!match) throw new Error('Unexpected response format from Google Sheets.');
 
   const { table } = JSON.parse(match[1]);
-  const headers = table.cols.map(c => c.label || c.id);
+  // Trim header names to remove any accidental whitespace from the sheet
+  const headers = table.cols.map(c => (c.label || c.id).trim());
 
   const rows = (table.rows || [])
     .map(row => (row.c || []).map(cell => {
@@ -39,16 +40,17 @@ async function fetchViaGviz() {
 }
 
 async function fetchViaSheetsAPI() {
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/A:J?key=${GOOGLE_API_KEY}`;
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/A:Z?key=${GOOGLE_API_KEY}`;
   const res = await fetch(url);
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.error?.message || `Sheets API error ${res.status}`);
   }
   const data = await res.json();
-  const [headers, ...rows] = data.values || [];
+  const [rawHeaders, ...rows] = data.values || [];
+  const headers = (rawHeaders || []).map(h => h.trim());
   return {
-    headers: headers || [],
+    headers,
     rows: (rows || []).filter(r => r.some(c => c?.trim()))
   };
 }
@@ -69,11 +71,8 @@ app.get('/api/data', async (req, res) => {
 
     const all = buildRecords(headers, rows);
 
-    // Only count rows that have a date (col 0) AND a customer (col 3) — by position, not name
-    const active = all.filter(r => {
-      const vals = Object.values(r);
-      return vals[0]?.trim() && vals[3]?.trim();
-    });
+    // Filter to rows that have both a date (M) and a customer — by name, not position
+    const active = all.filter(r => r['M']?.trim() && r['CUSTOMER']?.trim());
 
     res.json({
       headers,
