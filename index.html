@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>American Irrigation – Service Order Dashboard</title>
-  <!-- Chart.js loaded async so it never blocks the page -->
   <script async src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"
           onload="onChartJsLoad()"></script>
   <style>
@@ -45,7 +44,7 @@
     header {
       background: var(--navy);
       color: #fff;
-      padding: 14px 24px;
+      padding: 12px 24px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -53,27 +52,21 @@
       box-shadow: 0 2px 8px rgba(0,0,0,.25);
       position: sticky;
       top: 0;
-      z-index: 100;
+      z-index: 200;
     }
     .header-brand { display: flex; align-items: center; gap: 16px; }
-    .logo-wrap {
-      background: #fff;
-      border-radius: 7px;
-      padding: 4px 10px;
-      display: flex;
-      align-items: center;
-    }
-    .logo-wrap img { height: 44px; object-fit: contain; }
-    .header-divider { width: 1px; height: 36px; background: rgba(255,255,255,.25); }
-    .header-title h1 { font-size: 1.1rem; font-weight: 700; letter-spacing: -.01em; }
-    .header-title p  { font-size: .72rem; opacity: .6; margin-top: 2px; }
-    .header-right { display: flex; align-items: center; gap: 14px; }
-    #lastUpdated { font-size: .78rem; opacity: .65; white-space: nowrap; }
+    .logo-wrap { background: #fff; border-radius: 7px; padding: 4px 10px; display: flex; align-items: center; }
+    .logo-wrap img { height: 40px; object-fit: contain; }
+    .header-divider { width: 1px; height: 32px; background: rgba(255,255,255,.25); }
+    .header-title h1 { font-size: 1rem; font-weight: 700; }
+    .header-title p  { font-size: .7rem; opacity: .6; margin-top: 1px; }
+    .header-right { display: flex; align-items: center; gap: 12px; }
+    #lastUpdated { font-size: .75rem; opacity: .6; white-space: nowrap; }
 
     .btn {
       display: inline-flex; align-items: center; gap: 6px;
-      padding: 8px 16px; border: none; border-radius: 6px;
-      cursor: pointer; font-size: .85rem; font-weight: 600;
+      padding: 7px 14px; border: none; border-radius: 6px;
+      cursor: pointer; font-size: .82rem; font-weight: 600;
       transition: background .15s, opacity .15s;
     }
     .btn-primary { background: var(--blue); color: #fff; }
@@ -82,8 +75,82 @@
     .spin { animation: spin .9s linear infinite; display: inline-block; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── Main ────────────────────────────────── */
-    main { padding: 20px 24px; max-width: 1700px; margin: 0 auto; }
+    /* ── Dashboard nav bar ───────────────────── */
+    .dash-chrome {
+      background: #152b47;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      position: sticky;
+      top: 64px;
+      z-index: 190;
+    }
+    .dash-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      gap: 16px;
+    }
+    .dash-tabs { display: flex; gap: 2px; }
+    .dash-tab {
+      padding: 10px 18px;
+      border: none;
+      background: transparent;
+      color: rgba(255,255,255,.5);
+      font-size: .82rem;
+      font-weight: 600;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: color .15s, border-color .15s;
+      white-space: nowrap;
+    }
+    .dash-tab:hover { color: rgba(255,255,255,.8); }
+    .dash-tab.active { color: #fff; border-bottom-color: var(--blue); }
+
+    .dash-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .rotate-btn {
+      background: rgba(255,255,255,.1);
+      border: none;
+      color: #fff;
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: .9rem;
+      display: flex; align-items: center; justify-content: center;
+      transition: background .15s;
+    }
+    .rotate-btn:hover { background: rgba(255,255,255,.2); }
+    .rotate-countdown {
+      font-size: .75rem;
+      color: rgba(255,255,255,.55);
+      min-width: 48px;
+      text-align: right;
+    }
+    .interval-select {
+      background: rgba(255,255,255,.1);
+      border: 1px solid rgba(255,255,255,.15);
+      color: rgba(255,255,255,.8);
+      padding: 4px 8px;
+      border-radius: 5px;
+      font-size: .75rem;
+      cursor: pointer;
+    }
+    .interval-select option { background: #1e3a5f; color: #fff; }
+
+    /* Progress bar */
+    .progress-bar { height: 3px; background: rgba(255,255,255,.08); }
+    .progress-fill { height: 100%; background: var(--blue); width: 0%; transition: width 1s linear; }
+
+    /* ── Panels ──────────────────────────────── */
+    .panels { position: relative; }
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    /* ── Panel inner layout ──────────────────── */
+    .panel-main { padding: 20px 24px; max-width: 1700px; margin: 0 auto; }
 
     /* ── Stats ───────────────────────────────── */
     .stats-grid {
@@ -107,12 +174,19 @@
     }
     .stat-value { font-size: 2rem; font-weight: 800; color: var(--gray-900); line-height: 1; }
 
-    /* ── Charts ──────────────────────────────── */
+    /* ── Charts row ──────────────────────────── */
     .charts-row {
       display: grid; grid-template-columns: 2fr 1fr;
       gap: 16px; margin-bottom: 18px;
     }
     @media (max-width: 900px) { .charts-row { grid-template-columns: 1fr; } }
+
+    .analytics-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 16px; margin-bottom: 18px;
+    }
+    @media (max-width: 900px) { .analytics-grid { grid-template-columns: 1fr; } }
+
     .chart-card {
       background: var(--white); border-radius: var(--radius);
       padding: 18px 20px; box-shadow: var(--shadow);
@@ -122,7 +196,40 @@
       letter-spacing: .07em; color: var(--gray-500); margin-bottom: 14px;
     }
 
-    /* ── Body grid ───────────────────────────── */
+    /* ── Tech cards (analytics panel) ───────── */
+    .tech-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+    .tech-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      box-shadow: var(--shadow);
+      border-left: 4px solid var(--blue);
+    }
+    .tech-card-name {
+      font-weight: 700;
+      font-size: .9rem;
+      color: var(--navy);
+      margin-bottom: 10px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .tech-card-stats { display: flex; gap: 10px; }
+    .tech-card-stat { flex: 1; text-align: center; }
+    .tech-card-stat-val { font-size: 1.4rem; font-weight: 800; line-height: 1; }
+    .tech-card-stat-lbl { font-size: .65rem; color: var(--gray-500); text-transform: uppercase; letter-spacing: .04em; margin-top: 3px; }
+    .tc-total  .tech-card-stat-val { color: var(--navy); }
+    .tc-inv    .tech-card-stat-val { color: var(--green); }
+    .tc-pend   .tech-card-stat-val { color: var(--amber); }
+    .tech-rate-bar { margin-top: 10px; height: 4px; background: var(--gray-200); border-radius: 2px; overflow: hidden; }
+    .tech-rate-fill { height: 100%; background: var(--green); border-radius: 2px; }
+
+    /* ── Body grid (panel 0) ─────────────────── */
     .body-grid { display: grid; grid-template-columns: 1fr 250px; gap: 18px; align-items: start; }
     @media (max-width: 1200px) { .body-grid { grid-template-columns: 1fr; } }
 
@@ -163,17 +270,12 @@
     tbody tr.row-pending  { background: var(--amber-row); }
     tbody tr:hover { filter: brightness(.96); }
     tbody td { padding: 9px 13px; vertical-align: middle; }
-
     .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: .72rem; font-weight: 700; white-space: nowrap; }
     .badge-so       { background: var(--navy); color: #fff; }
     .badge-invoiced { background: var(--green-light); color: var(--green); }
     .badge-pending  { background: var(--amber-light); color: var(--amber); }
-
-    .cell-job, .cell-comment {
-      max-width: 280px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
+    .cell-job, .cell-comment { max-width: 280px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .cell-comment { max-width: 200px; color: var(--gray-500); font-style: italic; }
-
     .map-btn {
       display: inline-flex; align-items: center; gap: 4px;
       padding: 3px 9px; background: var(--blue-light); color: var(--blue);
@@ -200,10 +302,7 @@
     /* ── Sidebar ─────────────────────────────── */
     .sidebar { display: flex; flex-direction: column; gap: 14px; }
     .widget { background: var(--white); border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); }
-    .widget-title {
-      font-size: .68rem; font-weight: 800; text-transform: uppercase;
-      letter-spacing: .07em; color: var(--gray-500); margin-bottom: 12px;
-    }
+    .widget-title { font-size: .68rem; font-weight: 800; text-transform: uppercase; letter-spacing: .07em; color: var(--gray-500); margin-bottom: 12px; }
     .tech-list { list-style: none; }
     .tech-item { display: flex; align-items: center; gap: 6px; padding: 5px 0; border-bottom: 1px solid var(--gray-100); font-size: .8rem; }
     .tech-item:last-child { border-bottom: none; }
@@ -221,7 +320,6 @@
       background: var(--white); border-radius: var(--radius);
       padding: 48px 24px; text-align: center; box-shadow: var(--shadow); color: var(--gray-500);
     }
-    .msg-box p { margin: 4px 0; }
     .msg-error { color: var(--red); }
     .msg-error .err-detail {
       margin-top: 12px; font-size: .8rem; background: #fef2f2;
@@ -233,6 +331,7 @@
 </head>
 <body>
 
+<!-- ── Header ───────────────────────────────── -->
 <header>
   <div class="header-brand">
     <div class="logo-wrap"><img src="logo.png" alt="American Irrigation" /></div>
@@ -255,8 +354,33 @@
   </div>
 </header>
 
-<main>
-  <div class="stats-grid">
+<!-- ── Dashboard nav / rotation controls ────── -->
+<div class="dash-chrome">
+  <div class="dash-nav">
+    <div class="dash-tabs">
+      <button class="dash-tab active" onclick="selectPanel(0, true)">Service Orders</button>
+      <button class="dash-tab"        onclick="selectPanel(1, true)">Analytics</button>
+    </div>
+    <div class="dash-controls">
+      <select class="interval-select" id="intervalSel" onchange="setInterval_()">
+        <option value="120">2 min</option>
+        <option value="300" selected>5 min</option>
+        <option value="600">10 min</option>
+        <option value="1800">30 min</option>
+      </select>
+      <span class="rotate-countdown" id="rotateCountdown">5:00</span>
+      <button class="rotate-btn" id="rotateBtn" onclick="toggleRotate()" title="Pause/Resume rotation">⏸</button>
+    </div>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+</div>
+
+<!-- ── Panel 0: Service Orders ───────────────── -->
+<div class="panels">
+<div class="panel active" id="panel-0">
+<div class="panel-main">
+
+  <div class="stats-grid" id="statsGrid0">
     <div class="stat-card c-blue">  <div class="stat-label">Total Orders</div><div class="stat-value" id="sTotal">—</div></div>
     <div class="stat-card c-green"> <div class="stat-label">Invoiced</div>     <div class="stat-value" id="sInvoiced">—</div></div>
     <div class="stat-card c-amber"> <div class="stat-label">Pending</div>      <div class="stat-value" id="sPending">—</div></div>
@@ -267,11 +391,11 @@
   <div class="charts-row" id="chartsRow" style="display:none">
     <div class="chart-card">
       <div class="chart-title">Jobs by Date</div>
-      <div style="position:relative;height:220px"><canvas id="chartDate"></canvas></div>
+      <div style="position:relative;height:200px"><canvas id="chartDate"></canvas></div>
     </div>
     <div class="chart-card">
       <div class="chart-title">Invoiced vs Open</div>
-      <div style="position:relative;height:220px"><canvas id="chartStatus"></canvas></div>
+      <div style="position:relative;height:200px"><canvas id="chartStatus"></canvas></div>
     </div>
   </div>
 
@@ -300,14 +424,10 @@
         </div>
         <span class="result-count" id="resultCount"></span>
       </div>
-
       <div id="tableArea">
-        <div class="msg-box" id="initMsg">
-          <p><strong>Loading service orders…</strong></p>
-        </div>
+        <div class="msg-box" id="initMsg"><p><strong>Loading service orders…</strong></p></div>
       </div>
     </div>
-
     <div class="sidebar" id="sidebar" style="display:none">
       <div class="widget">
         <div class="widget-title">By Technician</div>
@@ -319,137 +439,190 @@
       </div>
     </div>
   </div>
-</main>
+
+</div>
+</div>
+
+<!-- ── Panel 1: Analytics ─────────────────────── -->
+<div class="panel" id="panel-1">
+<div class="panel-main">
+
+  <div class="stats-grid" id="statsGrid1">
+    <div class="stat-card c-blue">  <div class="stat-label">Total Orders</div><div class="stat-value" id="a-sTotal">—</div></div>
+    <div class="stat-card c-green"> <div class="stat-label">Invoiced</div>     <div class="stat-value" id="a-sInvoiced">—</div></div>
+    <div class="stat-card c-amber"> <div class="stat-label">Pending</div>      <div class="stat-value" id="a-sPending">—</div></div>
+    <div class="stat-card c-navy">  <div class="stat-label">Technicians</div>  <div class="stat-value" id="a-sTechs">—</div></div>
+    <div class="stat-card c-purple"><div class="stat-label">Customers</div>    <div class="stat-value" id="a-sCustomers">—</div></div>
+  </div>
+
+  <div class="analytics-grid" id="analyticsCharts" style="display:none">
+    <div class="chart-card">
+      <div class="chart-title">Jobs by Technician</div>
+      <div style="position:relative;height:300px"><canvas id="chartTech"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Top Customers</div>
+      <div style="position:relative;height:300px"><canvas id="chartCust"></canvas></div>
+    </div>
+  </div>
+
+  <div id="techCardsArea"></div>
+
+</div>
+</div>
+</div><!-- /panels -->
 
 <script>
-  // ── Config ──────────────────────────────────
+  // ── Config ───────────────────────────────────
   const SHEET_ID = '1HWfIjPqARGR8UqUEtKlO5YZ_9_QyE6vjcSU4P4Fd3rM';
 
   const C = {
-    DATE:     'M',
-    SO:       'SERVICE ORDER #',
-    INVOICE:  'INVOICE #',
-    CUSTOMER: 'CUSTOMER',
-    SITE:     'SITE NAME',
-    JOB:      'JOB INFO',
-    MAP:      'GOOGLE PIN LOCATION',
-    TECH:     'TECH.',
-    COMMENTS: 'COMMENTS',
+    DATE: 'M', SO: 'SERVICE ORDER #', INVOICE: 'INVOICE #',
+    CUSTOMER: 'CUSTOMER', SITE: 'SITE NAME', JOB: 'JOB INFO',
+    MAP: 'GOOGLE PIN LOCATION', TECH: 'TECH.', COMMENTS: 'COMMENTS',
   };
 
   const TABLE_COLS = [
-    { key: C.DATE,     label: 'Date' },
-    { key: C.SO,       label: 'SO #' },
-    { key: C.INVOICE,  label: 'Invoice #' },
-    { key: C.CUSTOMER, label: 'Customer' },
-    { key: C.SITE,     label: 'Site' },
-    { key: C.JOB,      label: 'Job Info' },
-    { key: C.TECH,     label: 'Tech' },
-    { key: C.COMMENTS, label: 'Comments' },
-    { key: C.MAP,      label: 'Map', nosort: true },
+    { key: C.DATE, label: 'Date' }, { key: C.SO, label: 'SO #' },
+    { key: C.INVOICE, label: 'Invoice #' }, { key: C.CUSTOMER, label: 'Customer' },
+    { key: C.SITE, label: 'Site' }, { key: C.JOB, label: 'Job Info' },
+    { key: C.TECH, label: 'Tech' }, { key: C.COMMENTS, label: 'Comments' },
+    { key: C.MAP, label: 'Map', nosort: true },
   ];
 
   const PAGE_SIZE = 50;
   let allRows = [], filtered = [], sortKey = C.SO, sortDir = 'asc', page = 1;
   let chartJsReady = false, chartsNeedRender = false;
-  let chartDate = null, chartStatus = null;
+  let chartDate = null, chartStatus = null, chartTech = null, chartCust = null;
+
+  // ── Rotation ─────────────────────────────────
+  const NUM_PANELS = 2;
+  let currentPanel = 0;
+  let autoRotate   = true;
+  let rotateIntervalSec = 300;
+  let rotateTimer  = null;
+  let progressTimer = null;
+  let progressStart = null;
+
+  function selectPanel(idx, userInitiated = false) {
+    document.querySelectorAll('.panel').forEach((p, i) => p.classList.toggle('active', i === idx));
+    document.querySelectorAll('.dash-tab').forEach((t, i) => t.classList.toggle('active', i === idx));
+    currentPanel = idx;
+    if (userInitiated && autoRotate) {
+      stopRotation();
+      progressStart = Date.now();
+      updateProgress();
+      // Resume auto-rotation after 30s of manual inactivity
+      rotateTimer = setTimeout(() => startRotation(), 30000);
+    }
+  }
+
+  function startRotation() {
+    stopRotation();
+    if (!autoRotate) return;
+    progressStart = Date.now();
+    rotateTimer = setTimeout(() => {
+      selectPanel((currentPanel + 1) % NUM_PANELS);
+      startRotation();
+    }, rotateIntervalSec * 1000);
+    progressTimer = setInterval(updateProgress, 500);
+    updateProgress();
+  }
+
+  function stopRotation() {
+    clearTimeout(rotateTimer);
+    clearInterval(progressTimer);
+    rotateTimer = null; progressTimer = null;
+  }
+
+  function updateProgress() {
+    const elapsed = progressStart ? (Date.now() - progressStart) / 1000 : 0;
+    const pct = Math.min(elapsed / rotateIntervalSec * 100, 100);
+    document.getElementById('progressFill').style.width = pct + '%';
+    const rem = Math.max(rotateIntervalSec - elapsed, 0);
+    const m = Math.floor(rem / 60), s = Math.floor(rem % 60);
+    document.getElementById('rotateCountdown').textContent =
+      autoRotate ? `${m}:${s.toString().padStart(2, '0')}` : 'Paused';
+  }
+
+  function toggleRotate() {
+    autoRotate = !autoRotate;
+    document.getElementById('rotateBtn').textContent = autoRotate ? '⏸' : '▶';
+    autoRotate ? startRotation() : stopRotation();
+    if (!autoRotate) updateProgress();
+  }
+
+  function setInterval_() {
+    rotateIntervalSec = parseInt(document.getElementById('intervalSel').value, 10);
+    if (autoRotate) startRotation();
+  }
 
   // ── Sheet fetch ──────────────────────────────
   async function fetchSheet() {
     const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
     const res = await fetch(url);
-    if (!res.ok) throw new Error(
-      `Google Sheets returned ${res.status}.\nMake sure the sheet is shared as "Anyone with the link can view".`
-    );
+    if (!res.ok) throw new Error(`Google Sheets returned ${res.status}.\nEnsure the sheet is shared as "Anyone with the link can view".`);
     const text = await res.text();
     const match = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);?\s*$/);
     if (!match) throw new Error('Unexpected response from Google Sheets.');
-
     const { table } = JSON.parse(match[1]);
     const headers = table.cols.map(c => (c.label || c.id).trim());
-
     const rows = (table.rows || [])
-      .map(row => (row.c || []).map(cell => {
-        if (!cell || cell.v == null) return '';
-        return cell.f ?? String(cell.v);
-      }))
+      .map(row => (row.c || []).map(cell => (!cell || cell.v == null) ? '' : (cell.f ?? String(cell.v))))
       .filter(row => row.some(c => c.trim()));
-
     const all = rows.map(row => {
-      const r = {};
-      headers.forEach((h, i) => { r[h] = row[i] ?? ''; });
-      return r;
+      const r = {}; headers.forEach((h, i) => { r[h] = row[i] ?? ''; }); return r;
     });
-
     return all.filter(r => r[C.DATE]?.trim() && r[C.CUSTOMER]?.trim());
   }
 
   // ── Load / refresh ───────────────────────────
   async function loadData() {
-    const btn  = document.getElementById('refreshBtn');
+    const btn = document.getElementById('refreshBtn');
     const icon = document.getElementById('refreshIcon');
-    btn.disabled = true;
-    icon.classList.add('spin');
-
+    btn.disabled = true; icon.classList.add('spin');
     try {
       allRows = await fetchSheet();
-
       const d = new Date();
       document.getElementById('lastUpdated').textContent =
         `Updated ${d.toLocaleDateString()} ${d.toLocaleTimeString()}`;
-
-      updateStats();
-      populateFilters();
-      applyFilters();
-      renderSidebar();
-
+      updateStats(); populateFilters(); applyFilters(); renderSidebar();
       document.getElementById('filterBar').style.display = 'flex';
       document.getElementById('sidebar').style.display   = 'flex';
       document.getElementById('initMsg')?.remove();
-
-      if (chartJsReady) {
-        renderCharts();
-        document.getElementById('chartsRow').style.display = 'grid';
-      } else {
-        chartsNeedRender = true;
-      }
-
+      renderAnalytics();
+      if (chartJsReady) { renderCharts(); document.getElementById('chartsRow').style.display = 'grid'; }
+      else chartsNeedRender = true;
+      startRotation();
     } catch (err) {
       document.getElementById('tableArea').innerHTML = `
         <div class="msg-box msg-error">
           <p><strong>Failed to load data</strong></p>
           <div class="err-detail">${esc(err.message)}</div>
-          <p class="err-hint">
-            Make sure the Google Sheet is shared as <strong>"Anyone with the link can view"</strong>.
-          </p>
+          <p class="err-hint">Make sure the sheet is shared as <strong>"Anyone with the link can view"</strong>.</p>
         </div>`;
-    } finally {
-      btn.disabled = false;
-      icon.classList.remove('spin');
-    }
+    } finally { btn.disabled = false; icon.classList.remove('spin'); }
   }
 
   function onChartJsLoad() {
     chartJsReady = true;
     if (chartsNeedRender && allRows.length) {
-      try {
-        renderCharts();
-        document.getElementById('chartsRow').style.display = 'grid';
-      } catch (e) { console.warn('Charts:', e.message); }
+      try { renderCharts(); document.getElementById('chartsRow').style.display = 'grid'; }
+      catch(e) { console.warn('Charts:', e.message); }
       chartsNeedRender = false;
     }
   }
 
   // ── Stats ────────────────────────────────────
   function updateStats() {
-    const invoiced = allRows.filter(r => r[C.INVOICE]?.trim());
-    const techs    = new Set(allRows.map(r => r[C.TECH]?.trim()).filter(Boolean));
-    const custs    = new Set(allRows.map(r => r[C.CUSTOMER]?.trim()).filter(Boolean));
-    document.getElementById('sTotal').textContent     = allRows.length;
-    document.getElementById('sInvoiced').textContent  = invoiced.length;
-    document.getElementById('sPending').textContent   = allRows.length - invoiced.length;
-    document.getElementById('sTechs').textContent     = techs.size;
-    document.getElementById('sCustomers').textContent = custs.size;
+    const inv   = allRows.filter(r => r[C.INVOICE]?.trim());
+    const techs = new Set(allRows.map(r => r[C.TECH]?.trim()).filter(Boolean));
+    const custs = new Set(allRows.map(r => r[C.CUSTOMER]?.trim()).filter(Boolean));
+    const vals = [allRows.length, inv.length, allRows.length - inv.length, techs.size, custs.size];
+    const ids0 = ['sTotal','sInvoiced','sPending','sTechs','sCustomers'];
+    const ids1 = ['a-sTotal','a-sInvoiced','a-sPending','a-sTechs','a-sCustomers'];
+    ids0.forEach((id, i) => document.getElementById(id).textContent = vals[i]);
+    ids1.forEach((id, i) => document.getElementById(id).textContent = vals[i]);
   }
 
   // ── Filters ──────────────────────────────────
@@ -457,19 +630,15 @@
     fillSel('qTech',     uniq(allRows.map(r => r[C.TECH]?.trim())).sort(),     'All Techs');
     fillSel('qCustomer', uniq(allRows.map(r => r[C.CUSTOMER]?.trim())).sort(), 'All Customers');
   }
-
-  function fillSel(id, items, placeholder) {
-    document.getElementById(id).innerHTML =
-      `<option value="">${placeholder}</option>` +
+  function fillSel(id, items, ph) {
+    document.getElementById(id).innerHTML = `<option value="">${ph}</option>` +
       items.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
   }
-
   function applyFilters() {
-    const q      = document.getElementById('qSearch').value.toLowerCase();
-    const tech   = document.getElementById('qTech').value;
-    const cust   = document.getElementById('qCustomer').value;
+    const q = document.getElementById('qSearch').value.toLowerCase();
+    const tech = document.getElementById('qTech').value;
+    const cust = document.getElementById('qCustomer').value;
     const status = document.getElementById('qStatus').value;
-
     filtered = allRows.filter(row => {
       if (tech   && row[C.TECH]?.trim()     !== tech) return false;
       if (cust   && row[C.CUSTOMER]?.trim() !== cust) return false;
@@ -478,14 +647,11 @@
       if (q && !Object.values(row).join(' ').toLowerCase().includes(q)) return false;
       return true;
     });
-
     filtered.sort((a, b) => {
-      const cmp = (a[sortKey] || '').localeCompare(b[sortKey] || '', undefined, { numeric: true, sensitivity: 'base' });
+      const cmp = (a[sortKey]||'').localeCompare(b[sortKey]||'', undefined, {numeric:true,sensitivity:'base'});
       return sortDir === 'asc' ? cmp : -cmp;
     });
-
-    page = 1;
-    renderTable();
+    page = 1; renderTable();
   }
 
   // ── Table ────────────────────────────────────
@@ -493,202 +659,198 @@
     const total = filtered.length;
     document.getElementById('resultCount').textContent =
       total === allRows.length ? `${total} orders` : `${total} of ${allRows.length}`;
-
-    if (!total) {
-      document.getElementById('tableArea').innerHTML =
-        '<div class="msg-box"><p>No orders match the current filters.</p></div>';
-      return;
-    }
-
-    const start = (page - 1) * PAGE_SIZE;
-    const slice = filtered.slice(start, start + PAGE_SIZE);
-    const pages = Math.ceil(total / PAGE_SIZE);
-
-    const thead = TABLE_COLS.map(c => {
-      const cls     = sortKey === c.key ? sortDir : '';
-      const onclick = c.nosort ? '' : `onclick="sortBy('${c.key}')"`;
-      return `<th class="${cls}" ${onclick}>${c.label}</th>`;
-    }).join('');
-
+    if (!total) { document.getElementById('tableArea').innerHTML = '<div class="msg-box"><p>No orders match the current filters.</p></div>'; return; }
+    const start = (page-1)*PAGE_SIZE, slice = filtered.slice(start, start+PAGE_SIZE), pages = Math.ceil(total/PAGE_SIZE);
+    const thead = TABLE_COLS.map(c =>
+      `<th class="${sortKey===c.key?sortDir:''}" ${c.nosort?'':` onclick="sortBy('${c.key}')"`}>${c.label}</th>`
+    ).join('');
     const tbody = slice.map(row => {
       const inv = row[C.INVOICE]?.trim();
-      return `<tr class="${inv ? 'row-invoiced' : 'row-pending'}">
+      return `<tr class="${inv?'row-invoiced':'row-pending'}">
         <td style="white-space:nowrap">${esc(row[C.DATE])}</td>
         <td><span class="badge badge-so">${esc(row[C.SO])}</span></td>
-        <td>${inv ? `<span class="badge badge-invoiced">${esc(inv)}</span>` : `<span class="badge badge-pending">Pending</span>`}</td>
-        <td>${esc(row[C.CUSTOMER])}</td>
-        <td>${esc(row[C.SITE])}</td>
+        <td>${inv?`<span class="badge badge-invoiced">${esc(inv)}</span>`:`<span class="badge badge-pending">Pending</span>`}</td>
+        <td>${esc(row[C.CUSTOMER])}</td><td>${esc(row[C.SITE])}</td>
         <td><div class="cell-job" title="${esc(row[C.JOB])}">${esc(row[C.JOB])}</div></td>
         <td style="white-space:nowrap">${esc(row[C.TECH])}</td>
         <td><div class="cell-comment" title="${esc(row[C.COMMENTS])}">${esc(row[C.COMMENTS])}</div></td>
         <td>${mapLink(row[C.MAP])}</td>
       </tr>`;
     }).join('');
-
     document.getElementById('tableArea').innerHTML = `
-      <div class="table-wrap">
-        <div class="tscroll">
-          <table><thead><tr>${thead}</tr></thead><tbody>${tbody}</tbody></table>
-        </div>
-        <div class="table-footer">
-          <span class="page-info">Showing ${start + 1}–${Math.min(start + PAGE_SIZE, total)} of ${total}</span>
-          <div class="pagination">${buildPages(page, pages)}</div>
-        </div>
-      </div>`;
+      <div class="table-wrap"><div class="tscroll">
+        <table><thead><tr>${thead}</tr></thead><tbody>${tbody}</tbody></table>
+      </div>
+      <div class="table-footer">
+        <span class="page-info">Showing ${start+1}–${Math.min(start+PAGE_SIZE,total)} of ${total}</span>
+        <div class="pagination">${buildPages(page,pages)}</div>
+      </div></div>`;
   }
-
   function buildPages(cur, total) {
-    if (total <= 1) return '';
-    const out = [`<button class="pb" onclick="goPage(${cur-1})" ${cur===1?'disabled':''}>&#8592;</button>`];
-    const nums = [];
-    for (let i = 1; i <= total; i++) {
-      if (i === 1 || i === total || Math.abs(i - cur) <= 2) nums.push(i);
-      else if (nums[nums.length-1] !== '…') nums.push('…');
-    }
-    nums.forEach(n => out.push(
-      n === '…'
-        ? `<span class="pb" style="cursor:default">…</span>`
-        : `<button class="pb ${n===cur?'active':''}" onclick="goPage(${n})">${n}</button>`
-    ));
+    if (total<=1) return '';
+    const out=[`<button class="pb" onclick="goPage(${cur-1})" ${cur===1?'disabled':''}>&#8592;</button>`];
+    const nums=[];
+    for(let i=1;i<=total;i++) { if(i===1||i===total||Math.abs(i-cur)<=2) nums.push(i); else if(nums[nums.length-1]!=='…') nums.push('…'); }
+    nums.forEach(n=>out.push(n==='…'?`<span class="pb" style="cursor:default">…</span>`:`<button class="pb ${n===cur?'active':''}" onclick="goPage(${n})">${n}</button>`));
     out.push(`<button class="pb" onclick="goPage(${cur+1})" ${cur===total?'disabled':''}>&#8594;</button>`);
     return out.join('');
   }
-
-  function goPage(p) {
-    const max = Math.ceil(filtered.length / PAGE_SIZE);
-    if (p < 1 || p > max) return;
-    page = p;
-    renderTable();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-
-  function sortBy(key) {
-    sortDir = (sortKey === key && sortDir === 'asc') ? 'desc' : 'asc';
-    sortKey = key;
-    applyFilters();
-  }
+  function goPage(p) { const max=Math.ceil(filtered.length/PAGE_SIZE); if(p<1||p>max)return; page=p; renderTable(); window.scrollTo({top:0,behavior:'smooth'}); }
+  function sortBy(key) { sortDir=(sortKey===key&&sortDir==='asc')?'desc':'asc'; sortKey=key; applyFilters(); }
 
   // ── Sidebar ──────────────────────────────────
   function renderSidebar() {
-    const counts = {};
-    allRows.forEach(r => {
-      const t = r[C.TECH]?.trim();
-      if (t) counts[t] = (counts[t] || 0) + 1;
-    });
-    const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-    const max = sorted[0]?.[1] || 1;
-
-    document.getElementById('wTechs').innerHTML = sorted.slice(0, 14).map(([t, n]) => `
+    const counts={};
+    allRows.forEach(r=>{ const t=r[C.TECH]?.trim(); if(t) counts[t]=(counts[t]||0)+1; });
+    const sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+    const max=sorted[0]?.[1]||1;
+    document.getElementById('wTechs').innerHTML=sorted.slice(0,14).map(([t,n])=>`
       <li class="tech-item">
         <span class="tech-name">${esc(t)}</span>
         <div class="tech-bar-bg"><div class="tech-bar-fill" style="width:${Math.round(n/max*100)}%"></div></div>
         <span class="tech-count">${n}</span>
       </li>`).join('');
-
-    document.getElementById('wRecent').innerHTML = [...allRows].reverse().slice(0, 8).map(r => `
+    document.getElementById('wRecent').innerHTML=[...allRows].reverse().slice(0,8).map(r=>`
       <div class="recent-item">
         <div class="recent-so">${esc(r[C.SO])} <span style="font-weight:400;color:var(--gray-500)">${esc(r[C.DATE])}</span></div>
         <div class="recent-sub">${esc(r[C.CUSTOMER])} · ${esc(r[C.SITE])}</div>
       </div>`).join('');
   }
 
-  // ── Charts ───────────────────────────────────
+  // ── Analytics panel ──────────────────────────
+  function renderAnalytics() {
+    // Tech cards
+    const techData = {};
+    allRows.forEach(r => {
+      const t = r[C.TECH]?.trim(); if (!t) return;
+      if (!techData[t]) techData[t] = { total:0, inv:0 };
+      techData[t].total++;
+      if (r[C.INVOICE]?.trim()) techData[t].inv++;
+    });
+    const techSorted = Object.entries(techData).sort((a,b) => b[1].total - a[1].total);
+    document.getElementById('techCardsArea').innerHTML = `
+      <div class="tech-cards-grid">${techSorted.map(([name, d]) => {
+        const pend = d.total - d.inv;
+        const rate = d.total ? Math.round(d.inv / d.total * 100) : 0;
+        return `<div class="tech-card">
+          <div class="tech-card-name">${esc(name)}</div>
+          <div class="tech-card-stats">
+            <div class="tech-card-stat tc-total"><div class="tech-card-stat-val">${d.total}</div><div class="tech-card-stat-lbl">Jobs</div></div>
+            <div class="tech-card-stat tc-inv">  <div class="tech-card-stat-val">${d.inv}</div>  <div class="tech-card-stat-lbl">Invoiced</div></div>
+            <div class="tech-card-stat tc-pend"> <div class="tech-card-stat-val">${pend}</div>   <div class="tech-card-stat-lbl">Pending</div></div>
+          </div>
+          <div class="tech-rate-bar"><div class="tech-rate-fill" style="width:${rate}%"></div></div>
+        </div>`;
+      }).join('')}</div>`;
+
+    if (chartJsReady) renderAnalyticsCharts();
+    else chartsNeedRender = true;
+  }
+
+  function renderAnalyticsCharts() {
+    // Jobs by tech (horizontal bar)
+    const techCounts = {};
+    allRows.forEach(r => { const t=r[C.TECH]?.trim(); if(t) techCounts[t]=(techCounts[t]||0)+1; });
+    const techSorted = Object.entries(techCounts).sort((a,b)=>b[1]-a[1]).slice(0,15);
+
+    if (chartTech) chartTech.destroy();
+    chartTech = new Chart(document.getElementById('chartTech'), {
+      type: 'bar',
+      data: {
+        labels: techSorted.map(([t])=>t),
+        datasets:[{ label:'Jobs', data:techSorted.map(([,n])=>n), backgroundColor:'#2563eb', borderRadius:4, borderSkipped:false }]
+      },
+      options: {
+        indexAxis:'y', responsive:true, maintainAspectRatio:false,
+        plugins:{legend:{display:false}},
+        scales:{
+          x:{beginAtZero:true, ticks:{stepSize:1,font:{size:10}}, grid:{color:'#f1f5f9'}},
+          y:{grid:{display:false}, ticks:{font:{size:10}}}
+        }
+      }
+    });
+
+    // Top customers (horizontal bar)
+    const custCounts = {};
+    allRows.forEach(r => { const c=r[C.CUSTOMER]?.trim(); if(c) custCounts[c]=(custCounts[c]||0)+1; });
+    const custSorted = Object.entries(custCounts).sort((a,b)=>b[1]-a[1]).slice(0,15);
+
+    if (chartCust) chartCust.destroy();
+    chartCust = new Chart(document.getElementById('chartCust'), {
+      type: 'bar',
+      data: {
+        labels: custSorted.map(([c])=>c),
+        datasets:[{ label:'Jobs', data:custSorted.map(([,n])=>n), backgroundColor:'#7c3aed', borderRadius:4, borderSkipped:false }]
+      },
+      options: {
+        indexAxis:'y', responsive:true, maintainAspectRatio:false,
+        plugins:{legend:{display:false}},
+        scales:{
+          x:{beginAtZero:true, ticks:{stepSize:1,font:{size:10}}, grid:{color:'#f1f5f9'}},
+          y:{grid:{display:false}, ticks:{font:{size:10}}}
+        }
+      }
+    });
+
+    document.getElementById('analyticsCharts').style.display = 'grid';
+  }
+
+  // ── Panel 0 charts ───────────────────────────
   function normalizeDate(raw) {
     if (!raw) return null;
-    const parts = raw.trim().replace(/-/g, '/').split('/').map(Number).filter(n => !isNaN(n));
-    return parts.length >= 2 ? `${parts[0]}/${parts[1]}` : raw.trim();
+    const parts = raw.trim().replace(/-/g,'/').split('/').map(Number).filter(n=>!isNaN(n));
+    return parts.length>=2 ? `${parts[0]}/${parts[1]}` : raw.trim();
   }
 
   function renderCharts() {
-    // Bar chart — jobs by date
-    const dateCounts = {};
-    allRows.forEach(r => {
-      const d = normalizeDate(r[C.DATE]);
-      if (d) dateCounts[d] = (dateCounts[d] || 0) + 1;
+    const dateCounts={};
+    allRows.forEach(r=>{ const d=normalizeDate(r[C.DATE]); if(d) dateCounts[d]=(dateCounts[d]||0)+1; });
+    const labels=Object.keys(dateCounts).sort((a,b)=>{
+      const[am,ad]=a.split('/').map(Number),[bm,bd]=b.split('/').map(Number);
+      return am!==bm?am-bm:ad-bd;
     });
-    const labels = Object.keys(dateCounts).sort((a, b) => {
-      const [am, ad] = a.split('/').map(Number), [bm, bd] = b.split('/').map(Number);
-      return am !== bm ? am - bm : ad - bd;
-    });
-
-    if (chartDate) chartDate.destroy();
-    chartDate = new Chart(document.getElementById('chartDate'), {
-      type: 'bar',
-      data: {
-        labels,
-        datasets: [{ label: 'Jobs', data: labels.map(l => dateCounts[l]),
-          backgroundColor: '#2563eb', borderRadius: 4, borderSkipped: false }]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: {
-          x: { grid: { display: false }, ticks: { font: { size: 10 }, maxRotation: 45 } },
-          y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 10 } }, grid: { color: '#f1f5f9' } }
-        }
-      }
+    if(chartDate) chartDate.destroy();
+    chartDate=new Chart(document.getElementById('chartDate'),{
+      type:'bar',
+      data:{labels,datasets:[{label:'Jobs',data:labels.map(l=>dateCounts[l]),backgroundColor:'#2563eb',borderRadius:4,borderSkipped:false}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+        scales:{x:{grid:{display:false},ticks:{font:{size:10},maxRotation:45}},y:{beginAtZero:true,ticks:{stepSize:1,font:{size:10}},grid:{color:'#f1f5f9'}}}}
     });
 
-    // Doughnut chart — invoiced vs open
-    const invoiced = allRows.filter(r => r[C.INVOICE]?.trim()).length;
-    const open     = allRows.length - invoiced;
-    const total    = invoiced + open;
-
-    const pctPlugin = {
-      id: 'pct',
-      afterDatasetsDraw(chart) {
-        const { ctx, data } = chart;
-        chart.getDatasetMeta(0).data.forEach((arc, i) => {
-          const val = data.datasets[0].data[i];
-          const pct = Math.round(val / total * 100);
-          if (pct < 4) return;
-          const mid = (arc.startAngle + arc.endAngle) / 2;
-          const r   = (arc.outerRadius + arc.innerRadius) / 2;
-          ctx.save();
-          ctx.fillStyle = '#fff';
-          ctx.font = 'bold 13px sans-serif';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(`${pct}%`, arc.x + r * Math.cos(mid), arc.y + r * Math.sin(mid));
-          ctx.restore();
-        });
-      }
-    };
-
-    if (chartStatus) chartStatus.destroy();
-    chartStatus = new Chart(document.getElementById('chartStatus'), {
-      type: 'doughnut',
-      plugins: [pctPlugin],
-      data: {
-        labels: ['Invoiced', 'Open'],
-        datasets: [{ data: [invoiced, open],
-          backgroundColor: ['#16a34a', '#f59e0b'], borderWidth: 2, borderColor: '#fff', hoverOffset: 6 }]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false, cutout: '62%',
-        plugins: {
-          legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 14, usePointStyle: true } },
-          tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed} (${Math.round(ctx.parsed/total*100)}%)` } }
-        }
-      }
+    const inv=allRows.filter(r=>r[C.INVOICE]?.trim()).length, open=allRows.length-inv, total=inv+open;
+    const pctPlugin={id:'pct',afterDatasetsDraw(chart){
+      const{ctx,data}=chart;
+      chart.getDatasetMeta(0).data.forEach((arc,i)=>{
+        const val=data.datasets[0].data[i], pct=Math.round(val/total*100);
+        if(pct<4) return;
+        const mid=(arc.startAngle+arc.endAngle)/2, r=(arc.outerRadius+arc.innerRadius)/2;
+        ctx.save(); ctx.fillStyle='#fff'; ctx.font='bold 13px sans-serif';
+        ctx.textAlign='center'; ctx.textBaseline='middle';
+        ctx.fillText(`${pct}%`, arc.x+r*Math.cos(mid), arc.y+r*Math.sin(mid)); ctx.restore();
+      });
+    }};
+    if(chartStatus) chartStatus.destroy();
+    chartStatus=new Chart(document.getElementById('chartStatus'),{
+      type:'doughnut', plugins:[pctPlugin],
+      data:{labels:['Invoiced','Open'],datasets:[{data:[inv,open],backgroundColor:['#16a34a','#f59e0b'],borderWidth:2,borderColor:'#fff',hoverOffset:6}]},
+      options:{responsive:true,maintainAspectRatio:false,cutout:'62%',
+        plugins:{legend:{position:'bottom',labels:{font:{size:11},padding:14,usePointStyle:true}},
+          tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${ctx.parsed} (${Math.round(ctx.parsed/total*100)}%)`}}}}
     });
+
+    renderAnalyticsCharts();
   }
 
   // ── Helpers ──────────────────────────────────
   function mapLink(val) {
-    val = (val || '').trim();
-    if (!val) return '';
-    const href = val.startsWith('http') ? val : `https://www.google.com/maps?q=${encodeURIComponent(val)}`;
+    val=(val||'').trim(); if(!val) return '';
+    const href=val.startsWith('http')?val:`https://www.google.com/maps?q=${encodeURIComponent(val)}`;
     return `<a class="map-btn" href="${href}" target="_blank" rel="noopener noreferrer">
       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
         <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
       </svg>Map</a>`;
   }
-
-  function esc(s) {
-    return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
-
+  function esc(s) { return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
   function uniq(arr) { return [...new Set(arr.filter(Boolean))]; }
 
   loadData();
