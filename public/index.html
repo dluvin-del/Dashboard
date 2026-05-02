@@ -114,8 +114,42 @@
     .spin { animation: spin .9s linear infinite; display: inline-block; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    /* ── Tab Navigation ──────────────────────── */
+    .tab-nav {
+      background: var(--navy-dark);
+      padding: 0 24px;
+      display: flex;
+      border-bottom: 2px solid rgba(255,255,255,0.08);
+      position: sticky;
+      top: 73px;
+      z-index: 99;
+    }
+
+    .tab-btn {
+      padding: 11px 20px;
+      border: none;
+      background: transparent;
+      color: rgba(255,255,255,0.55);
+      font-size: .82rem;
+      font-weight: 600;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      transition: color .15s, border-color .15s;
+      white-space: nowrap;
+      letter-spacing: .01em;
+    }
+    .tab-btn:hover { color: rgba(255,255,255,0.85); }
+    .tab-btn.active {
+      color: #fff;
+      border-bottom-color: var(--blue);
+    }
+
     /* ── Main layout ─────────────────────────── */
     main { padding: 20px 24px; max-width: 1700px; margin: 0 auto; }
+
+    .panel { display: none; }
+    .panel.active { display: block; }
 
     /* ── Stats grid ─────────────────────────── */
     .stats-grid {
@@ -243,8 +277,9 @@
       border-bottom: 1px solid var(--gray-100);
       transition: background .08s;
     }
-    tbody tr.row-invoiced { background: var(--green-row); }
-    tbody tr.row-pending  { background: var(--amber-row); }
+    tbody tr.row-invoiced  { background: var(--green-row); }
+    tbody tr.row-pending   { background: var(--amber-row); }
+    tbody tr.row-received  { background: var(--green-row); }
     tbody tr:hover { filter: brightness(.96); }
 
     tbody td { padding: 9px 13px; vertical-align: middle; }
@@ -258,7 +293,9 @@
       white-space: nowrap;
     }
     .badge-so       { background: var(--navy); color: #fff; }
+    .badge-po       { background: var(--navy); color: #fff; }
     .badge-invoiced { background: var(--green-light); color: var(--green); }
+    .badge-received { background: var(--green-light); color: var(--green); }
     .badge-pending  { background: var(--amber-light); color: var(--amber); }
 
     .cell-job {
@@ -407,6 +444,61 @@
       margin-bottom: 14px;
     }
     .chart-wrap { position: relative; }
+
+    /* ── Analytics Panel ─────────────────────── */
+    .analytics-section-title {
+      font-size: .7rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: var(--gray-500);
+      margin: 0 0 12px;
+    }
+
+    .analytics-charts {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    @media (max-width: 900px) { .analytics-charts { grid-template-columns: 1fr; } }
+
+    .tech-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .tech-perf-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      box-shadow: var(--shadow);
+      border-left: 4px solid var(--blue);
+    }
+    .tech-perf-name {
+      font-weight: 700;
+      font-size: .9rem;
+      color: var(--navy);
+      margin-bottom: 10px;
+    }
+    .tech-perf-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: .78rem;
+      color: var(--gray-500);
+      margin-bottom: 4px;
+    }
+    .tech-perf-row span:last-child { font-weight: 700; color: var(--gray-700); }
+    .tech-rate-bar {
+      margin-top: 8px;
+      height: 4px;
+      background: var(--gray-200);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .tech-rate-fill { height: 100%; background: var(--green); border-radius: 2px; }
   </style>
 </head>
 <body>
@@ -422,7 +514,7 @@
   </div>
   <div class="header-right">
     <span id="lastUpdated">Not loaded</span>
-    <button class="btn btn-primary" id="refreshBtn" onclick="loadData()">
+    <button class="btn btn-primary" id="refreshBtn" onclick="refreshCurrentPanel()">
       <svg id="refreshIcon" width="14" height="14" viewBox="0 0 24 24" fill="none"
            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <polyline points="23 4 23 10 17 10"></polyline>
@@ -433,108 +525,335 @@
   </div>
 </header>
 
+<nav class="tab-nav">
+  <button class="tab-btn active" onclick="switchTab(0)">Service Orders</button>
+  <button class="tab-btn" onclick="switchTab(1)">Analytics</button>
+  <button class="tab-btn" onclick="switchTab(2)">RB W/O</button>
+  <button class="tab-btn" onclick="switchTab(3)">RB PO's</button>
+</nav>
+
 <main>
-  <!-- Stats -->
-  <div class="stats-grid">
-    <div class="stat-card c-blue">
-      <div class="stat-label">Total Orders</div>
-      <div class="stat-value" id="sTotal">—</div>
-    </div>
-    <div class="stat-card c-green">
-      <div class="stat-label">Invoiced</div>
-      <div class="stat-value" id="sInvoiced">—</div>
-    </div>
-    <div class="stat-card c-amber">
-      <div class="stat-label">Pending</div>
-      <div class="stat-value" id="sPending">—</div>
-    </div>
-    <div class="stat-card c-navy">
-      <div class="stat-label">Technicians</div>
-      <div class="stat-value" id="sTechs">—</div>
-    </div>
-    <div class="stat-card c-purple">
-      <div class="stat-label">Customers</div>
-      <div class="stat-value" id="sCustomers">—</div>
-    </div>
-  </div>
 
-  <!-- Charts -->
-  <div class="charts-row" id="chartsRow" style="display:none">
-    <div class="chart-card">
-      <div class="chart-title">Jobs by Date</div>
-      <div class="chart-wrap" style="height:220px">
-        <canvas id="chartDate"></canvas>
+  <!-- ═══════════════════════════════════════════════════════
+       Panel 0 — Service Orders
+  ════════════════════════════════════════════════════════ -->
+  <div id="panel-0" class="panel active">
+
+    <div class="stats-grid">
+      <div class="stat-card c-blue">
+        <div class="stat-label">Total Orders</div>
+        <div class="stat-value" id="sTotal">—</div>
+      </div>
+      <div class="stat-card c-green">
+        <div class="stat-label">Invoiced</div>
+        <div class="stat-value" id="sInvoiced">—</div>
+      </div>
+      <div class="stat-card c-amber">
+        <div class="stat-label">Pending</div>
+        <div class="stat-value" id="sPending">—</div>
+      </div>
+      <div class="stat-card c-navy">
+        <div class="stat-label">Technicians</div>
+        <div class="stat-value" id="sTechs">—</div>
+      </div>
+      <div class="stat-card c-purple">
+        <div class="stat-label">Customers</div>
+        <div class="stat-value" id="sCustomers">—</div>
       </div>
     </div>
-    <div class="chart-card">
-      <div class="chart-title">Invoiced vs Open</div>
-      <div class="chart-wrap" style="height:220px">
-        <canvas id="chartStatus"></canvas>
-      </div>
-    </div>
-  </div>
 
-  <div class="body-grid">
-    <div id="mainCol">
-      <!-- Filters -->
-      <div class="filters" id="filterBar" style="display:none">
-        <div class="fg">
-          <div class="fl">Search</div>
-          <input type="search" class="fi fi-search" id="qSearch"
-                 placeholder="Search any field…" oninput="applyFilters()" />
+    <div class="charts-row" id="chartsRow" style="display:none">
+      <div class="chart-card">
+        <div class="chart-title">Jobs by Date</div>
+        <div class="chart-wrap" style="height:220px">
+          <canvas id="chartDate"></canvas>
         </div>
-        <div class="fg">
-          <div class="fl">Technician</div>
-          <select class="fs" id="qTech" onchange="applyFilters()">
-            <option value="">All Techs</option>
-          </select>
-        </div>
-        <div class="fg">
-          <div class="fl">Customer</div>
-          <select class="fs" id="qCustomer" onchange="applyFilters()">
-            <option value="">All Customers</option>
-          </select>
-        </div>
-        <div class="fg">
-          <div class="fl">Status</div>
-          <select class="fs" id="qStatus" onchange="applyFilters()">
-            <option value="">All</option>
-            <option value="invoiced">Invoiced</option>
-            <option value="pending">Pending</option>
-          </select>
-        </div>
-        <span class="result-count" id="resultCount"></span>
       </div>
-
-      <!-- Table area -->
-      <div id="tableArea">
-        <div class="msg-box" id="initMsg">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none"
-               stroke="currentColor" stroke-width="1.5">
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="12" y1="8" x2="12" y2="12"/>
-            <line x1="12" y1="16" x2="12.01" y2="16"/>
-          </svg>
-          <p><strong>Loading service orders…</strong></p>
+      <div class="chart-card">
+        <div class="chart-title">Invoiced vs Open</div>
+        <div class="chart-wrap" style="height:220px">
+          <canvas id="chartStatus"></canvas>
         </div>
       </div>
     </div>
 
-    <!-- Sidebar -->
-    <div class="sidebar" id="sidebar" style="display:none">
-      <div class="widget">
-        <div class="widget-title">By Technician</div>
-        <ul class="tech-list" id="wTechs"></ul>
+    <div class="body-grid">
+      <div id="mainCol">
+        <div class="filters" id="filterBar" style="display:none">
+          <div class="fg">
+            <div class="fl">Search</div>
+            <input type="search" class="fi fi-search" id="qSearch"
+                   placeholder="Search any field…" oninput="applyFilters()" />
+          </div>
+          <div class="fg">
+            <div class="fl">Technician</div>
+            <select class="fs" id="qTech" onchange="applyFilters()">
+              <option value="">All Techs</option>
+            </select>
+          </div>
+          <div class="fg">
+            <div class="fl">Customer</div>
+            <select class="fs" id="qCustomer" onchange="applyFilters()">
+              <option value="">All Customers</option>
+            </select>
+          </div>
+          <div class="fg">
+            <div class="fl">Status</div>
+            <select class="fs" id="qStatus" onchange="applyFilters()">
+              <option value="">All</option>
+              <option value="invoiced">Invoiced</option>
+              <option value="pending">Pending</option>
+            </select>
+          </div>
+          <span class="result-count" id="resultCount"></span>
+        </div>
+
+        <div id="tableArea">
+          <div class="msg-box" id="initMsg">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="1.5">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <p><strong>Loading service orders…</strong></p>
+          </div>
+        </div>
       </div>
-      <div class="widget">
-        <div class="widget-title">Most Recent</div>
-        <div id="wRecent"></div>
+
+      <div class="sidebar" id="sidebar" style="display:none">
+        <div class="widget">
+          <div class="widget-title">By Technician</div>
+          <ul class="tech-list" id="wTechs"></ul>
+        </div>
+        <div class="widget">
+          <div class="widget-title">Most Recent</div>
+          <div id="wRecent"></div>
+        </div>
       </div>
     </div>
-  </div>
+
+  </div><!-- /panel-0 -->
+
+
+  <!-- ═══════════════════════════════════════════════════════
+       Panel 1 — Analytics
+  ════════════════════════════════════════════════════════ -->
+  <div id="panel-1" class="panel">
+
+    <div id="analyticsArea">
+      <div class="msg-box">
+        <p><strong>Loading analytics…</strong></p>
+      </div>
+    </div>
+
+  </div><!-- /panel-1 -->
+
+
+  <!-- ═══════════════════════════════════════════════════════
+       Panel 2 — RB W/O
+  ════════════════════════════════════════════════════════ -->
+  <div id="panel-2" class="panel">
+
+    <div class="stats-grid">
+      <div class="stat-card c-blue">
+        <div class="stat-label">Total W/Os</div>
+        <div class="stat-value" id="wo-sTotal">—</div>
+      </div>
+      <div class="stat-card c-green">
+        <div class="stat-label">Invoiced</div>
+        <div class="stat-value" id="wo-sInvoiced">—</div>
+      </div>
+      <div class="stat-card c-amber">
+        <div class="stat-label">Pending</div>
+        <div class="stat-value" id="wo-sPending">—</div>
+      </div>
+      <div class="stat-card c-navy">
+        <div class="stat-label">Technicians</div>
+        <div class="stat-value" id="wo-sTechs">—</div>
+      </div>
+      <div class="stat-card c-purple">
+        <div class="stat-label">Customers</div>
+        <div class="stat-value" id="wo-sCustomers">—</div>
+      </div>
+    </div>
+
+    <div class="charts-row" id="woChartsRow" style="display:none">
+      <div class="chart-card">
+        <div class="chart-title">Jobs by Tech</div>
+        <div class="chart-wrap" style="height:220px">
+          <canvas id="chartWoTech"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Invoiced vs Open</div>
+        <div class="chart-wrap" style="height:220px">
+          <canvas id="chartWoStatus"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="filters" id="woFilterBar" style="display:none">
+      <div class="fg">
+        <div class="fl">Search</div>
+        <input type="search" class="fi fi-search" id="woSearch"
+               placeholder="Search any field…" oninput="applyWoFilters()" />
+      </div>
+      <div class="fg">
+        <div class="fl">Technician</div>
+        <select class="fs" id="woQTech" onchange="applyWoFilters()">
+          <option value="">All Techs</option>
+        </select>
+      </div>
+      <div class="fg">
+        <div class="fl">Customer</div>
+        <select class="fs" id="woQCustomer" onchange="applyWoFilters()">
+          <option value="">All Customers</option>
+        </select>
+      </div>
+      <div class="fg">
+        <div class="fl">Status</div>
+        <select class="fs" id="woQStatus" onchange="applyWoFilters()">
+          <option value="">All</option>
+          <option value="invoiced">Invoiced</option>
+          <option value="pending">Pending</option>
+        </select>
+      </div>
+      <span class="result-count" id="woResultCount"></span>
+    </div>
+
+    <div id="woTableArea">
+      <div class="msg-box"><p><strong>Loading RB W/O data…</strong></p></div>
+    </div>
+
+  </div><!-- /panel-2 -->
+
+
+  <!-- ═══════════════════════════════════════════════════════
+       Panel 3 — RB PO's
+  ════════════════════════════════════════════════════════ -->
+  <div id="panel-3" class="panel">
+
+    <div class="stats-grid">
+      <div class="stat-card c-blue">
+        <div class="stat-label">Total POs</div>
+        <div class="stat-value" id="po-sTotal">—</div>
+      </div>
+      <div class="stat-card c-green">
+        <div class="stat-label">Received</div>
+        <div class="stat-value" id="po-sReceived">—</div>
+      </div>
+      <div class="stat-card c-amber">
+        <div class="stat-label">Pending</div>
+        <div class="stat-value" id="po-sPending">—</div>
+      </div>
+      <div class="stat-card c-navy">
+        <div class="stat-label">Vendors</div>
+        <div class="stat-value" id="po-sVendors">—</div>
+      </div>
+      <div class="stat-card c-purple">
+        <div class="stat-label">Accounts</div>
+        <div class="stat-value" id="po-sAccounts">—</div>
+      </div>
+    </div>
+
+    <div class="charts-row" id="poChartsRow" style="display:none">
+      <div class="chart-card">
+        <div class="chart-title">POs by Vendor</div>
+        <div class="chart-wrap" style="height:220px">
+          <canvas id="chartPoVendor"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Received vs Pending</div>
+        <div class="chart-wrap" style="height:220px">
+          <canvas id="chartPoStatus"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="filters" id="poFilterBar" style="display:none">
+      <div class="fg">
+        <div class="fl">Search</div>
+        <input type="search" class="fi fi-search" id="poSearch"
+               placeholder="Search any field…" oninput="applyPoFilters()" />
+      </div>
+      <div class="fg">
+        <div class="fl">Vendor</div>
+        <select class="fs" id="poQVendor" onchange="applyPoFilters()">
+          <option value="">All Vendors</option>
+        </select>
+      </div>
+      <div class="fg">
+        <div class="fl">Buyer</div>
+        <select class="fs" id="poQBuyer" onchange="applyPoFilters()">
+          <option value="">All Buyers</option>
+        </select>
+      </div>
+      <div class="fg">
+        <div class="fl">Account</div>
+        <select class="fs" id="poQAccount" onchange="applyPoFilters()">
+          <option value="">All Accounts</option>
+        </select>
+      </div>
+      <div class="fg">
+        <div class="fl">Status</div>
+        <select class="fs" id="poQStatus" onchange="applyPoFilters()">
+          <option value="">All</option>
+          <option value="received">Received</option>
+          <option value="pending">Pending</option>
+        </select>
+      </div>
+      <span class="result-count" id="poResultCount"></span>
+    </div>
+
+    <div id="poTableArea">
+      <div class="msg-box"><p><strong>Loading RB PO data…</strong></p></div>
+    </div>
+
+  </div><!-- /panel-3 -->
+
 </main>
 
 <script>
+
+  /* ════════════════════════════════════════════════════════
+     Tab Management
+  ════════════════════════════════════════════════════════ */
+  let activeTab = 0;
+
+  function switchTab(n) {
+    document.querySelectorAll('.tab-btn').forEach((btn, i) => btn.classList.toggle('active', i === n));
+    document.querySelectorAll('.panel').forEach((panel, i) => panel.classList.toggle('active', i === n));
+    activeTab = n;
+    if (n === 1) renderAnalytics();
+    if (n === 2 && !woRows.length) loadRBIAWO();
+    if (n === 3 && !poRows.length) loadRBIAPO();
+  }
+
+  function refreshCurrentPanel() {
+    const btn  = document.getElementById('refreshBtn');
+    const icon = document.getElementById('refreshIcon');
+    btn.disabled = true;
+    icon.classList.add('spin');
+    const done = () => { btn.disabled = false; icon.classList.remove('spin'); };
+
+    if (activeTab === 0) { loadData().finally(done); return; }
+    if (activeTab === 1) { renderAnalytics(); done(); return; }
+    if (activeTab === 2) { loadRBIAWO().finally(done); return; }
+    if (activeTab === 3) { loadRBIAPO().finally(done); return; }
+    done();
+  }
+
+  function setLastUpdated(iso) {
+    const d = new Date(iso);
+    document.getElementById('lastUpdated').textContent =
+      `Updated ${d.toLocaleDateString()} ${d.toLocaleTimeString()}`;
+  }
+
+  /* ════════════════════════════════════════════════════════
+     Panel 0 — Service Orders
+  ════════════════════════════════════════════════════════ */
   const SHEET_COLS = {
     DATE:           'M',
     SO:             'SERVICE ORDER #',
@@ -563,13 +882,12 @@
 
   const PAGE_SIZE = 50;
 
-  let allRows    = [];
-  let filtered   = [];
-  let sortKey    = SHEET_COLS.SO;
-  let sortDir    = 'asc';
-  let page       = 1;
+  let allRows  = [];
+  let filtered = [];
+  let sortKey  = SHEET_COLS.SO;
+  let sortDir  = 'asc';
+  let page     = 1;
 
-  /* ── Data loading ──────────────────────────── */
   async function loadData() {
     const btn  = document.getElementById('refreshBtn');
     const icon = document.getElementById('refreshIcon');
@@ -582,10 +900,7 @@
       if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
 
       allRows = json.rows || [];
-
-      const d = new Date(json.fetched);
-      document.getElementById('lastUpdated').textContent =
-        `Updated ${d.toLocaleDateString()} ${d.toLocaleTimeString()}`;
+      setLastUpdated(json.fetched);
 
       updateStats();
       populateFilters();
@@ -596,7 +911,6 @@
       document.getElementById('sidebar').style.display   = 'flex';
       document.getElementById('initMsg')?.remove();
 
-      // Charts are optional — don't let a failure here break the data display
       try {
         renderCharts();
         document.getElementById('chartsRow').style.display = 'grid';
@@ -620,7 +934,6 @@
     }
   }
 
-  /* ── Stats ─────────────────────────────────── */
   function updateStats() {
     const invoiced = allRows.filter(r => r[SHEET_COLS.INVOICE]?.trim());
     const techSet  = new Set(allRows.map(r => r[SHEET_COLS.TECH]?.trim()).filter(Boolean));
@@ -633,11 +946,9 @@
     document.getElementById('sCustomers').textContent = custSet.size;
   }
 
-  /* ── Filters ────────────────────────────────── */
   function populateFilters() {
     const techs = uniq(allRows.map(r => r[SHEET_COLS.TECH]?.trim())).sort();
     const custs = uniq(allRows.map(r => r[SHEET_COLS.CUSTOMER]?.trim())).sort();
-
     sel('qTech',     techs, 'All Techs');
     sel('qCustomer', custs, 'All Customers');
   }
@@ -676,7 +987,6 @@
     renderTable();
   }
 
-  /* ── Table rendering ────────────────────────── */
   function renderTable() {
     const total = filtered.length;
     document.getElementById('resultCount').textContent =
@@ -688,9 +998,9 @@
       return;
     }
 
-    const start  = (page - 1) * PAGE_SIZE;
-    const slice  = filtered.slice(start, start + PAGE_SIZE);
-    const pages  = Math.ceil(total / PAGE_SIZE);
+    const start = (page - 1) * PAGE_SIZE;
+    const slice = filtered.slice(start, start + PAGE_SIZE);
+    const pages = Math.ceil(total / PAGE_SIZE);
 
     const thead = TABLE_COLS.map(c => {
       const cls = sortKey === c.key ? sortDir : '';
@@ -763,9 +1073,7 @@
     applyFilters();
   }
 
-  /* ── Sidebar ────────────────────────────────── */
   function renderSidebar() {
-    // Tech breakdown
     const counts = {};
     allRows.forEach(r => {
       const t = r[SHEET_COLS.TECH]?.trim();
@@ -781,7 +1089,6 @@
         <span class="tech-count">${n}</span>
       </li>`).join('');
 
-    // Most recent entries
     const recent = [...allRows].reverse().slice(0, 8);
     document.getElementById('wRecent').innerHTML = recent.map(r => `
       <div class="recent-item">
@@ -790,73 +1097,665 @@
       </div>`).join('');
   }
 
-  /* ── Charts ─────────────────────────────────── */
   let chartDate = null, chartStatus = null;
 
   function normalizeDate(raw) {
     if (!raw) return null;
     const d = raw.trim().replace(/-/g, '/');
     const parts = d.split('/').map(p => parseInt(p, 10)).filter(n => !isNaN(n));
-    if (parts.length >= 2) {
-      // M/D or M/D/YY or M/D/YYYY — just return M/D
-      return `${parts[0]}/${parts[1]}`;
-    }
+    if (parts.length >= 2) return `${parts[0]}/${parts[1]}`;
     return d;
   }
 
   function renderCharts() {
-    // ── Jobs by Date (bar chart) ──
     const dateCounts = {};
     allRows.forEach(r => {
       const d = normalizeDate(r[SHEET_COLS.DATE]);
       if (d) dateCounts[d] = (dateCounts[d] || 0) + 1;
     });
-
-    // Sort by month then day
     const dateLabels = Object.keys(dateCounts).sort((a, b) => {
       const [am, ad] = a.split('/').map(Number);
       const [bm, bd] = b.split('/').map(Number);
       return am !== bm ? am - bm : ad - bd;
     });
-    const dateValues = dateLabels.map(l => dateCounts[l]);
 
     if (chartDate) chartDate.destroy();
     chartDate = new Chart(document.getElementById('chartDate'), {
       type: 'bar',
       data: {
         labels: dateLabels,
-        datasets: [{
-          label: 'Jobs',
-          data: dateValues,
-          backgroundColor: '#2563eb',
-          borderRadius: 4,
-          borderSkipped: false,
-        }]
+        datasets: [{ label: 'Jobs', data: dateLabels.map(l => dateCounts[l]),
+          backgroundColor: '#2563eb', borderRadius: 4, borderSkipped: false }]
       },
       options: {
-        responsive: true,
-        maintainAspectRatio: false,
+        responsive: true, maintainAspectRatio: false,
         plugins: { legend: { display: false } },
         scales: {
-          x: {
-            grid: { display: false },
-            ticks: { font: { size: 10 }, maxRotation: 45 }
-          },
-          y: {
-            beginAtZero: true,
-            ticks: { stepSize: 1, font: { size: 10 } },
-            grid: { color: '#f1f5f9' }
-          }
+          x: { grid: { display: false }, ticks: { font: { size: 10 }, maxRotation: 45 } },
+          y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 10 } }, grid: { color: '#f1f5f9' } }
         }
       }
     });
 
-    // ── Invoiced vs Open (doughnut chart) ──
     const invoiced = allRows.filter(r => r[SHEET_COLS.INVOICE]?.trim()).length;
     const open     = allRows.length - invoiced;
+    const total    = invoiced + open;
 
-    const total = invoiced + open;
-    const pctPlugin = {
+    const pctPlugin = makePctPlugin(total);
+
+    if (chartStatus) chartStatus.destroy();
+    chartStatus = new Chart(document.getElementById('chartStatus'), {
+      type: 'doughnut',
+      plugins: [pctPlugin],
+      data: {
+        labels: ['Invoiced', 'Open'],
+        datasets: [{ data: [invoiced, open], backgroundColor: ['#16a34a', '#f59e0b'], borderWidth: 2, borderColor: '#fff', hoverOffset: 6 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, cutout: '62%',
+        plugins: {
+          legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 14, usePointStyle: true } },
+          tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed} (${Math.round(ctx.parsed / total * 100)}%)` } }
+        }
+      }
+    });
+  }
+
+
+  /* ════════════════════════════════════════════════════════
+     Panel 1 — Analytics
+  ════════════════════════════════════════════════════════ */
+  let chartAnalyticsTech = null, chartAnalyticsCustomer = null;
+
+  function renderAnalytics() {
+    const area = document.getElementById('analyticsArea');
+
+    if (!allRows.length) {
+      area.innerHTML = '<div class="msg-box"><p>Service Orders data not yet loaded. Switch to Service Orders and wait for data to load.</p></div>';
+      return;
+    }
+
+    // Build tech stats
+    const techStats = {};
+    allRows.forEach(r => {
+      const t = r[SHEET_COLS.TECH]?.trim();
+      if (!t) return;
+      if (!techStats[t]) techStats[t] = { jobs: 0, invoiced: 0 };
+      techStats[t].jobs++;
+      if (r[SHEET_COLS.INVOICE]?.trim()) techStats[t].invoiced++;
+    });
+    const techList = Object.entries(techStats).sort((a, b) => b[1].jobs - a[1].jobs);
+
+    // Build customer stats
+    const custCounts = {};
+    allRows.forEach(r => {
+      const c = r[SHEET_COLS.CUSTOMER]?.trim();
+      if (c) custCounts[c] = (custCounts[c] || 0) + 1;
+    });
+    const custList = Object.entries(custCounts).sort((a, b) => b[1] - a[1]).slice(0, 10);
+
+    const cards = techList.map(([name, s]) => {
+      const rate = s.jobs ? Math.round(s.invoiced / s.jobs * 100) : 0;
+      return `
+        <div class="tech-perf-card">
+          <div class="tech-perf-name">${esc(name)}</div>
+          <div class="tech-perf-row"><span>Jobs</span><span>${s.jobs}</span></div>
+          <div class="tech-perf-row"><span>Invoiced</span><span>${s.invoiced}</span></div>
+          <div class="tech-perf-row"><span>Pending</span><span>${s.jobs - s.invoiced}</span></div>
+          <div class="tech-rate-bar"><div class="tech-rate-fill" style="width:${rate}%"></div></div>
+          <div style="text-align:right;font-size:.7rem;color:var(--gray-500);margin-top:3px">${rate}% invoiced</div>
+        </div>`;
+    }).join('');
+
+    area.innerHTML = `
+      <p class="analytics-section-title">Technician Performance</p>
+      <div class="tech-cards-grid">${cards}</div>
+      <div class="analytics-charts">
+        <div class="chart-card">
+          <div class="chart-title">Jobs by Technician</div>
+          <div class="chart-wrap" style="height:${Math.max(200, techList.length * 28)}px">
+            <canvas id="chartAnalyticsTech"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Top 10 Customers</div>
+          <div class="chart-wrap" style="height:${Math.max(200, custList.length * 28)}px">
+            <canvas id="chartAnalyticsCustomer"></canvas>
+          </div>
+        </div>
+      </div>`;
+
+    if (chartAnalyticsTech) chartAnalyticsTech.destroy();
+    chartAnalyticsTech = new Chart(document.getElementById('chartAnalyticsTech'), {
+      type: 'bar',
+      data: {
+        labels: techList.map(([n]) => n),
+        datasets: [
+          { label: 'Invoiced', data: techList.map(([, s]) => s.invoiced), backgroundColor: '#16a34a', borderRadius: 3 },
+          { label: 'Pending',  data: techList.map(([, s]) => s.jobs - s.invoiced), backgroundColor: '#f59e0b', borderRadius: 3 }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        indexAxis: 'y',
+        plugins: { legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 12, usePointStyle: true } } },
+        scales: {
+          x: { stacked: true, beginAtZero: true, ticks: { stepSize: 1, font: { size: 10 } }, grid: { color: '#f1f5f9' } },
+          y: { stacked: true, grid: { display: false }, ticks: { font: { size: 11 } } }
+        }
+      }
+    });
+
+    if (chartAnalyticsCustomer) chartAnalyticsCustomer.destroy();
+    chartAnalyticsCustomer = new Chart(document.getElementById('chartAnalyticsCustomer'), {
+      type: 'bar',
+      data: {
+        labels: custList.map(([n]) => n),
+        datasets: [{ label: 'Jobs', data: custList.map(([, n]) => n), backgroundColor: '#2563eb', borderRadius: 3 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        indexAxis: 'y',
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 10 } }, grid: { color: '#f1f5f9' } },
+          y: { grid: { display: false }, ticks: { font: { size: 11 } } }
+        }
+      }
+    });
+  }
+
+
+  /* ════════════════════════════════════════════════════════
+     Panel 2 — RB W/O
+  ════════════════════════════════════════════════════════ */
+  const WO = {
+    DATE:     'DISC',
+    CUSTOMER: 'CUSTOMER',
+    SITE:     'SITE',
+    DESC:     'DESCRIPTION',
+    ORDER:    'ORDER #',
+    MAP:      'JOB LOCATION',
+    EST:      'EST. #',
+    TECH:     'TECH.',
+    INVOICE:  'INVOICE #',
+  };
+
+  const WO_TABLE_COLS = [
+    { key: WO.DATE,     label: 'Date' },
+    { key: WO.CUSTOMER, label: 'Customer' },
+    { key: WO.SITE,     label: 'Site' },
+    { key: WO.DESC,     label: 'Description' },
+    { key: WO.ORDER,    label: 'Order #' },
+    { key: WO.TECH,     label: 'Tech' },
+    { key: WO.INVOICE,  label: 'Invoice #' },
+    { key: WO.MAP,      label: 'Map', nosort: true },
+  ];
+
+  let woRows     = [];
+  let woFiltered = [];
+  let woSortKey  = WO.DATE;
+  let woSortDir  = 'desc';
+  let woPage     = 1;
+  let chartWoTech = null, chartWoStatus = null;
+
+  async function loadRBIAWO() {
+    try {
+      const res  = await fetch('/api/rbia-wo');
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
+
+      woRows = json.rows || [];
+      setLastUpdated(json.fetched);
+      updateWoStats();
+      populateWoFilters();
+      applyWoFilters();
+
+      document.getElementById('woFilterBar').style.display = 'flex';
+
+      try {
+        renderWoCharts();
+        document.getElementById('woChartsRow').style.display = 'grid';
+      } catch (e) { console.warn('WO charts error:', e.message); }
+
+    } catch (err) {
+      document.getElementById('woTableArea').innerHTML = `
+        <div class="msg-box msg-error">
+          <p><strong>Failed to load RB W/O data</strong></p>
+          <div class="err-detail">${esc(err.message)}</div>
+        </div>`;
+    }
+  }
+
+  function updateWoStats() {
+    const invoiced = woRows.filter(r => r[WO.INVOICE]?.trim());
+    const techSet  = new Set(woRows.map(r => r[WO.TECH]?.trim()).filter(Boolean));
+    const custSet  = new Set(woRows.map(r => r[WO.CUSTOMER]?.trim()).filter(Boolean));
+
+    document.getElementById('wo-sTotal').textContent    = woRows.length;
+    document.getElementById('wo-sInvoiced').textContent = invoiced.length;
+    document.getElementById('wo-sPending').textContent  = woRows.length - invoiced.length;
+    document.getElementById('wo-sTechs').textContent    = techSet.size;
+    document.getElementById('wo-sCustomers').textContent = custSet.size;
+  }
+
+  function populateWoFilters() {
+    const techs = uniq(woRows.map(r => r[WO.TECH]?.trim())).sort();
+    const custs = uniq(woRows.map(r => r[WO.CUSTOMER]?.trim())).sort();
+    sel('woQTech',     techs, 'All Techs');
+    sel('woQCustomer', custs, 'All Customers');
+  }
+
+  function applyWoFilters() {
+    const q      = document.getElementById('woSearch').value.toLowerCase();
+    const tech   = document.getElementById('woQTech').value;
+    const cust   = document.getElementById('woQCustomer').value;
+    const status = document.getElementById('woQStatus').value;
+
+    woFiltered = woRows.filter(row => {
+      if (tech   && row[WO.TECH]?.trim()     !== tech) return false;
+      if (cust   && row[WO.CUSTOMER]?.trim() !== cust) return false;
+      if (status === 'invoiced' && !row[WO.INVOICE]?.trim()) return false;
+      if (status === 'pending'  &&  row[WO.INVOICE]?.trim()) return false;
+      if (q) {
+        const flat = Object.values(row).join(' ').toLowerCase();
+        if (!flat.includes(q)) return false;
+      }
+      return true;
+    });
+
+    woFiltered.sort((a, b) => {
+      const av = a[woSortKey] || '', bv = b[woSortKey] || '';
+      const cmp = av.localeCompare(bv, undefined, { numeric: true, sensitivity: 'base' });
+      return woSortDir === 'asc' ? cmp : -cmp;
+    });
+
+    woPage = 1;
+    renderWoTable();
+  }
+
+  function renderWoTable() {
+    const total = woFiltered.length;
+    document.getElementById('woResultCount').textContent =
+      total === woRows.length ? `${total} records` : `${total} of ${woRows.length}`;
+
+    if (total === 0) {
+      document.getElementById('woTableArea').innerHTML =
+        '<div class="msg-box"><p>No records match the current filters.</p></div>';
+      return;
+    }
+
+    const start = (woPage - 1) * PAGE_SIZE;
+    const slice = woFiltered.slice(start, start + PAGE_SIZE);
+    const pages = Math.ceil(total / PAGE_SIZE);
+
+    const thead = WO_TABLE_COLS.map(c => {
+      const cls = woSortKey === c.key ? woSortDir : '';
+      const onclick = c.nosort ? '' : `onclick="woSortBy('${c.key}')"`;
+      return `<th class="${cls}" ${onclick}>${c.label}</th>`;
+    }).join('');
+
+    const tbody = slice.map(row => {
+      const inv = row[WO.INVOICE]?.trim();
+      const cls = inv ? 'row-invoiced' : 'row-pending';
+      return `<tr class="${cls}">
+        <td style="white-space:nowrap">${esc(row[WO.DATE])}</td>
+        <td>${esc(row[WO.CUSTOMER])}</td>
+        <td>${esc(row[WO.SITE])}</td>
+        <td><div class="cell-job" title="${esc(row[WO.DESC])}">${esc(row[WO.DESC])}</div></td>
+        <td>${esc(row[WO.ORDER])}</td>
+        <td style="white-space:nowrap">${esc(row[WO.TECH])}</td>
+        <td>${inv
+          ? `<span class="badge badge-invoiced">${esc(inv)}</span>`
+          : `<span class="badge badge-pending">Pending</span>`}</td>
+        <td>${mapLink(row[WO.MAP])}</td>
+      </tr>`;
+    }).join('');
+
+    document.getElementById('woTableArea').innerHTML = `
+      <div class="table-wrap">
+        <div class="tscroll">
+          <table>
+            <thead><tr>${thead}</tr></thead>
+            <tbody>${tbody}</tbody>
+          </table>
+        </div>
+        <div class="table-footer">
+          <span class="page-info">
+            Showing ${start + 1}–${Math.min(start + PAGE_SIZE, total)} of ${total}
+          </span>
+          <div class="pagination">${buildWoPages(woPage, pages)}</div>
+        </div>
+      </div>`;
+  }
+
+  function buildWoPages(cur, total) {
+    if (total <= 1) return '';
+    const btns = [`<button class="pb" onclick="goWoPage(${cur - 1})" ${cur === 1 ? 'disabled' : ''}>&#8592;</button>`];
+    const nums = [];
+    for (let i = 1; i <= total; i++) {
+      if (i === 1 || i === total || Math.abs(i - cur) <= 2) nums.push(i);
+      else if (nums[nums.length - 1] !== '…') nums.push('…');
+    }
+    nums.forEach(n => {
+      if (n === '…') btns.push(`<span class="pb" style="cursor:default">…</span>`);
+      else btns.push(`<button class="pb ${n === cur ? 'active' : ''}" onclick="goWoPage(${n})">${n}</button>`);
+    });
+    btns.push(`<button class="pb" onclick="goWoPage(${cur + 1})" ${cur === total ? 'disabled' : ''}>&#8594;</button>`);
+    return btns.join('');
+  }
+
+  function goWoPage(p) {
+    const max = Math.ceil(woFiltered.length / PAGE_SIZE);
+    if (p < 1 || p > max) return;
+    woPage = p;
+    renderWoTable();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function woSortBy(key) {
+    woSortDir = (woSortKey === key && woSortDir === 'asc') ? 'desc' : 'asc';
+    woSortKey = key;
+    applyWoFilters();
+  }
+
+  function renderWoCharts() {
+    const techCounts = {};
+    woRows.forEach(r => {
+      const t = r[WO.TECH]?.trim();
+      if (t) techCounts[t] = (techCounts[t] || 0) + 1;
+    });
+    const techEntries = Object.entries(techCounts).sort((a, b) => b[1] - a[1]);
+
+    if (chartWoTech) chartWoTech.destroy();
+    chartWoTech = new Chart(document.getElementById('chartWoTech'), {
+      type: 'bar',
+      data: {
+        labels: techEntries.map(([t]) => t),
+        datasets: [{ label: 'Jobs', data: techEntries.map(([, n]) => n), backgroundColor: '#2563eb', borderRadius: 4 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { display: false }, ticks: { font: { size: 10 }, maxRotation: 45 } },
+          y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 10 } }, grid: { color: '#f1f5f9' } }
+        }
+      }
+    });
+
+    const invoiced = woRows.filter(r => r[WO.INVOICE]?.trim()).length;
+    const open     = woRows.length - invoiced;
+    const total    = invoiced + open;
+
+    if (chartWoStatus) chartWoStatus.destroy();
+    chartWoStatus = new Chart(document.getElementById('chartWoStatus'), {
+      type: 'doughnut',
+      plugins: [makePctPlugin(total)],
+      data: {
+        labels: ['Invoiced', 'Open'],
+        datasets: [{ data: [invoiced, open], backgroundColor: ['#16a34a', '#f59e0b'], borderWidth: 2, borderColor: '#fff', hoverOffset: 6 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, cutout: '62%',
+        plugins: {
+          legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 14, usePointStyle: true } },
+          tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed} (${Math.round(ctx.parsed / total * 100)}%)` } }
+        }
+      }
+    });
+  }
+
+
+  /* ════════════════════════════════════════════════════════
+     Panel 3 — RB PO's
+  ════════════════════════════════════════════════════════ */
+  const PO = {
+    DATE:      'ORDER_DATE',
+    NUM:       'PO_NUM',
+    VENDOR:    'VENDOR',
+    BUYER:     'BUYER',
+    DESC:      'DESCRIPTION',
+    ACCOUNT:   'ACCOUNT',
+    INVOICE:   'INVOICE_NUM',
+    REC_DATE:  'RECEIVED_DATE',
+    REC_BY:    'RECEIVED_BY',
+    NOTES:     'NOTES',
+  };
+
+  const PO_TABLE_COLS = [
+    { key: PO.DATE,     label: 'Order Date' },
+    { key: PO.NUM,      label: 'PO #' },
+    { key: PO.VENDOR,   label: 'Vendor' },
+    { key: PO.BUYER,    label: 'Buyer' },
+    { key: PO.DESC,     label: 'Description' },
+    { key: PO.ACCOUNT,  label: 'Account' },
+    { key: PO.REC_DATE, label: 'Received' },
+    { key: PO.NOTES,    label: 'Notes', nosort: true },
+  ];
+
+  let poRows     = [];
+  let poFiltered = [];
+  let poSortKey  = PO.DATE;
+  let poSortDir  = 'desc';
+  let poPage     = 1;
+  let chartPoVendor = null, chartPoStatus = null;
+
+  async function loadRBIAPO() {
+    try {
+      const res  = await fetch('/api/rbia-po');
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
+
+      poRows = json.rows || [];
+      setLastUpdated(json.fetched);
+      updatePoStats();
+      populatePoFilters();
+      applyPoFilters();
+
+      document.getElementById('poFilterBar').style.display = 'flex';
+
+      try {
+        renderPoCharts();
+        document.getElementById('poChartsRow').style.display = 'grid';
+      } catch (e) { console.warn('PO charts error:', e.message); }
+
+    } catch (err) {
+      document.getElementById('poTableArea').innerHTML = `
+        <div class="msg-box msg-error">
+          <p><strong>Failed to load RB PO data</strong></p>
+          <div class="err-detail">${esc(err.message)}</div>
+        </div>`;
+    }
+  }
+
+  function updatePoStats() {
+    const received   = poRows.filter(r => r[PO.REC_DATE]?.trim());
+    const vendorSet  = new Set(poRows.map(r => r[PO.VENDOR]?.trim()).filter(Boolean));
+    const accountSet = new Set(poRows.map(r => r[PO.ACCOUNT]?.trim()).filter(Boolean));
+
+    document.getElementById('po-sTotal').textContent    = poRows.length;
+    document.getElementById('po-sReceived').textContent = received.length;
+    document.getElementById('po-sPending').textContent  = poRows.length - received.length;
+    document.getElementById('po-sVendors').textContent  = vendorSet.size;
+    document.getElementById('po-sAccounts').textContent = accountSet.size;
+  }
+
+  function populatePoFilters() {
+    sel('poQVendor',  uniq(poRows.map(r => r[PO.VENDOR]?.trim())).sort(),  'All Vendors');
+    sel('poQBuyer',   uniq(poRows.map(r => r[PO.BUYER]?.trim())).sort(),   'All Buyers');
+    sel('poQAccount', uniq(poRows.map(r => r[PO.ACCOUNT]?.trim())).sort(), 'All Accounts');
+  }
+
+  function applyPoFilters() {
+    const q       = document.getElementById('poSearch').value.toLowerCase();
+    const vendor  = document.getElementById('poQVendor').value;
+    const buyer   = document.getElementById('poQBuyer').value;
+    const account = document.getElementById('poQAccount').value;
+    const status  = document.getElementById('poQStatus').value;
+
+    poFiltered = poRows.filter(row => {
+      if (vendor  && row[PO.VENDOR]?.trim()  !== vendor)  return false;
+      if (buyer   && row[PO.BUYER]?.trim()   !== buyer)   return false;
+      if (account && row[PO.ACCOUNT]?.trim() !== account) return false;
+      if (status === 'received' && !row[PO.REC_DATE]?.trim()) return false;
+      if (status === 'pending'  &&  row[PO.REC_DATE]?.trim()) return false;
+      if (q) {
+        const flat = Object.values(row).join(' ').toLowerCase();
+        if (!flat.includes(q)) return false;
+      }
+      return true;
+    });
+
+    poFiltered.sort((a, b) => {
+      const av = a[poSortKey] || '', bv = b[poSortKey] || '';
+      const cmp = av.localeCompare(bv, undefined, { numeric: true, sensitivity: 'base' });
+      return poSortDir === 'asc' ? cmp : -cmp;
+    });
+
+    poPage = 1;
+    renderPoTable();
+  }
+
+  function renderPoTable() {
+    const total = poFiltered.length;
+    document.getElementById('poResultCount').textContent =
+      total === poRows.length ? `${total} POs` : `${total} of ${poRows.length}`;
+
+    if (total === 0) {
+      document.getElementById('poTableArea').innerHTML =
+        '<div class="msg-box"><p>No POs match the current filters.</p></div>';
+      return;
+    }
+
+    const start = (poPage - 1) * PAGE_SIZE;
+    const slice = poFiltered.slice(start, start + PAGE_SIZE);
+    const pages = Math.ceil(total / PAGE_SIZE);
+
+    const thead = PO_TABLE_COLS.map(c => {
+      const cls = poSortKey === c.key ? poSortDir : '';
+      const onclick = c.nosort ? '' : `onclick="poSortBy('${c.key}')"`;
+      return `<th class="${cls}" ${onclick}>${c.label}</th>`;
+    }).join('');
+
+    const tbody = slice.map(row => {
+      const received = row[PO.REC_DATE]?.trim();
+      const cls = received ? 'row-received' : 'row-pending';
+      return `<tr class="${cls}">
+        <td style="white-space:nowrap">${esc(row[PO.DATE])}</td>
+        <td><span class="badge badge-po">${esc(row[PO.NUM])}</span></td>
+        <td>${esc(row[PO.VENDOR])}</td>
+        <td>${esc(row[PO.BUYER])}</td>
+        <td><div class="cell-job" title="${esc(row[PO.DESC])}">${esc(row[PO.DESC])}</div></td>
+        <td>${esc(row[PO.ACCOUNT])}</td>
+        <td style="white-space:nowrap">${received
+          ? `<span class="badge badge-received">${esc(received)}</span>`
+          : `<span class="badge badge-pending">Pending</span>`}</td>
+        <td><div class="cell-comment" title="${esc(row[PO.NOTES])}">${esc(row[PO.NOTES])}</div></td>
+      </tr>`;
+    }).join('');
+
+    document.getElementById('poTableArea').innerHTML = `
+      <div class="table-wrap">
+        <div class="tscroll">
+          <table>
+            <thead><tr>${thead}</tr></thead>
+            <tbody>${tbody}</tbody>
+          </table>
+        </div>
+        <div class="table-footer">
+          <span class="page-info">
+            Showing ${start + 1}–${Math.min(start + PAGE_SIZE, total)} of ${total}
+          </span>
+          <div class="pagination">${buildPoPages(poPage, pages)}</div>
+        </div>
+      </div>`;
+  }
+
+  function buildPoPages(cur, total) {
+    if (total <= 1) return '';
+    const btns = [`<button class="pb" onclick="goPoPage(${cur - 1})" ${cur === 1 ? 'disabled' : ''}>&#8592;</button>`];
+    const nums = [];
+    for (let i = 1; i <= total; i++) {
+      if (i === 1 || i === total || Math.abs(i - cur) <= 2) nums.push(i);
+      else if (nums[nums.length - 1] !== '…') nums.push('…');
+    }
+    nums.forEach(n => {
+      if (n === '…') btns.push(`<span class="pb" style="cursor:default">…</span>`);
+      else btns.push(`<button class="pb ${n === cur ? 'active' : ''}" onclick="goPoPage(${n})">${n}</button>`);
+    });
+    btns.push(`<button class="pb" onclick="goPoPage(${cur + 1})" ${cur === total ? 'disabled' : ''}>&#8594;</button>`);
+    return btns.join('');
+  }
+
+  function goPoPage(p) {
+    const max = Math.ceil(poFiltered.length / PAGE_SIZE);
+    if (p < 1 || p > max) return;
+    poPage = p;
+    renderPoTable();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function poSortBy(key) {
+    poSortDir = (poSortKey === key && poSortDir === 'asc') ? 'desc' : 'asc';
+    poSortKey = key;
+    applyPoFilters();
+  }
+
+  function renderPoCharts() {
+    const vendorCounts = {};
+    poRows.forEach(r => {
+      const v = r[PO.VENDOR]?.trim();
+      if (v) vendorCounts[v] = (vendorCounts[v] || 0) + 1;
+    });
+    const vendorEntries = Object.entries(vendorCounts).sort((a, b) => b[1] - a[1]).slice(0, 10);
+
+    if (chartPoVendor) chartPoVendor.destroy();
+    chartPoVendor = new Chart(document.getElementById('chartPoVendor'), {
+      type: 'bar',
+      data: {
+        labels: vendorEntries.map(([v]) => v),
+        datasets: [{ label: 'POs', data: vendorEntries.map(([, n]) => n), backgroundColor: '#2563eb', borderRadius: 4 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        indexAxis: 'y',
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 10 } }, grid: { color: '#f1f5f9' } },
+          y: { grid: { display: false }, ticks: { font: { size: 11 } } }
+        }
+      }
+    });
+
+    const received = poRows.filter(r => r[PO.REC_DATE]?.trim()).length;
+    const pending  = poRows.length - received;
+    const total    = received + pending;
+
+    if (chartPoStatus) chartPoStatus.destroy();
+    chartPoStatus = new Chart(document.getElementById('chartPoStatus'), {
+      type: 'doughnut',
+      plugins: [makePctPlugin(total)],
+      data: {
+        labels: ['Received', 'Pending'],
+        datasets: [{ data: [received, pending], backgroundColor: ['#16a34a', '#f59e0b'], borderWidth: 2, borderColor: '#fff', hoverOffset: 6 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, cutout: '62%',
+        plugins: {
+          legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 14, usePointStyle: true } },
+          tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed} (${Math.round(ctx.parsed / total * 100)}%)` } }
+        }
+      }
+    });
+  }
+
+
+  /* ════════════════════════════════════════════════════════
+     Shared Helpers
+  ════════════════════════════════════════════════════════ */
+  function makePctPlugin(total) {
+    return {
       id: 'pctLabels',
       afterDatasetsDraw(chart) {
         const { ctx, data } = chart;
@@ -876,41 +1775,8 @@
         });
       }
     };
-
-    if (chartStatus) chartStatus.destroy();
-    chartStatus = new Chart(document.getElementById('chartStatus'), {
-      type: 'doughnut',
-      plugins: [pctPlugin],
-      data: {
-        labels: ['Invoiced', 'Open'],
-        datasets: [{
-          data: [invoiced, open],
-          backgroundColor: ['#16a34a', '#f59e0b'],
-          borderWidth: 2,
-          borderColor: '#fff',
-          hoverOffset: 6,
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        cutout: '62%',
-        plugins: {
-          legend: {
-            position: 'bottom',
-            labels: { font: { size: 11 }, padding: 14, usePointStyle: true }
-          },
-          tooltip: {
-            callbacks: {
-              label: ctx => ` ${ctx.label}: ${ctx.parsed} (${Math.round(ctx.parsed / total * 100)}%)`
-            }
-          }
-        }
-      }
-    });
   }
 
-  /* ── Helpers ────────────────────────────────── */
   function mapLink(val) {
     val = (val || '').trim();
     if (!val) return '';
@@ -929,8 +1795,9 @@
     return [...new Set(arr.filter(Boolean))];
   }
 
-  // Auto-load on open
+  // Init
   loadData();
+
 </script>
 </body>
 </html>

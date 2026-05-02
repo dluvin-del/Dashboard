@@ -6,6 +6,7 @@ const fs = require('fs');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const SHEET_ID = process.env.SHEET_ID || '1HWfIjPqARGR8UqUEtKlO5YZ_9_QyE6vjcSU4P4Fd3rM';
+const RBIA_SHEET_ID = '183p2yP9ViMqmJvGDH4YE0JB1EhocuPUt3PFCpr5_zyg';
 const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
 const PUBLIC_DIR = path.join(__dirname, 'public');
 
@@ -36,6 +37,24 @@ async function fetchViaGviz() {
     }))
     .filter(row => row.some(cell => cell.trim()));
 
+  return { headers, rows };
+}
+
+async function fetchGvizSheet(sheetId, sheetParam, headersMode = 1) {
+  const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&${sheetParam}&headers=${headersMode}`;
+  const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+  if (!res.ok) throw new Error(`Google Sheets returned ${res.status}.`);
+  const text = await res.text();
+  const match = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);?\s*$/);
+  if (!match) throw new Error('Unexpected response format from Google Sheets.');
+  const { table } = JSON.parse(match[1]);
+  const headers = table.cols.map(c => (c.label || c.id).trim());
+  const rows = (table.rows || [])
+    .map(row => (row.c || []).map(cell => {
+      if (!cell || cell.v === null || cell.v === undefined) return '';
+      return cell.f ?? String(cell.v);
+    }))
+    .filter(row => row.some(cell => cell.trim()));
   return { headers, rows };
 }
 
@@ -82,6 +101,39 @@ app.get('/api/data', async (req, res) => {
     });
   } catch (err) {
     console.error('[api/data]', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/rbia-wo', async (req, res) => {
+  try {
+    const { headers: rawHeaders, rows } = await fetchGvizSheet(RBIA_SHEET_ID, 'sheet=rbia+w%2Fo');
+    // Column D has no label in the sheet — rename it to DESCRIPTION
+    const headers = rawHeaders.map((h, i) => (h === '' && i === 3) ? 'DESCRIPTION' : h);
+    const all = buildRecords(headers, rows);
+    const active = all.filter(r => r['CUSTOMER']?.trim() || r['DISC']?.trim());
+    res.json({ headers, rows: active, total: active.length, fetched: new Date().toISOString() });
+  } catch (err) {
+    console.error('[api/rbia-wo]', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// rbia po's tab has no header row — use headers=0 and map by position
+const RBIA_PO_COLS = ['ORDER_DATE', 'PO_NUM', 'VENDOR', 'BUYER', 'DESCRIPTION', 'ACCOUNT', 'INVOICE_NUM', 'RECEIVED_DATE', 'RECEIVED_BY', 'NOTES'];
+
+app.get('/api/rbia-po', async (req, res) => {
+  try {
+    const { rows } = await fetchGvizSheet(RBIA_SHEET_ID, 'gid=1831326038', 0);
+    const all = rows.map(row => {
+      const record = {};
+      RBIA_PO_COLS.forEach((name, i) => { record[name] = row[i] ?? ''; });
+      return record;
+    });
+    const active = all.filter(r => r['PO_NUM']?.trim());
+    res.json({ rows: active, total: active.length, fetched: new Date().toISOString() });
+  } catch (err) {
+    console.error('[api/rbia-po]', err.message);
     res.status(500).json({ error: err.message });
   }
 });
