@@ -1,4 +1,4 @@
-﻿﻿﻿<!DOCTYPE html>
+﻿﻿﻿﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -625,6 +625,12 @@
       <div style="position:relative;height:220px"><canvas id="fitzStatusChart"></canvas></div>
     </div>
   </div>
+  <div class="charts-row" id="fitzTechChartsRow" style="display:none">
+    <div class="chart-card" style="grid-column:1/-1">
+      <div class="chart-title">Jobs by Technician</div>
+      <div style="position:relative;height:220px"><canvas id="fitzTechChart"></canvas></div>
+    </div>
+  </div>
 
   <div class="filters" id="fitzFilterBar" style="display:none">
     <div class="fg">
@@ -677,6 +683,12 @@
     <div class="chart-card">
       <div class="chart-title">Invoiced vs Open</div>
       <div style="position:relative;height:220px"><canvas id="loStatusChart"></canvas></div>
+    </div>
+  </div>
+  <div class="charts-row" id="loTechChartsRow" style="display:none">
+    <div class="chart-card" style="grid-column:1/-1">
+      <div class="chart-title">Jobs by Technician</div>
+      <div style="position:relative;height:220px"><canvas id="loTechChart"></canvas></div>
     </div>
   </div>
 
@@ -859,8 +871,8 @@
   let chartDate = null, chartStatus = null, chartTech = null, chartCust = null, chartAmount = null;
   let rbiaTechChart = null, rbiaStatusChart = null, rbiaDateChart = null;
   let poVendorChart = null, poLocationChart = null;
-  let fitzDateChart = null, fitzStatusChart = null;
-  let loDateChart = null, loStatusChart = null;
+  let fitzDateChart = null, fitzStatusChart = null, fitzTechChart = null;
+  let loDateChart = null, loStatusChart = null, loTechChart = null;
   let loNeedRender = false;
   let fitzNeedRender = false;
 
@@ -1054,12 +1066,12 @@
       poNeedRender = false;
     }
     if (fitzNeedRender && allRows4.length) {
-      try { renderFitzCharts(); }
+      try { renderFitzCharts(); document.getElementById('fitzChartsRow').style.display = 'grid'; document.getElementById('fitzTechChartsRow').style.display = 'grid'; }
       catch(e) { console.warn('Fitz Charts:', e.message); }
       fitzNeedRender = false;
     }
     if (loNeedRender && allRows5.length) {
-      try { renderLoCharts(); }
+      try { renderLoCharts(); document.getElementById('loChartsRow').style.display = 'grid'; document.getElementById('loTechChartsRow').style.display = 'grid'; }
       catch(e) { console.warn('LO Charts:', e.message); }
       loNeedRender = false;
     }
@@ -1569,7 +1581,7 @@
       updateStats4(); populateFilters4(); applyFilters4();
       document.getElementById('fitzFilterBar').style.display = 'flex';
       document.getElementById('fitzInitMsg')?.remove();
-      if (chartJsReady) { renderFitzCharts(); document.getElementById('fitzChartsRow').style.display = 'grid'; }
+      if (chartJsReady) { renderFitzCharts(); document.getElementById('fitzChartsRow').style.display = 'grid'; document.getElementById('fitzTechChartsRow').style.display = 'grid'; }
       else fitzNeedRender = true;
     } catch (err) {
       document.getElementById('fitzTableArea').innerHTML = `
@@ -1677,7 +1689,19 @@
           tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${ctx.parsed} (${Math.round(ctx.parsed/(inv+open)*100)}%)`}}}}
     });
 
+    const empCounts = {};
+    allRows4.forEach(r => { const e=r[C4.EMPLOYEE]?.trim(); if(e) empCounts[e]=(empCounts[e]||0)+1; });
+    const empSorted = Object.entries(empCounts).sort((a,b)=>b[1]-a[1]).slice(0,15);
+    if (fitzTechChart) fitzTechChart.destroy();
+    fitzTechChart = new Chart(document.getElementById('fitzTechChart'), {
+      type: 'bar',
+      data: { labels: empSorted.map(([e])=>e), datasets:[{ label:'Jobs', data:empSorted.map(([,n])=>n), backgroundColor:'#7c3aed', borderRadius:4, borderSkipped:false }] },
+      options: { indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+        scales:{ x:{beginAtZero:true,ticks:{stepSize:1,font:{size:10}},grid:{color:'#f1f5f9'}}, y:{grid:{display:false},ticks:{font:{size:10}}} } }
+    });
+
     document.getElementById('fitzChartsRow').style.display = 'grid';
+    document.getElementById('fitzTechChartsRow').style.display = 'grid';
   }
 
   // ── Sheet 5: Live Oak W/O ────────────────────
@@ -1688,7 +1712,7 @@
       updateStats5(); populateFilters5(); applyFilters5();
       document.getElementById('loFilterBar').style.display = 'flex';
       document.getElementById('loInitMsg')?.remove();
-      if (chartJsReady) { renderLoCharts(); document.getElementById('loChartsRow').style.display = 'grid'; }
+      if (chartJsReady) { renderLoCharts(); document.getElementById('loChartsRow').style.display = 'grid'; document.getElementById('loTechChartsRow').style.display = 'grid'; }
       else loNeedRender = true;
     } catch (err) {
       document.getElementById('loTableArea').innerHTML = `
@@ -1795,7 +1819,19 @@
           tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${ctx.parsed} (${Math.round(ctx.parsed/(inv+open)*100)}%)`}}}}
     });
 
+    const techCounts = {};
+    allRows5.forEach(r => { const t=r[C5.TECH]?.trim(); if(t) techCounts[t]=(techCounts[t]||0)+1; });
+    const techSorted = Object.entries(techCounts).sort((a,b)=>b[1]-a[1]).slice(0,15);
+    if (loTechChart) loTechChart.destroy();
+    loTechChart = new Chart(document.getElementById('loTechChart'), {
+      type: 'bar',
+      data: { labels: techSorted.map(([t])=>t), datasets:[{ label:'Jobs', data:techSorted.map(([,n])=>n), backgroundColor:'#7c3aed', borderRadius:4, borderSkipped:false }] },
+      options: { indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+        scales:{ x:{beginAtZero:true,ticks:{stepSize:1,font:{size:10}},grid:{color:'#f1f5f9'}}, y:{grid:{display:false},ticks:{font:{size:10}}} } }
+    });
+
     document.getElementById('loChartsRow').style.display = 'grid';
+    document.getElementById('loTechChartsRow').style.display = 'grid';
   }
 
   // ── Helpers ──────────────────────────────────
@@ -1823,6 +1859,7 @@
 </script>
 </body>
 </html>
+
 
 
 
