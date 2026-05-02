@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -372,6 +372,7 @@
       <button class="dash-tab"        onclick="selectPanel(1, true)">Analytics</button>
       <button class="dash-tab"        onclick="selectPanel(2, true)">RB W/O</button>
       <button class="dash-tab"        onclick="selectPanel(3, true)">RB PO's</button>
+      <button class="dash-tab"        onclick="selectPanel(4, true)">Fitzgerald W/O</button>
     </div>
     <div class="dash-controls">
       <select class="interval-select" id="intervalSel" onchange="setInterval_()">
@@ -594,6 +595,60 @@
 </div>
 </div>
 
+
+<!-- ── Panel 4: Fitzgerald W/O ───────────────── -->
+<div class="panel" id="panel-4">
+<div class="panel-main">
+
+  <div class="stats-grid">
+    <div class="stat-card c-blue">  <div class="stat-label">Total Jobs</div>  <div class="stat-value" id="f-sTotal">—</div></div>
+    <div class="stat-card c-green"> <div class="stat-label">Invoiced</div>     <div class="stat-value" id="f-sInvoiced">—</div></div>
+    <div class="stat-card c-amber"> <div class="stat-label">Pending</div>      <div class="stat-value" id="f-sPending">—</div></div>
+    <div class="stat-card c-navy">  <div class="stat-label">Employees</div>    <div class="stat-value" id="f-sEmployees">—</div></div>
+    <div class="stat-card c-purple"><div class="stat-label">Customers</div>    <div class="stat-value" id="f-sCustomers">—</div></div>
+  </div>
+
+  <div class="charts-row" id="fitzChartsRow" style="display:none">
+    <div class="chart-card">
+      <div class="chart-title">Jobs by Date</div>
+      <div style="position:relative;height:220px"><canvas id="fitzDateChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Invoiced vs Open</div>
+      <div style="position:relative;height:220px"><canvas id="fitzStatusChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="filters" id="fitzFilterBar" style="display:none">
+    <div class="fg">
+      <div class="fl">Search</div>
+      <input type="search" class="fi fi-search" id="fSearch" placeholder="Search any field…" oninput="applyFilters4()" />
+    </div>
+    <div class="fg">
+      <div class="fl">Employee</div>
+      <select class="fs" id="fEmployee" onchange="applyFilters4()"><option value="">All Employees</option></select>
+    </div>
+    <div class="fg">
+      <div class="fl">Customer</div>
+      <select class="fs" id="fCustomer" onchange="applyFilters4()"><option value="">All Customers</option></select>
+    </div>
+    <div class="fg">
+      <div class="fl">Status</div>
+      <select class="fs" id="fStatus" onchange="applyFilters4()">
+        <option value="">All</option>
+        <option value="invoiced">Invoiced</option>
+        <option value="pending">Pending</option>
+      </select>
+    </div>
+    <span class="result-count" id="fitzResultCount"></span>
+  </div>
+
+  <div id="fitzTableArea">
+    <div class="msg-box" id="fitzInitMsg"><p><strong>Loading Fitzgerald work orders…</strong></p></div>
+  </div>
+
+</div>
+</div>
 </div><!-- /panels -->
 
 <script>
@@ -637,6 +692,34 @@
     { key: C2.PHOTO,   label: 'Photo',    nosort: true },
   ];
 
+
+  // ── Config: Sheet 4 (Fitzgerald W/O) ─────────
+  const SHEET_ID_4   = '1lK8q6BFz-cdXdwjLIG4PfqoCvuCWGEOZDfhRZI8Jguk';
+
+  const C4 = {
+    DATE:     'HU4',
+    SO:       'SERVICE ORDER #',
+    INVOICE:  'INVOICE #',
+    AMOUNT:   'Invoice Amount',
+    CUSTOMER: 'CUSTOMER',
+    DESC:     'CALL/DESCRIPTION',
+    MAP:      'GOOGLE LOCATION',
+    EMPLOYEE: 'EMPLOYEE',
+    WO:       'W.O. #',
+  };
+
+  const TABLE_COLS_4 = [
+    { key: C4.DATE,     label: 'Date'        },
+    { key: C4.SO,       label: 'SO #'        },
+    { key: C4.INVOICE,  label: 'Invoice #'   },
+    { key: C4.AMOUNT,   label: 'Amount'      },
+    { key: C4.CUSTOMER, label: 'Customer'    },
+    { key: C4.DESC,     label: 'Description', nosort: true },
+    { key: C4.EMPLOYEE, label: 'Employee'    },
+    { key: C4.WO,       label: 'W.O. #'      },
+    { key: C4.MAP,      label: 'Map',         nosort: true },
+  ];
+
   // ── Config: Sheet 3 (RB PO's) ────────────────
   // No header row in this sheet — columns referenced by letter ID (A, B, C…)
   const SHEET_ID_3   = '183p2yP9ViMqmJvGDH4YE0JB1EhocuPUt3PFCpr5_zyg';
@@ -676,14 +759,19 @@
   // Sheet 3 state
   let allRows3 = [], filtered3 = [], sortKey3 = C3.DATE, sortDir3 = 'desc', page3 = 1;
 
+
+  // Sheet 4 state
+  let allRows4 = [], filtered4 = [], sortKey4 = C4.DATE, sortDir4 = 'desc', page4 = 1;
   // Chart.js ready flag
   let chartJsReady = false, chartsNeedRender = false, rbiaNeedRender = false, poNeedRender = false;
   let chartDate = null, chartStatus = null, chartTech = null, chartCust = null, chartAmount = null;
   let rbiaTechChart = null, rbiaStatusChart = null;
   let poVendorChart = null, poLocationChart = null;
+  let fitzDateChart = null, fitzStatusChart = null;
+  let fitzNeedRender = false;
 
   // ── Rotation ─────────────────────────────────
-  const NUM_PANELS = 4;
+  const NUM_PANELS = 5;
   let currentPanel = 0;
   let autoRotate   = true;
   let rotateIntervalSec = 300;
@@ -771,7 +859,7 @@
     const icon = document.getElementById('refreshIcon');
     btn.disabled = true; icon.classList.add('spin');
     const d = new Date();
-    await Promise.allSettled([loadData(false), loadData2(false), loadData3(false)]);
+    await Promise.allSettled([loadData(false), loadData2(false), loadData3(false), loadData4(false)]);
     document.getElementById('lastUpdated').textContent =
       `Updated ${d.toLocaleDateString()} ${d.toLocaleTimeString()}`;
     btn.disabled = false; icon.classList.remove('spin');
@@ -870,6 +958,11 @@
       try { renderPoCharts(); document.getElementById('poChartsRow').style.display = 'grid'; }
       catch(e) { console.warn('PO Charts:', e.message); }
       poNeedRender = false;
+    }
+    if (fitzNeedRender && allRows4.length) {
+      try { renderFitzCharts(); }
+      catch(e) { console.warn('Fitz Charts:', e.message); }
+      fitzNeedRender = false;
     }
   }
 
@@ -1364,6 +1457,125 @@
     document.getElementById('poChartsRow').style.display = 'grid';
   }
 
+  // ── Sheet 4: Fitzgerald W/O ─────────────────
+  async function loadData4(standalone = true) {
+    try {
+      const all = await fetchGviz(SHEET_ID_4);
+      allRows4 = all.filter(r => r[C4.CUSTOMER]?.trim());
+      updateStats4(); populateFilters4(); applyFilters4();
+      document.getElementById('fitzFilterBar').style.display = 'flex';
+      document.getElementById('fitzInitMsg')?.remove();
+      if (chartJsReady) { renderFitzCharts(); document.getElementById('fitzChartsRow').style.display = 'grid'; }
+      else fitzNeedRender = true;
+    } catch (err) {
+      document.getElementById('fitzTableArea').innerHTML = `
+        <div class="msg-box msg-error">
+          <p><strong>Failed to load Fitzgerald work orders</strong></p>
+          <div class="err-detail">${esc(err.message)}</div>
+          <p class="err-hint">Make sure the sheet is shared as <strong>"Anyone with the link can view"</strong>.</p>
+        </div>`;
+    }
+  }
+
+  function updateStats4() {
+    const inv   = allRows4.filter(r => r[C4.INVOICE]?.trim());
+    const emps  = new Set(allRows4.map(r => r[C4.EMPLOYEE]?.trim()).filter(Boolean));
+    const custs = new Set(allRows4.map(r => r[C4.CUSTOMER]?.trim()).filter(Boolean));
+    const vals  = [allRows4.length, inv.length, allRows4.length - inv.length, emps.size, custs.size];
+    ['f-sTotal','f-sInvoiced','f-sPending','f-sEmployees','f-sCustomers'].forEach((id, i) => {
+      document.getElementById(id).textContent = vals[i];
+    });
+  }
+
+  function populateFilters4() {
+    fillSel('fEmployee', uniq(allRows4.map(r => r[C4.EMPLOYEE]?.trim())).sort(), 'All Employees');
+    fillSel('fCustomer', uniq(allRows4.map(r => r[C4.CUSTOMER]?.trim())).sort(), 'All Customers');
+  }
+
+  function applyFilters4() {
+    const q      = document.getElementById('fSearch').value.toLowerCase();
+    const emp    = document.getElementById('fEmployee').value;
+    const cust   = document.getElementById('fCustomer').value;
+    const status = document.getElementById('fStatus').value;
+    filtered4 = allRows4.filter(row => {
+      if (emp    && row[C4.EMPLOYEE]?.trim() !== emp)  return false;
+      if (cust   && row[C4.CUSTOMER]?.trim() !== cust) return false;
+      if (status === 'invoiced' && !row[C4.INVOICE]?.trim()) return false;
+      if (status === 'pending'  &&  row[C4.INVOICE]?.trim()) return false;
+      if (q && !Object.values(row).join(' ').toLowerCase().includes(q)) return false;
+      return true;
+    });
+    filtered4.sort((a, b) => {
+      const cmp = (a[sortKey4]||'').localeCompare(b[sortKey4]||'', undefined, {numeric:true,sensitivity:'base'});
+      return sortDir4 === 'asc' ? cmp : -cmp;
+    });
+    page4 = 1; renderTable4();
+  }
+
+  function renderTable4() {
+    const total = filtered4.length;
+    document.getElementById('fitzResultCount').textContent =
+      total === allRows4.length ? `${total} jobs` : `${total} of ${allRows4.length}`;
+    if (!total) { document.getElementById('fitzTableArea').innerHTML = '<div class="msg-box"><p>No jobs match the current filters.</p></div>'; return; }
+    const start = (page4-1)*PAGE_SIZE, slice = filtered4.slice(start, start+PAGE_SIZE), pages = Math.ceil(total/PAGE_SIZE);
+    const thead = TABLE_COLS_4.map(c =>
+      `<th class="${sortKey4===c.key?sortDir4:''}" ${c.nosort?'':` onclick="sortBy4('${c.key}')"`}>${c.label}</th>`
+    ).join('');
+    const tbody = slice.map(row => {
+      const inv = row[C4.INVOICE]?.trim();
+      const amt = row[C4.AMOUNT]?.trim();
+      return `<tr class="${inv?'row-invoiced':'row-pending'}">
+        <td style="white-space:nowrap">${esc(row[C4.DATE])}</td>
+        <td>${row[C4.SO]?.trim()?`<span class="badge badge-so">${esc(row[C4.SO])}</span>`:''}</td>
+        <td>${inv?`<span class="badge badge-invoiced">${esc(inv)}</span>`:`<span class="badge badge-pending">Pending</span>`}</td>
+        <td style="white-space:nowrap">${amt?`$${esc(amt)}`:''}</td>
+        <td>${esc(row[C4.CUSTOMER])}</td>
+        <td><div class="cell-job" title="${esc(row[C4.DESC])}">${esc(row[C4.DESC])}</div></td>
+        <td style="white-space:nowrap">${esc(row[C4.EMPLOYEE])}</td>
+        <td>${esc(row[C4.WO])}</td>
+        <td>${mapLink(row[C4.MAP])}</td>
+      </tr>`;
+    }).join('');
+    document.getElementById('fitzTableArea').innerHTML = `
+      <div class="table-wrap"><div class="tscroll">
+        <table><thead><tr>${thead}</tr></thead><tbody>${tbody}</tbody></table>
+      </div>
+      <div class="table-footer">
+        <span class="page-info">Showing ${start+1}–${Math.min(start+PAGE_SIZE,total)} of ${total}</span>
+        <div class="pagination">${buildPages(page4,pages,'goPage4')}</div>
+      </div></div>`;
+  }
+  function goPage4(p) { const max=Math.ceil(filtered4.length/PAGE_SIZE); if(p<1||p>max)return; page4=p; renderTable4(); window.scrollTo({top:0,behavior:'smooth'}); }
+  function sortBy4(key) { sortDir4=(sortKey4===key&&sortDir4==='asc')?'desc':'asc'; sortKey4=key; applyFilters4(); }
+
+  function renderFitzCharts() {
+    const dateCounts = {};
+    allRows4.forEach(r => { const d=normalizeDate(r[C4.DATE]); if(d) dateCounts[d]=(dateCounts[d]||0)+1; });
+    const labels = Object.keys(dateCounts).sort((a,b) => {
+      const[am,ad]=a.split('/').map(Number),[bm,bd]=b.split('/').map(Number);
+      return am!==bm?am-bm:ad-bd;
+    });
+    if (fitzDateChart) fitzDateChart.destroy();
+    fitzDateChart = new Chart(document.getElementById('fitzDateChart'), {
+      type: 'bar',
+      data: { labels, datasets:[{ label:'Jobs', data:labels.map(l=>dateCounts[l]), backgroundColor:'#2563eb', borderRadius:4, borderSkipped:false }] },
+      options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+        scales:{ x:{grid:{display:false},ticks:{font:{size:10},maxRotation:45}}, y:{beginAtZero:true,ticks:{stepSize:1,font:{size:10}},grid:{color:'#f1f5f9'}} } }
+    });
+
+    const inv = allRows4.filter(r=>r[C4.INVOICE]?.trim()).length, open = allRows4.length - inv;
+    if (fitzStatusChart) fitzStatusChart.destroy();
+    fitzStatusChart = new Chart(document.getElementById('fitzStatusChart'), {
+      type: 'doughnut', plugins:[makePctPlugin()],
+      data:{labels:['Invoiced','Open'],datasets:[{data:[inv,open],backgroundColor:['#16a34a','#f59e0b'],borderWidth:2,borderColor:'#fff',hoverOffset:6}]},
+      options:{responsive:true,maintainAspectRatio:false,cutout:'62%',
+        plugins:{legend:{position:'bottom',labels:{font:{size:11},padding:14,usePointStyle:true}},
+          tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${ctx.parsed} (${Math.round(ctx.parsed/(inv+open)*100)}%)`}}}}
+    });
+
+    document.getElementById('fitzChartsRow').style.display = 'grid';
+  }
+
   // ── Helpers ──────────────────────────────────
   function mapLink(val) {
     val=(val||'').trim(); if(!val) return '';
@@ -1389,3 +1601,4 @@
 </script>
 </body>
 </html>
+
