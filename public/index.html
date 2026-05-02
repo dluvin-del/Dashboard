@@ -40,7 +40,7 @@
       font-size: 14px;
     }
 
-    /* ── Header ────────────────────────────────────────── */
+    /* ── Header ─────────────────────────────── */
     header {
       background: var(--navy);
       color: #fff;
@@ -75,7 +75,7 @@
     .spin { animation: spin .9s linear infinite; display: inline-block; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── Dashboard nav bar ──────────────────────────────────── */
+    /* ── Dashboard nav bar ───────────────────── */
     .dash-chrome {
       background: #152b47;
       border-bottom: 1px solid rgba(255,255,255,.08);
@@ -144,15 +144,15 @@
     .progress-bar { height: 3px; background: rgba(255,255,255,.08); }
     .progress-fill { height: 100%; background: var(--blue); width: 0%; transition: width 1s linear; }
 
-    /* ── Panels ──────────────────────────────────────────── */
+    /* ── Panels ──────────────────────────────── */
     .panels { position: relative; }
     .panel { display: none; }
     .panel.active { display: block; }
 
-    /* ── Panel inner layout ──────────────────────────────────── */
+    /* ── Panel inner layout ──────────────────── */
     .panel-main { padding: 20px 24px; max-width: 1700px; margin: 0 auto; }
 
-    /* ── Stats ─────────────────────────────────────────────── */
+    /* ── Stats ───────────────────────────────── */
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -174,7 +174,7 @@
     }
     .stat-value { font-size: 2rem; font-weight: 800; color: var(--gray-900); line-height: 1; }
 
-    /* ── Charts row ──────────────────────────────────────────── */
+    /* ── Charts row ──────────────────────────── */
     .charts-row {
       display: grid; grid-template-columns: 2fr 1fr;
       gap: 16px; margin-bottom: 18px;
@@ -196,7 +196,7 @@
       letter-spacing: .07em; color: var(--gray-500); margin-bottom: 14px;
     }
 
-    /* ── Tech cards (analytics panel) ──────────────────────── */
+    /* ── Tech cards (analytics panel) ───────── */
     .tech-cards-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -229,11 +229,11 @@
     .tech-rate-bar { margin-top: 10px; height: 4px; background: var(--gray-200); border-radius: 2px; overflow: hidden; }
     .tech-rate-fill { height: 100%; background: var(--green); border-radius: 2px; }
 
-    /* ── Body grid (panel 0) ─────────────────────────────────── */
+    /* ── Body grid (panel 0) ─────────────────── */
     .body-grid { display: grid; grid-template-columns: 1fr 250px; gap: 18px; align-items: start; }
     @media (max-width: 1200px) { .body-grid { grid-template-columns: 1fr; } }
 
-    /* ── Filters ─────────────────────────────────────────────── */
+    /* ── Filters ─────────────────────────────── */
     .filters {
       background: var(--white); border-radius: var(--radius);
       padding: 14px 18px; box-shadow: var(--shadow);
@@ -251,7 +251,7 @@
     .fi-search { flex: 1; min-width: 200px; }
     .result-count { margin-left: auto; font-size: .82rem; color: var(--gray-500); padding-bottom: 7px; white-space: nowrap; }
 
-    /* ── Table ───────────────────────────────────────────────── */
+    /* ── Table ───────────────────────────────── */
     .table-wrap { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
     .tscroll { overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; font-size: .8rem; }
@@ -274,8 +274,11 @@
     .badge-so       { background: var(--navy); color: #fff; }
     .badge-invoiced { background: var(--green-light); color: var(--green); }
     .badge-pending  { background: var(--amber-light); color: var(--amber); }
+    .badge-po       { background: #ede9fe; color: #7c3aed; }
     .cell-job, .cell-comment { max-width: 280px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .cell-comment { max-width: 200px; color: var(--gray-500); font-style: italic; }
+    .cell-item { max-width: 320px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .cell-notes { max-width: 240px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--gray-500); font-style: italic; }
     .map-btn {
       display: inline-flex; align-items: center; gap: 4px;
       padding: 3px 9px; background: var(--blue-light); color: var(--blue);
@@ -291,7 +294,7 @@
     }
     .photo-btn:hover { background: #ede9fe; }
 
-    /* ── Pagination ──────────────────────────────────────────── */
+    /* ── Pagination ──────────────────────────── */
     .table-footer {
       padding: 12px 16px; display: flex; justify-content: space-between;
       align-items: center; border-top: 1px solid var(--gray-200); background: var(--gray-50);
@@ -306,7 +309,7 @@
     .pb.active { background: var(--blue); color: #fff; border-color: var(--blue); font-weight: 700; }
     .pb:disabled { opacity: .4; cursor: not-allowed; }
 
-    /* ── Sidebar ─────────────────────────────────────────────── */
+    /* ── Sidebar ─────────────────────────────── */
     .sidebar { display: flex; flex-direction: column; gap: 14px; }
     .widget { background: var(--white); border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); }
     .widget-title { font-size: .68rem; font-weight: 800; text-transform: uppercase; letter-spacing: .07em; color: var(--gray-500); margin-bottom: 12px; }
@@ -322,7 +325,7 @@
     .recent-so { font-weight: 700; font-size: .8rem; color: var(--navy); }
     .recent-sub { font-size: .72rem; color: var(--gray-500); margin-top: 1px; }
 
-    /* ── Messages ──────────────────────────────────────────── */
+    /* ── Messages ────────────────────────────── */
     .msg-box {
       background: var(--white); border-radius: var(--radius);
       padding: 48px 24px; text-align: center; box-shadow: var(--shadow); color: var(--gray-500);
@@ -338,7 +341,7 @@
 </head>
 <body>
 
-<!-- ── Header ───────────────────────────────────────────── -->
+<!-- ── Header ───────────────────────────────── -->
 <header>
   <div class="header-brand">
     <div class="logo-wrap"><img src="logo.png" alt="American Irrigation" /></div>
@@ -361,13 +364,14 @@
   </div>
 </header>
 
-<!-- ── Dashboard nav / rotation controls ────────────── -->
+<!-- ── Dashboard nav / rotation controls ────── -->
 <div class="dash-chrome">
   <div class="dash-nav">
     <div class="dash-tabs">
       <button class="dash-tab active" onclick="selectPanel(0, true)">Service Orders</button>
       <button class="dash-tab"        onclick="selectPanel(1, true)">Analytics</button>
       <button class="dash-tab"        onclick="selectPanel(2, true)">RB W/O</button>
+      <button class="dash-tab"        onclick="selectPanel(3, true)">RB PO's</button>
     </div>
     <div class="dash-controls">
       <select class="interval-select" id="intervalSel" onchange="setInterval_()">
@@ -383,10 +387,10 @@
   <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
 </div>
 
-<!-- ── Panels ────────────────────────────────────────────── -->
+<!-- ── Panels ────────────────────────────────── -->
 <div class="panels">
 
-<!-- ── Panel 0: Service Orders ─────────────────────────── -->
+<!-- ── Panel 0: Service Orders ───────────────── -->
 <div class="panel active" id="panel-0">
 <div class="panel-main">
 
@@ -459,7 +463,7 @@
 </div>
 </div>
 
-<!-- ── Panel 1: Analytics ─────────────────────────────────── -->
+<!-- ── Panel 1: Analytics ─────────────────────── -->
 <div class="panel" id="panel-1">
 <div class="panel-main">
 
@@ -487,7 +491,7 @@
 </div>
 </div>
 
-<!-- ── Panel 2: RB W/O ─────────────────────────────────────── -->
+<!-- ── Panel 2: RBIA W/O ──────────────────────── -->
 <div class="panel" id="panel-2">
 <div class="panel-main">
 
@@ -499,18 +503,18 @@
     <div class="stat-card c-purple"><div class="stat-label">Customers</div>    <div class="stat-value" id="r-sCustomers">—</div></div>
   </div>
 
-  <div class="charts-row" id="rbChartsRow" style="display:none">
+  <div class="charts-row" id="rbiaChartsRow" style="display:none">
     <div class="chart-card">
       <div class="chart-title">Jobs by Technician</div>
-      <div style="position:relative;height:220px"><canvas id="rbTechChart"></canvas></div>
+      <div style="position:relative;height:220px"><canvas id="rbiaTechChart"></canvas></div>
     </div>
     <div class="chart-card">
       <div class="chart-title">Invoiced vs Open</div>
-      <div style="position:relative;height:220px"><canvas id="rbStatusChart"></canvas></div>
+      <div style="position:relative;height:220px"><canvas id="rbiaStatusChart"></canvas></div>
     </div>
   </div>
 
-  <div class="filters" id="rbFilterBar" style="display:none">
+  <div class="filters" id="rbiaFilterBar" style="display:none">
     <div class="fg">
       <div class="fl">Search</div>
       <input type="search" class="fi fi-search" id="rSearch" placeholder="Search any field…" oninput="applyFilters2()" />
@@ -531,11 +535,60 @@
         <option value="pending">Pending</option>
       </select>
     </div>
-    <span class="result-count" id="rbResultCount"></span>
+    <span class="result-count" id="rbiaResultCount"></span>
   </div>
 
-  <div id="rbTableArea">
-    <div class="msg-box" id="rbInitMsg"><p><strong>Loading RB work orders…</strong></p></div>
+  <div id="rbiaTableArea">
+    <div class="msg-box" id="rbiaInitMsg"><p><strong>Loading RBIA work orders…</strong></p></div>
+  </div>
+
+</div>
+</div>
+
+<!-- ── Panel 3: RB PO's ───────────────────────── -->
+<div class="panel" id="panel-3">
+<div class="panel-main">
+
+  <div class="stats-grid">
+    <div class="stat-card c-blue">  <div class="stat-label">Total POs</div>      <div class="stat-value" id="p-sTotal">—</div></div>
+    <div class="stat-card c-green"> <div class="stat-label">Vendors</div>         <div class="stat-value" id="p-sVendors">—</div></div>
+    <div class="stat-card c-amber"> <div class="stat-label">With Follow-up</div>  <div class="stat-value" id="p-sFollowup">—</div></div>
+    <div class="stat-card c-navy">  <div class="stat-label">Locations</div>       <div class="stat-value" id="p-sLocations">—</div></div>
+  </div>
+
+  <div class="analytics-grid" id="poChartsRow" style="display:none">
+    <div class="chart-card">
+      <div class="chart-title">POs by Vendor</div>
+      <div style="position:relative;height:280px"><canvas id="poVendorChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">POs by Location</div>
+      <div style="position:relative;height:280px"><canvas id="poLocationChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="filters" id="poFilterBar" style="display:none">
+    <div class="fg">
+      <div class="fl">Search</div>
+      <input type="search" class="fi fi-search" id="pSearch" placeholder="Search any field…" oninput="applyFilters3()" />
+    </div>
+    <div class="fg">
+      <div class="fl">Vendor</div>
+      <select class="fs" id="pVendor" onchange="applyFilters3()"><option value="">All Vendors</option></select>
+    </div>
+    <div class="fg">
+      <div class="fl">Location</div>
+      <select class="fs" id="pLocation" onchange="applyFilters3()"><option value="">All Locations</option></select>
+    </div>
+    <div class="fg">
+      <div class="fl">Contact</div>
+      <select class="fs" id="pContact" onchange="applyFilters3()"><option value="">All Contacts</option></select>
+    </div>
+    <span class="result-count" id="poResultCount"></span>
+  </div>
+
+  <div id="poTableArea">
+    <div class="msg-box" id="poInitMsg"><p><strong>Loading RB POs…</strong></p></div>
   </div>
 
 </div>
@@ -551,7 +604,7 @@
     DATE: 'M', SO: 'SERVICE ORDER #', INVOICE: 'INVOICE #',
     CUSTOMER: 'CUSTOMER', SITE: 'SITE NAME', JOB: 'JOB INFO',
     MAP: 'GOOGLE PIN LOCATION', TECH: 'TECH.', COMMENTS: 'COMMENTS',
-    AMOUNT: 'INVOICE AMOUNT',
+    AMOUNT: 'Invoice Amount',
   };
 
   const TABLE_COLS = [
@@ -562,7 +615,7 @@
     { key: C.MAP, label: 'Map', nosort: true },
   ];
 
-  // ── Config: Sheet 2 (RB W/O) ───────────
+  // ── Config: Sheet 2 (RBIA W/O) ───────────────
   const SHEET_ID_2   = '183p2yP9ViMqmJvGDH4YE0JB1EhocuPUt3PFCpr5_zyg';
   const SHEET_NAME_2 = 'rbia w/o';
 
@@ -584,6 +637,34 @@
     { key: C2.PHOTO,   label: 'Photo',    nosort: true },
   ];
 
+  // ── Config: Sheet 3 (RB PO's) ────────────────
+  // No header row in this sheet — columns referenced by letter ID (A, B, C…)
+  const SHEET_ID_3   = '183p2yP9ViMqmJvGDH4YE0JB1EhocuPUt3PFCpr5_zyg';
+  const SHEET_NAME_3 = "rbia po's";
+
+  const C3 = {
+    DATE:     'A',
+    PO:       'B',
+    VENDOR:   'C',
+    CONTACT:  'D',
+    ITEM:     'E',
+    LOCATION: 'F',
+    QTY:      'G',
+    FOLLOWUP: 'H',
+    NOTES:    'I',
+  };
+
+  const TABLE_COLS_3 = [
+    { key: C3.DATE,     label: 'Date'         },
+    { key: C3.PO,       label: 'PO #'         },
+    { key: C3.VENDOR,   label: 'Vendor'       },
+    { key: C3.CONTACT,  label: 'Contact'      },
+    { key: C3.ITEM,     label: 'Item / Description', nosort: true },
+    { key: C3.LOCATION, label: 'Location'     },
+    { key: C3.FOLLOWUP, label: 'Follow-up'    },
+    { key: C3.NOTES,    label: 'Notes', nosort: true },
+  ];
+
   const PAGE_SIZE = 50;
 
   // Sheet 1 state
@@ -592,13 +673,17 @@
   // Sheet 2 state
   let allRows2 = [], filtered2 = [], sortKey2 = C2.ORDER, sortDir2 = 'asc', page2 = 1;
 
-  // Chart.js ready flag
-  let chartJsReady = false, chartsNeedRender = false, rbNeedRender = false;
-  let chartDate = null, chartStatus = null, chartTech = null, chartCust = null, chartAmount = null;
-  let rbTechChart = null, rbStatusChart = null;
+  // Sheet 3 state
+  let allRows3 = [], filtered3 = [], sortKey3 = C3.DATE, sortDir3 = 'desc', page3 = 1;
 
-  // ── Rotation ───────────────────────────────────────────
-  const NUM_PANELS = 3;
+  // Chart.js ready flag
+  let chartJsReady = false, chartsNeedRender = false, rbiaNeedRender = false, poNeedRender = false;
+  let chartDate = null, chartStatus = null, chartTech = null, chartCust = null, chartAmount = null;
+  let rbiaTechChart = null, rbiaStatusChart = null;
+  let poVendorChart = null, poLocationChart = null;
+
+  // ── Rotation ─────────────────────────────────
+  const NUM_PANELS = 4;
   let currentPanel = 0;
   let autoRotate   = true;
   let rotateIntervalSec = 300;
@@ -658,17 +743,20 @@
     if (autoRotate) startRotation();
   }
 
-  // ── Sheet fetch helpers ────────────────────────────
-  async function fetchGviz(sheetId, sheetName) {
+  // ── Sheet fetch helpers ──────────────────────
+  async function fetchGviz(sheetId, sheetName, useColIds = false) {
     let url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
     if (sheetName) url += `&sheet=${encodeURIComponent(sheetName)}`;
+    if (useColIds) url += `&headers=0`;
     const res = await fetch(url);
     if (!res.ok) throw new Error(`Google Sheets returned ${res.status}.\nEnsure the sheet is shared as "Anyone with the link can view".`);
     const text = await res.text();
     const match = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);?\s*$/);
     if (!match) throw new Error('Unexpected response from Google Sheets.');
     const { table } = JSON.parse(match[1]);
-    const headers = table.cols.map(c => (c.label || c.id).trim());
+    const headers = useColIds
+      ? table.cols.map(c => c.id)
+      : table.cols.map(c => (c.label || c.id).trim());
     const rows = (table.rows || [])
       .map(row => (row.c || []).map(cell => (!cell || cell.v == null) ? '' : (cell.f ?? String(cell.v))))
       .filter(row => row.some(c => c.trim()));
@@ -677,20 +765,20 @@
     });
   }
 
-  // ── Load all sheets ──────────────────────────────
+  // ── Load all sheets ──────────────────────────
   async function loadAll() {
     const btn = document.getElementById('refreshBtn');
     const icon = document.getElementById('refreshIcon');
     btn.disabled = true; icon.classList.add('spin');
     const d = new Date();
-    await Promise.allSettled([loadData(false), loadData2(false)]);
+    await Promise.allSettled([loadData(false), loadData2(false), loadData3(false)]);
     document.getElementById('lastUpdated').textContent =
       `Updated ${d.toLocaleDateString()} ${d.toLocaleTimeString()}`;
     btn.disabled = false; icon.classList.remove('spin');
     startRotation();
   }
 
-  // ── Sheet 1: Service Orders ──────────────────────────
+  // ── Sheet 1: Service Orders ──────────────────
   async function loadData(standalone = true) {
     if (standalone) {
       const btn = document.getElementById('refreshBtn');
@@ -726,22 +814,42 @@
     }
   }
 
-  // ── Sheet 2: RB W/O ────────────────────────────────
+  // ── Sheet 2: RBIA W/O ────────────────────────
   async function loadData2(standalone = true) {
     try {
       const all = await fetchGviz(SHEET_ID_2, SHEET_NAME_2);
       allRows2 = all.filter(r => r[C2.CUSTOMER]?.trim());
       updateStats2(); populateFilters2(); applyFilters2();
-      document.getElementById('rbFilterBar').style.display = 'flex';
-      document.getElementById('rbInitMsg')?.remove();
-      if (chartJsReady) { renderRbCharts(); document.getElementById('rbChartsRow').style.display = 'grid'; }
-      else rbNeedRender = true;
+      document.getElementById('rbiaFilterBar').style.display = 'flex';
+      document.getElementById('rbiaInitMsg')?.remove();
+      if (chartJsReady) { renderRbiaCharts(); document.getElementById('rbiaChartsRow').style.display = 'grid'; }
+      else rbiaNeedRender = true;
     } catch (err) {
-      document.getElementById('rbTableArea').innerHTML = `
+      document.getElementById('rbiaTableArea').innerHTML = `
         <div class="msg-box msg-error">
-          <p><strong>Failed to load RB work orders</strong></p>
+          <p><strong>Failed to load RBIA work orders</strong></p>
           <div class="err-detail">${esc(err.message)}</div>
           <p class="err-hint">Make sure the sheet is shared as <strong>"Anyone with the link can view"</strong> and the tab is named <strong>"rbia w/o"</strong>.</p>
+        </div>`;
+    }
+  }
+
+  // ── Sheet 3: RB PO's ─────────────────────────
+  async function loadData3(standalone = true) {
+    try {
+      const all = await fetchGviz(SHEET_ID_3, SHEET_NAME_3, true);
+      allRows3 = all.filter(r => r[C3.PO]?.trim());
+      updateStats3(); populateFilters3(); applyFilters3();
+      document.getElementById('poFilterBar').style.display = 'flex';
+      document.getElementById('poInitMsg')?.remove();
+      if (chartJsReady) { renderPoCharts(); document.getElementById('poChartsRow').style.display = 'grid'; }
+      else poNeedRender = true;
+    } catch (err) {
+      document.getElementById('poTableArea').innerHTML = `
+        <div class="msg-box msg-error">
+          <p><strong>Failed to load RB POs</strong></p>
+          <div class="err-detail">${esc(err.message)}</div>
+          <p class="err-hint">Make sure the sheet is shared as <strong>"Anyone with the link can view"</strong> and the tab is named <strong>"rbia po's"</strong>.</p>
         </div>`;
     }
   }
@@ -753,14 +861,19 @@
       catch(e) { console.warn('Charts:', e.message); }
       chartsNeedRender = false;
     }
-    if (rbNeedRender && allRows2.length) {
-      try { renderRbCharts(); document.getElementById('rbChartsRow').style.display = 'grid'; }
-      catch(e) { console.warn('RB Charts:', e.message); }
-      rbNeedRender = false;
+    if (rbiaNeedRender && allRows2.length) {
+      try { renderRbiaCharts(); document.getElementById('rbiaChartsRow').style.display = 'grid'; }
+      catch(e) { console.warn('RBIA Charts:', e.message); }
+      rbiaNeedRender = false;
+    }
+    if (poNeedRender && allRows3.length) {
+      try { renderPoCharts(); document.getElementById('poChartsRow').style.display = 'grid'; }
+      catch(e) { console.warn('PO Charts:', e.message); }
+      poNeedRender = false;
     }
   }
 
-  // ── Stats: Sheet 1 ─────────────────────────────────────────
+  // ── Stats: Sheet 1 ───────────────────────────
   function updateStats() {
     const inv   = allRows.filter(r => r[C.INVOICE]?.trim());
     const techs = new Set(allRows.map(r => r[C.TECH]?.trim()).filter(Boolean));
@@ -770,7 +883,7 @@
     ['a-sTotal','a-sInvoiced','a-sPending','a-sTechs','a-sCustomers'].forEach((id, i) => { document.getElementById(id).textContent = vals[i]; });
   }
 
-  // ── Stats: Sheet 2 ─────────────────────────────────────────
+  // ── Stats: Sheet 2 ───────────────────────────
   function updateStats2() {
     const inv   = allRows2.filter(r => r[C2.INVOICE]?.trim());
     const techs = new Set(allRows2.map(r => r[C2.TECH]?.trim()).filter(Boolean));
@@ -779,7 +892,16 @@
     ['r-sTotal','r-sInvoiced','r-sPending','r-sTechs','r-sCustomers'].forEach((id, i) => { document.getElementById(id).textContent = vals[i]; });
   }
 
-  // ── Filters: Sheet 1 ─────────────────────────────────────────
+  // ── Stats: Sheet 3 ───────────────────────────
+  function updateStats3() {
+    const vendors   = new Set(allRows3.map(r => r[C3.VENDOR]?.trim()).filter(Boolean));
+    const locations = new Set(allRows3.map(r => r[C3.LOCATION]?.trim()).filter(Boolean));
+    const withFU    = allRows3.filter(r => r[C3.FOLLOWUP]?.trim()).length;
+    const vals = [allRows3.length, vendors.size, withFU, locations.size];
+    ['p-sTotal','p-sVendors','p-sFollowup','p-sLocations'].forEach((id, i) => { document.getElementById(id).textContent = vals[i]; });
+  }
+
+  // ── Filters: Sheet 1 ─────────────────────────
   function populateFilters() {
     fillSel('qTech',     uniq(allRows.map(r => r[C.TECH]?.trim())).sort(),     'All Techs');
     fillSel('qCustomer', uniq(allRows.map(r => r[C.CUSTOMER]?.trim())).sort(), 'All Customers');
@@ -804,7 +926,7 @@
     page = 1; renderTable();
   }
 
-  // ── Filters: Sheet 2 ─────────────────────────────────────────
+  // ── Filters: Sheet 2 ─────────────────────────
   function populateFilters2() {
     fillSel('rTech',     uniq(allRows2.map(r => r[C2.TECH]?.trim())).sort(),     'All Techs');
     fillSel('rCustomer', uniq(allRows2.map(r => r[C2.CUSTOMER]?.trim())).sort(), 'All Customers');
@@ -829,7 +951,32 @@
     page2 = 1; renderTable2();
   }
 
-  // ── Table helpers ──────────────────────────────────────────
+  // ── Filters: Sheet 3 ─────────────────────────
+  function populateFilters3() {
+    fillSel('pVendor',   uniq(allRows3.map(r => r[C3.VENDOR]?.trim())).sort(),   'All Vendors');
+    fillSel('pLocation', uniq(allRows3.map(r => r[C3.LOCATION]?.trim())).sort(), 'All Locations');
+    fillSel('pContact',  uniq(allRows3.map(r => r[C3.CONTACT]?.trim())).sort(),  'All Contacts');
+  }
+  function applyFilters3() {
+    const q        = document.getElementById('pSearch').value.toLowerCase();
+    const vendor   = document.getElementById('pVendor').value;
+    const location = document.getElementById('pLocation').value;
+    const contact  = document.getElementById('pContact').value;
+    filtered3 = allRows3.filter(row => {
+      if (vendor   && row[C3.VENDOR]?.trim()   !== vendor)   return false;
+      if (location && row[C3.LOCATION]?.trim() !== location) return false;
+      if (contact  && row[C3.CONTACT]?.trim()  !== contact)  return false;
+      if (q && !Object.values(row).join(' ').toLowerCase().includes(q)) return false;
+      return true;
+    });
+    filtered3.sort((a, b) => {
+      const cmp = (a[sortKey3]||'').localeCompare(b[sortKey3]||'', undefined, {numeric:true,sensitivity:'base'});
+      return sortDir3 === 'asc' ? cmp : -cmp;
+    });
+    page3 = 1; renderTable3();
+  }
+
+  // ── Table helpers ────────────────────────────
   function fillSel(id, items, ph) {
     document.getElementById(id).innerHTML = `<option value="">${ph}</option>` +
       items.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
@@ -844,7 +991,7 @@
     return out.join('');
   }
 
-  // ── Table: Sheet 1 ───────────────────────────────────────────
+  // ── Table: Sheet 1 ───────────────────────────
   function renderTable() {
     const total = filtered.length;
     document.getElementById('resultCount').textContent =
@@ -879,12 +1026,12 @@
   function goPage(p) { const max=Math.ceil(filtered.length/PAGE_SIZE); if(p<1||p>max)return; page=p; renderTable(); window.scrollTo({top:0,behavior:'smooth'}); }
   function sortBy(key) { sortDir=(sortKey===key&&sortDir==='asc')?'desc':'asc'; sortKey=key; applyFilters(); }
 
-  // ── Table: Sheet 2 ───────────────────────────────────────────
+  // ── Table: Sheet 2 ───────────────────────────
   function renderTable2() {
     const total = filtered2.length;
-    document.getElementById('rbResultCount').textContent =
+    document.getElementById('rbiaResultCount').textContent =
       total === allRows2.length ? `${total} jobs` : `${total} of ${allRows2.length}`;
-    if (!total) { document.getElementById('rbTableArea').innerHTML = '<div class="msg-box"><p>No jobs match the current filters.</p></div>'; return; }
+    if (!total) { document.getElementById('rbiaTableArea').innerHTML = '<div class="msg-box"><p>No jobs match the current filters.</p></div>'; return; }
     const start = (page2-1)*PAGE_SIZE, slice = filtered2.slice(start, start+PAGE_SIZE), pages = Math.ceil(total/PAGE_SIZE);
     const thead = TABLE_COLS_2.map(c =>
       `<th class="${sortKey2===c.key?sortDir2:''}" ${c.nosort?'':` onclick="sortBy2('${c.key}')"`}>${c.label}</th>`
@@ -903,7 +1050,7 @@
         <td>${photoLink(row[C2.PHOTO])}</td>
       </tr>`;
     }).join('');
-    document.getElementById('rbTableArea').innerHTML = `
+    document.getElementById('rbiaTableArea').innerHTML = `
       <div class="table-wrap"><div class="tscroll">
         <table><thead><tr>${thead}</tr></thead><tbody>${tbody}</tbody></table>
       </div>
@@ -915,7 +1062,41 @@
   function goPage2(p) { const max=Math.ceil(filtered2.length/PAGE_SIZE); if(p<1||p>max)return; page2=p; renderTable2(); window.scrollTo({top:0,behavior:'smooth'}); }
   function sortBy2(key) { sortDir2=(sortKey2===key&&sortDir2==='asc')?'desc':'asc'; sortKey2=key; applyFilters2(); }
 
-  // ── Sidebar ──────────────────────────────────────────────────
+  // ── Table: Sheet 3 ───────────────────────────
+  function renderTable3() {
+    const total = filtered3.length;
+    document.getElementById('poResultCount').textContent =
+      total === allRows3.length ? `${total} POs` : `${total} of ${allRows3.length}`;
+    if (!total) { document.getElementById('poTableArea').innerHTML = '<div class="msg-box"><p>No POs match the current filters.</p></div>'; return; }
+    const start = (page3-1)*PAGE_SIZE, slice = filtered3.slice(start, start+PAGE_SIZE), pages = Math.ceil(total/PAGE_SIZE);
+    const thead = TABLE_COLS_3.map(c =>
+      `<th class="${sortKey3===c.key?sortDir3:''}" ${c.nosort?'':` onclick="sortBy3('${c.key}')"`}>${c.label}</th>`
+    ).join('');
+    const tbody = slice.map(row => {
+      return `<tr>
+        <td style="white-space:nowrap">${esc(row[C3.DATE])}</td>
+        <td><span class="badge badge-po">${esc(row[C3.PO])}</span></td>
+        <td style="white-space:nowrap">${esc(row[C3.VENDOR])}</td>
+        <td style="white-space:nowrap">${esc(row[C3.CONTACT])}</td>
+        <td><div class="cell-item" title="${esc(row[C3.ITEM])}">${esc(row[C3.ITEM])}</div></td>
+        <td style="white-space:nowrap">${esc(row[C3.LOCATION])}</td>
+        <td style="white-space:nowrap">${esc(row[C3.FOLLOWUP])}</td>
+        <td><div class="cell-notes" title="${esc(row[C3.NOTES])}">${esc(row[C3.NOTES])}</div></td>
+      </tr>`;
+    }).join('');
+    document.getElementById('poTableArea').innerHTML = `
+      <div class="table-wrap"><div class="tscroll">
+        <table><thead><tr>${thead}</tr></thead><tbody>${tbody}</tbody></table>
+      </div>
+      <div class="table-footer">
+        <span class="page-info">Showing ${start+1}–${Math.min(start+PAGE_SIZE,total)} of ${total}</span>
+        <div class="pagination">${buildPages(page3,pages,'goPage3')}</div>
+      </div></div>`;
+  }
+  function goPage3(p) { const max=Math.ceil(filtered3.length/PAGE_SIZE); if(p<1||p>max)return; page3=p; renderTable3(); window.scrollTo({top:0,behavior:'smooth'}); }
+  function sortBy3(key) { sortDir3=(sortKey3===key&&sortDir3==='asc')?'desc':'asc'; sortKey3=key; applyFilters3(); }
+
+  // ── Sidebar ──────────────────────────────────
   function renderSidebar() {
     const counts={};
     allRows.forEach(r=>{ const t=r[C.TECH]?.trim(); if(t) counts[t]=(counts[t]||0)+1; });
@@ -934,7 +1115,7 @@
       </div>`).join('');
   }
 
-  // ── Analytics panel (Panel 1) ────────────────────────────
+  // ── Analytics panel (Panel 1) ────────────────
   function renderAnalytics() {
     const techData = {};
     allRows.forEach(r => {
@@ -1009,7 +1190,7 @@
     document.getElementById('analyticsCharts').style.display = 'grid';
   }
 
-  // ── Panel 0 charts ───────────────────────────────────────────
+  // ── Panel 0 charts ───────────────────────────
   function normalizeDate(raw) {
     if (!raw) return null;
     const parts = raw.trim().replace(/-/g,'/').split('/').map(Number).filter(n=>!isNaN(n));
@@ -1054,7 +1235,6 @@
     if(chartDate) chartDate.destroy();
     chartDate=new Chart(document.getElementById('chartDate'),{
       type:'bar',
-      plugins:[makeBarLabelPlugin()],
       data:{labels,datasets:[{label:'Jobs',data:labels.map(l=>dateCounts[l]),backgroundColor:'#2563eb',borderRadius:4,borderSkipped:false}]},
       options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
         scales:{x:{grid:{display:false},ticks:{font:{size:10},maxRotation:45}},y:{beginAtZero:true,ticks:{stepSize:1,font:{size:10}},grid:{color:'#f1f5f9'}}}}
@@ -1085,7 +1265,7 @@
       type:'bar',
       plugins:[makeBarLabelPlugin(v=>v>=1000?'$'+(v/1000).toFixed(1)+'K':'$'+v.toFixed(0))],
       data:{labels:aLabels,datasets:[{label:'Invoice Amount',data:aLabels.map(l=>+amountByDate[l].toFixed(2)),backgroundColor:'#16a34a',borderRadius:4,borderSkipped:false}]},
-      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      options:{responsive:true,maintainAspectRatio:false,
         scales:{
           x:{grid:{display:false},ticks:{font:{size:10},maxRotation:45}},
           y:{beginAtZero:true,ticks:{font:{size:10},callback:v=>'$'+v.toLocaleString()},grid:{color:'#f1f5f9'}}
@@ -1097,14 +1277,14 @@
     renderAnalyticsCharts();
   }
 
-  // ── RB charts ────────────────────────────────────────────────
-  function renderRbCharts() {
+  // ── RBIA charts ──────────────────────────────
+  function renderRbiaCharts() {
     const techCounts = {};
     allRows2.forEach(r => { const t=r[C2.TECH]?.trim(); if(t) techCounts[t]=(techCounts[t]||0)+1; });
     const techSorted = Object.entries(techCounts).sort((a,b)=>b[1]-a[1]).slice(0,15);
 
-    if (rbTechChart) rbTechChart.destroy();
-    rbTechChart = new Chart(document.getElementById('rbTechChart'), {
+    if (rbiaTechChart) rbiaTechChart.destroy();
+    rbiaTechChart = new Chart(document.getElementById('rbiaTechChart'), {
       type: 'bar',
       data: {
         labels: techSorted.map(([t])=>t),
@@ -1121,8 +1301,8 @@
     });
 
     const inv = allRows2.filter(r=>r[C2.INVOICE]?.trim()).length, open = allRows2.length - inv;
-    if (rbStatusChart) rbStatusChart.destroy();
-    rbStatusChart = new Chart(document.getElementById('rbStatusChart'), {
+    if (rbiaStatusChart) rbiaStatusChart.destroy();
+    rbiaStatusChart = new Chart(document.getElementById('rbiaStatusChart'), {
       type: 'doughnut', plugins:[makePctPlugin()],
       data:{labels:['Invoiced','Open'],datasets:[{data:[inv,open],backgroundColor:['#16a34a','#f59e0b'],borderWidth:2,borderColor:'#fff',hoverOffset:6}]},
       options:{responsive:true,maintainAspectRatio:false,cutout:'62%',
@@ -1130,10 +1310,61 @@
           tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${ctx.parsed} (${Math.round(ctx.parsed/(inv+open)*100)}%)`}}}}
     });
 
-    document.getElementById('rbChartsRow').style.display = 'grid';
+    document.getElementById('rbiaChartsRow').style.display = 'grid';
   }
 
-  // ── Helpers ──────────────────────────────────────────────────
+  // ── PO charts ────────────────────────────────
+  function renderPoCharts() {
+    const vendorCounts = {};
+    allRows3.forEach(r => {
+      const v = r[C3.VENDOR]?.trim(); if(v) vendorCounts[v] = (vendorCounts[v]||0)+1;
+    });
+    const vendorSorted = Object.entries(vendorCounts).sort((a,b)=>b[1]-a[1]).slice(0,15);
+
+    if (poVendorChart) poVendorChart.destroy();
+    poVendorChart = new Chart(document.getElementById('poVendorChart'), {
+      type: 'bar',
+      data: {
+        labels: vendorSorted.map(([v])=>v),
+        datasets:[{ label:'POs', data:vendorSorted.map(([,n])=>n), backgroundColor:'#7c3aed', borderRadius:4, borderSkipped:false }]
+      },
+      options: {
+        indexAxis:'y', responsive:true, maintainAspectRatio:false,
+        plugins:{legend:{display:false}},
+        scales:{
+          x:{beginAtZero:true, ticks:{stepSize:1,font:{size:10}}, grid:{color:'#f1f5f9'}},
+          y:{grid:{display:false}, ticks:{font:{size:10}}}
+        }
+      }
+    });
+
+    const locCounts = {};
+    allRows3.forEach(r => {
+      const l = r[C3.LOCATION]?.trim(); if(l) locCounts[l] = (locCounts[l]||0)+1;
+    });
+    const locSorted = Object.entries(locCounts).sort((a,b)=>b[1]-a[1]).slice(0,15);
+
+    if (poLocationChart) poLocationChart.destroy();
+    poLocationChart = new Chart(document.getElementById('poLocationChart'), {
+      type: 'bar',
+      data: {
+        labels: locSorted.map(([l])=>l),
+        datasets:[{ label:'POs', data:locSorted.map(([,n])=>n), backgroundColor:'#2563eb', borderRadius:4, borderSkipped:false }]
+      },
+      options: {
+        indexAxis:'y', responsive:true, maintainAspectRatio:false,
+        plugins:{legend:{display:false}},
+        scales:{
+          x:{beginAtZero:true, ticks:{stepSize:1,font:{size:10}}, grid:{color:'#f1f5f9'}},
+          y:{grid:{display:false}, ticks:{font:{size:10}}}
+        }
+      }
+    });
+
+    document.getElementById('poChartsRow').style.display = 'grid';
+  }
+
+  // ── Helpers ──────────────────────────────────
   function mapLink(val) {
     val=(val||'').trim(); if(!val) return '';
     const href=val.startsWith('http')?val:`https://www.google.com/maps?q=${encodeURIComponent(val)}`;
