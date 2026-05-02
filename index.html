@@ -1,4 +1,4 @@
-﻿﻿<!DOCTYPE html>
+﻿﻿﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -370,7 +370,7 @@
     <div class="dash-tabs">
       <button class="dash-tab active" onclick="selectPanel(0, true)">Service Orders</button>
       <button class="dash-tab"        onclick="selectPanel(1, true)">Analytics</button>
-      <button class="dash-tab"        onclick="selectPanel(2, true)">RB W/O</button>
+      <button class="dash-tab"        onclick="selectPanel(2, true)">Americus W/O</button>
       <button class="dash-tab"        onclick="selectPanel(3, true)">RB PO's</button>
       <button class="dash-tab"        onclick="selectPanel(4, true)">Fitzgerald W/O</button>
       <button class="dash-tab"        onclick="selectPanel(5, true)">Live Oak W/O</button>
@@ -507,12 +507,18 @@
 
   <div class="charts-row" id="rbiaChartsRow" style="display:none">
     <div class="chart-card">
-      <div class="chart-title">Jobs by Technician</div>
-      <div style="position:relative;height:220px"><canvas id="rbiaTechChart"></canvas></div>
+      <div class="chart-title">Jobs by Date</div>
+      <div style="position:relative;height:220px"><canvas id="rbiaDateChart"></canvas></div>
     </div>
     <div class="chart-card">
       <div class="chart-title">Invoiced vs Open</div>
       <div style="position:relative;height:220px"><canvas id="rbiaStatusChart"></canvas></div>
+    </div>
+  </div>
+  <div class="charts-row" id="rbiaTechChartsRow" style="display:none">
+    <div class="chart-card" style="grid-column:1/-1">
+      <div class="chart-title">Jobs by Technician</div>
+      <div style="position:relative;height:220px"><canvas id="rbiaTechChart"></canvas></div>
     </div>
   </div>
 
@@ -851,7 +857,7 @@
   // Chart.js ready flag
   let chartJsReady = false, chartsNeedRender = false, rbiaNeedRender = false, poNeedRender = false;
   let chartDate = null, chartStatus = null, chartTech = null, chartCust = null, chartAmount = null;
-  let rbiaTechChart = null, rbiaStatusChart = null;
+  let rbiaTechChart = null, rbiaStatusChart = null, rbiaDateChart = null;
   let poVendorChart = null, poLocationChart = null;
   let fitzDateChart = null, fitzStatusChart = null;
   let loDateChart = null, loStatusChart = null;
@@ -998,7 +1004,7 @@
       updateStats2(); populateFilters2(); applyFilters2();
       document.getElementById('rbiaFilterBar').style.display = 'flex';
       document.getElementById('rbiaInitMsg')?.remove();
-      if (chartJsReady) { renderRbiaCharts(); document.getElementById('rbiaChartsRow').style.display = 'grid'; }
+      if (chartJsReady) { renderRbiaCharts(); document.getElementById('rbiaChartsRow').style.display = 'grid'; document.getElementById('rbiaTechChartsRow').style.display = 'grid'; }
       else rbiaNeedRender = true;
     } catch (err) {
       document.getElementById('rbiaTableArea').innerHTML = `
@@ -1038,7 +1044,7 @@
       chartsNeedRender = false;
     }
     if (rbiaNeedRender && allRows2.length) {
-      try { renderRbiaCharts(); document.getElementById('rbiaChartsRow').style.display = 'grid'; }
+      try { renderRbiaCharts(); document.getElementById('rbiaChartsRow').style.display = 'grid'; document.getElementById('rbiaTechChartsRow').style.display = 'grid'; }
       catch(e) { console.warn('RBIA Charts:', e.message); }
       rbiaNeedRender = false;
     }
@@ -1465,25 +1471,18 @@
 
   // ── RBIA charts ──────────────────────────────
   function renderRbiaCharts() {
-    const techCounts = {};
-    allRows2.forEach(r => { const t=r[C2.TECH]?.trim(); if(t) techCounts[t]=(techCounts[t]||0)+1; });
-    const techSorted = Object.entries(techCounts).sort((a,b)=>b[1]-a[1]).slice(0,15);
-
-    if (rbiaTechChart) rbiaTechChart.destroy();
-    rbiaTechChart = new Chart(document.getElementById('rbiaTechChart'), {
+    const dateCounts = {};
+    allRows2.forEach(r => { const d=normalizeDate(r[C2.DISC]); if(d) dateCounts[d]=(dateCounts[d]||0)+1; });
+    const dateLabels = Object.keys(dateCounts).sort((a,b) => {
+      const[am,ad]=a.split('/').map(Number),[bm,bd]=b.split('/').map(Number);
+      return am!==bm?am-bm:ad-bd;
+    });
+    if (rbiaDateChart) rbiaDateChart.destroy();
+    rbiaDateChart = new Chart(document.getElementById('rbiaDateChart'), {
       type: 'bar',
-      data: {
-        labels: techSorted.map(([t])=>t),
-        datasets:[{ label:'Jobs', data:techSorted.map(([,n])=>n), backgroundColor:'#2563eb', borderRadius:4, borderSkipped:false }]
-      },
-      options: {
-        indexAxis:'y', responsive:true, maintainAspectRatio:false,
-        plugins:{legend:{display:false}},
-        scales:{
-          x:{beginAtZero:true, ticks:{stepSize:1,font:{size:10}}, grid:{color:'#f1f5f9'}},
-          y:{grid:{display:false}, ticks:{font:{size:10}}}
-        }
-      }
+      data: { labels: dateLabels, datasets:[{ label:'Jobs', data:dateLabels.map(l=>dateCounts[l]), backgroundColor:'#2563eb', borderRadius:4, borderSkipped:false }] },
+      options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+        scales:{ x:{grid:{display:false},ticks:{font:{size:10},maxRotation:45}}, y:{beginAtZero:true,ticks:{stepSize:1,font:{size:10}},grid:{color:'#f1f5f9'}} } }
     });
 
     const inv = allRows2.filter(r=>r[C2.INVOICE]?.trim()).length, open = allRows2.length - inv;
@@ -1496,7 +1495,19 @@
           tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${ctx.parsed} (${Math.round(ctx.parsed/(inv+open)*100)}%)`}}}}
     });
 
+    const techCounts = {};
+    allRows2.forEach(r => { const t=r[C2.TECH]?.trim(); if(t) techCounts[t]=(techCounts[t]||0)+1; });
+    const techSorted = Object.entries(techCounts).sort((a,b)=>b[1]-a[1]).slice(0,15);
+    if (rbiaTechChart) rbiaTechChart.destroy();
+    rbiaTechChart = new Chart(document.getElementById('rbiaTechChart'), {
+      type: 'bar',
+      data: { labels: techSorted.map(([t])=>t), datasets:[{ label:'Jobs', data:techSorted.map(([,n])=>n), backgroundColor:'#2563eb', borderRadius:4, borderSkipped:false }] },
+      options: { indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+        scales:{ x:{beginAtZero:true,ticks:{stepSize:1,font:{size:10}},grid:{color:'#f1f5f9'}}, y:{grid:{display:false},ticks:{font:{size:10}}} } }
+    });
+
     document.getElementById('rbiaChartsRow').style.display = 'grid';
+    document.getElementById('rbiaTechChartsRow').style.display = 'grid';
   }
 
   // ── PO charts ────────────────────────────────
@@ -1812,5 +1823,6 @@
 </script>
 </body>
 </html>
+
 
 
