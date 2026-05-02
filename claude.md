@@ -2,14 +2,14 @@
 
 ## Project Identity
 - **Repo:** https://github.com/dluvin-del/Dashboard
-- **Working branch:** gh-main
+- **Working branch:** gh-pages
 - **Purpose:** AG Service Desk service call metrics dashboard for American Irrigation
 
 ## Session Start Protocol
 At the start of every session:
-1. Run `git status` and `git log --oneline -5` to confirm branch and recent history
+1. Run `git status` and `git log --oneline -5` to confirm you are on gh-pages
 2. Read `index.html`, `server.js`, and any files in `public/` to understand current state
-3. Provide a brief summary of the dashboard's current structure and last changes
+3. Provide a brief summary of the dashboard's current structure and last changes made
 
 ## Key Files
 - `index.html` — Main dashboard UI
@@ -25,6 +25,6 @@ At the start of every session:
 - Keep service desk metrics logic clearly commented
 
 ## Git Workflow — ALWAYS FOLLOW
-- Always work on branch `gh-main`
-- Before making any changes: `git checkout gh-main && git pull origin gh-main`
+- Always work on branch `gh-pages`
+- Before making any changes: `git checkout gh-pages && git pull origin gh-pages`
 - After completing any change: stage, commit with a descriptive message, and push
