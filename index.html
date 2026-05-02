@@ -274,8 +274,11 @@
     .badge-so       { background: var(--navy); color: #fff; }
     .badge-invoiced { background: var(--green-light); color: var(--green); }
     .badge-pending  { background: var(--amber-light); color: var(--amber); }
+    .badge-po       { background: #ede9fe; color: #7c3aed; }
     .cell-job, .cell-comment { max-width: 280px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .cell-comment { max-width: 200px; color: var(--gray-500); font-style: italic; }
+    .cell-item { max-width: 320px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .cell-notes { max-width: 240px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--gray-500); font-style: italic; }
     .map-btn {
       display: inline-flex; align-items: center; gap: 4px;
       padding: 3px 9px; background: var(--blue-light); color: var(--blue);
@@ -368,6 +371,7 @@
       <button class="dash-tab active" onclick="selectPanel(0, true)">Service Orders</button>
       <button class="dash-tab"        onclick="selectPanel(1, true)">Analytics</button>
       <button class="dash-tab"        onclick="selectPanel(2, true)">RB W/O</button>
+      <button class="dash-tab"        onclick="selectPanel(3, true)">RB PO's</button>
     </div>
     <div class="dash-controls">
       <select class="interval-select" id="intervalSel" onchange="setInterval_()">
@@ -541,6 +545,55 @@
 </div>
 </div>
 
+<!-- ── Panel 3: RB PO's ───────────────────────── -->
+<div class="panel" id="panel-3">
+<div class="panel-main">
+
+  <div class="stats-grid">
+    <div class="stat-card c-blue">  <div class="stat-label">Total POs</div>      <div class="stat-value" id="p-sTotal">—</div></div>
+    <div class="stat-card c-green"> <div class="stat-label">Vendors</div>         <div class="stat-value" id="p-sVendors">—</div></div>
+    <div class="stat-card c-amber"> <div class="stat-label">With Follow-up</div>  <div class="stat-value" id="p-sFollowup">—</div></div>
+    <div class="stat-card c-navy">  <div class="stat-label">Locations</div>       <div class="stat-value" id="p-sLocations">—</div></div>
+  </div>
+
+  <div class="analytics-grid" id="poChartsRow" style="display:none">
+    <div class="chart-card">
+      <div class="chart-title">POs by Vendor</div>
+      <div style="position:relative;height:280px"><canvas id="poVendorChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">POs by Location</div>
+      <div style="position:relative;height:280px"><canvas id="poLocationChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="filters" id="poFilterBar" style="display:none">
+    <div class="fg">
+      <div class="fl">Search</div>
+      <input type="search" class="fi fi-search" id="pSearch" placeholder="Search any field…" oninput="applyFilters3()" />
+    </div>
+    <div class="fg">
+      <div class="fl">Vendor</div>
+      <select class="fs" id="pVendor" onchange="applyFilters3()"><option value="">All Vendors</option></select>
+    </div>
+    <div class="fg">
+      <div class="fl">Location</div>
+      <select class="fs" id="pLocation" onchange="applyFilters3()"><option value="">All Locations</option></select>
+    </div>
+    <div class="fg">
+      <div class="fl">Contact</div>
+      <select class="fs" id="pContact" onchange="applyFilters3()"><option value="">All Contacts</option></select>
+    </div>
+    <span class="result-count" id="poResultCount"></span>
+  </div>
+
+  <div id="poTableArea">
+    <div class="msg-box" id="poInitMsg"><p><strong>Loading RB POs…</strong></p></div>
+  </div>
+
+</div>
+</div>
+
 </div><!-- /panels -->
 
 <script>
@@ -584,6 +637,34 @@
     { key: C2.PHOTO,   label: 'Photo',    nosort: true },
   ];
 
+  // ── Config: Sheet 3 (RB PO's) ────────────────
+  // No header row in this sheet — columns referenced by letter ID (A, B, C…)
+  const SHEET_ID_3   = '183p2yP9ViMqmJvGDH4YE0JB1EhocuPUt3PFCpr5_zyg';
+  const SHEET_NAME_3 = "rbia po's";
+
+  const C3 = {
+    DATE:     'A',
+    PO:       'B',
+    VENDOR:   'C',
+    CONTACT:  'D',
+    ITEM:     'E',
+    LOCATION: 'F',
+    QTY:      'G',
+    FOLLOWUP: 'H',
+    NOTES:    'I',
+  };
+
+  const TABLE_COLS_3 = [
+    { key: C3.DATE,     label: 'Date'         },
+    { key: C3.PO,       label: 'PO #'         },
+    { key: C3.VENDOR,   label: 'Vendor'       },
+    { key: C3.CONTACT,  label: 'Contact'      },
+    { key: C3.ITEM,     label: 'Item / Description', nosort: true },
+    { key: C3.LOCATION, label: 'Location'     },
+    { key: C3.FOLLOWUP, label: 'Follow-up'    },
+    { key: C3.NOTES,    label: 'Notes', nosort: true },
+  ];
+
   const PAGE_SIZE = 50;
 
   // Sheet 1 state
@@ -592,13 +673,17 @@
   // Sheet 2 state
   let allRows2 = [], filtered2 = [], sortKey2 = C2.ORDER, sortDir2 = 'asc', page2 = 1;
 
+  // Sheet 3 state
+  let allRows3 = [], filtered3 = [], sortKey3 = C3.DATE, sortDir3 = 'desc', page3 = 1;
+
   // Chart.js ready flag
-  let chartJsReady = false, chartsNeedRender = false, rbiaNeedRender = false;
+  let chartJsReady = false, chartsNeedRender = false, rbiaNeedRender = false, poNeedRender = false;
   let chartDate = null, chartStatus = null, chartTech = null, chartCust = null, chartAmount = null;
   let rbiaTechChart = null, rbiaStatusChart = null;
+  let poVendorChart = null, poLocationChart = null;
 
   // ── Rotation ─────────────────────────────────
-  const NUM_PANELS = 3;
+  const NUM_PANELS = 4;
   let currentPanel = 0;
   let autoRotate   = true;
   let rotateIntervalSec = 300;
@@ -659,16 +744,19 @@
   }
 
   // ── Sheet fetch helpers ──────────────────────
-  async function fetchGviz(sheetId, sheetName) {
+  async function fetchGviz(sheetId, sheetName, useColIds = false) {
     let url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
     if (sheetName) url += `&sheet=${encodeURIComponent(sheetName)}`;
+    if (useColIds) url += `&headers=0`;
     const res = await fetch(url);
     if (!res.ok) throw new Error(`Google Sheets returned ${res.status}.\nEnsure the sheet is shared as "Anyone with the link can view".`);
     const text = await res.text();
     const match = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);?\s*$/);
     if (!match) throw new Error('Unexpected response from Google Sheets.');
     const { table } = JSON.parse(match[1]);
-    const headers = table.cols.map(c => (c.label || c.id).trim());
+    const headers = useColIds
+      ? table.cols.map(c => c.id)
+      : table.cols.map(c => (c.label || c.id).trim());
     const rows = (table.rows || [])
       .map(row => (row.c || []).map(cell => (!cell || cell.v == null) ? '' : (cell.f ?? String(cell.v))))
       .filter(row => row.some(c => c.trim()));
@@ -683,7 +771,7 @@
     const icon = document.getElementById('refreshIcon');
     btn.disabled = true; icon.classList.add('spin');
     const d = new Date();
-    await Promise.allSettled([loadData(false), loadData2(false)]);
+    await Promise.allSettled([loadData(false), loadData2(false), loadData3(false)]);
     document.getElementById('lastUpdated').textContent =
       `Updated ${d.toLocaleDateString()} ${d.toLocaleTimeString()}`;
     btn.disabled = false; icon.classList.remove('spin');
@@ -746,6 +834,26 @@
     }
   }
 
+  // ── Sheet 3: RB PO's ─────────────────────────
+  async function loadData3(standalone = true) {
+    try {
+      const all = await fetchGviz(SHEET_ID_3, SHEET_NAME_3, true);
+      allRows3 = all.filter(r => r[C3.PO]?.trim());
+      updateStats3(); populateFilters3(); applyFilters3();
+      document.getElementById('poFilterBar').style.display = 'flex';
+      document.getElementById('poInitMsg')?.remove();
+      if (chartJsReady) { renderPoCharts(); document.getElementById('poChartsRow').style.display = 'grid'; }
+      else poNeedRender = true;
+    } catch (err) {
+      document.getElementById('poTableArea').innerHTML = `
+        <div class="msg-box msg-error">
+          <p><strong>Failed to load RB POs</strong></p>
+          <div class="err-detail">${esc(err.message)}</div>
+          <p class="err-hint">Make sure the sheet is shared as <strong>"Anyone with the link can view"</strong> and the tab is named <strong>"rbia po's"</strong>.</p>
+        </div>`;
+    }
+  }
+
   function onChartJsLoad() {
     chartJsReady = true;
     if (chartsNeedRender && allRows.length) {
@@ -757,6 +865,11 @@
       try { renderRbiaCharts(); document.getElementById('rbiaChartsRow').style.display = 'grid'; }
       catch(e) { console.warn('RBIA Charts:', e.message); }
       rbiaNeedRender = false;
+    }
+    if (poNeedRender && allRows3.length) {
+      try { renderPoCharts(); document.getElementById('poChartsRow').style.display = 'grid'; }
+      catch(e) { console.warn('PO Charts:', e.message); }
+      poNeedRender = false;
     }
   }
 
@@ -777,6 +890,15 @@
     const custs = new Set(allRows2.map(r => r[C2.CUSTOMER]?.trim()).filter(Boolean));
     const vals = [allRows2.length, inv.length, allRows2.length - inv.length, techs.size, custs.size];
     ['r-sTotal','r-sInvoiced','r-sPending','r-sTechs','r-sCustomers'].forEach((id, i) => { document.getElementById(id).textContent = vals[i]; });
+  }
+
+  // ── Stats: Sheet 3 ───────────────────────────
+  function updateStats3() {
+    const vendors   = new Set(allRows3.map(r => r[C3.VENDOR]?.trim()).filter(Boolean));
+    const locations = new Set(allRows3.map(r => r[C3.LOCATION]?.trim()).filter(Boolean));
+    const withFU    = allRows3.filter(r => r[C3.FOLLOWUP]?.trim()).length;
+    const vals = [allRows3.length, vendors.size, withFU, locations.size];
+    ['p-sTotal','p-sVendors','p-sFollowup','p-sLocations'].forEach((id, i) => { document.getElementById(id).textContent = vals[i]; });
   }
 
   // ── Filters: Sheet 1 ─────────────────────────
@@ -827,6 +949,31 @@
       return sortDir2 === 'asc' ? cmp : -cmp;
     });
     page2 = 1; renderTable2();
+  }
+
+  // ── Filters: Sheet 3 ─────────────────────────
+  function populateFilters3() {
+    fillSel('pVendor',   uniq(allRows3.map(r => r[C3.VENDOR]?.trim())).sort(),   'All Vendors');
+    fillSel('pLocation', uniq(allRows3.map(r => r[C3.LOCATION]?.trim())).sort(), 'All Locations');
+    fillSel('pContact',  uniq(allRows3.map(r => r[C3.CONTACT]?.trim())).sort(),  'All Contacts');
+  }
+  function applyFilters3() {
+    const q        = document.getElementById('pSearch').value.toLowerCase();
+    const vendor   = document.getElementById('pVendor').value;
+    const location = document.getElementById('pLocation').value;
+    const contact  = document.getElementById('pContact').value;
+    filtered3 = allRows3.filter(row => {
+      if (vendor   && row[C3.VENDOR]?.trim()   !== vendor)   return false;
+      if (location && row[C3.LOCATION]?.trim() !== location) return false;
+      if (contact  && row[C3.CONTACT]?.trim()  !== contact)  return false;
+      if (q && !Object.values(row).join(' ').toLowerCase().includes(q)) return false;
+      return true;
+    });
+    filtered3.sort((a, b) => {
+      const cmp = (a[sortKey3]||'').localeCompare(b[sortKey3]||'', undefined, {numeric:true,sensitivity:'base'});
+      return sortDir3 === 'asc' ? cmp : -cmp;
+    });
+    page3 = 1; renderTable3();
   }
 
   // ── Table helpers ────────────────────────────
@@ -914,6 +1061,40 @@
   }
   function goPage2(p) { const max=Math.ceil(filtered2.length/PAGE_SIZE); if(p<1||p>max)return; page2=p; renderTable2(); window.scrollTo({top:0,behavior:'smooth'}); }
   function sortBy2(key) { sortDir2=(sortKey2===key&&sortDir2==='asc')?'desc':'asc'; sortKey2=key; applyFilters2(); }
+
+  // ── Table: Sheet 3 ───────────────────────────
+  function renderTable3() {
+    const total = filtered3.length;
+    document.getElementById('poResultCount').textContent =
+      total === allRows3.length ? `${total} POs` : `${total} of ${allRows3.length}`;
+    if (!total) { document.getElementById('poTableArea').innerHTML = '<div class="msg-box"><p>No POs match the current filters.</p></div>'; return; }
+    const start = (page3-1)*PAGE_SIZE, slice = filtered3.slice(start, start+PAGE_SIZE), pages = Math.ceil(total/PAGE_SIZE);
+    const thead = TABLE_COLS_3.map(c =>
+      `<th class="${sortKey3===c.key?sortDir3:''}" ${c.nosort?'':` onclick="sortBy3('${c.key}')"`}>${c.label}</th>`
+    ).join('');
+    const tbody = slice.map(row => {
+      return `<tr>
+        <td style="white-space:nowrap">${esc(row[C3.DATE])}</td>
+        <td><span class="badge badge-po">${esc(row[C3.PO])}</span></td>
+        <td style="white-space:nowrap">${esc(row[C3.VENDOR])}</td>
+        <td style="white-space:nowrap">${esc(row[C3.CONTACT])}</td>
+        <td><div class="cell-item" title="${esc(row[C3.ITEM])}">${esc(row[C3.ITEM])}</div></td>
+        <td style="white-space:nowrap">${esc(row[C3.LOCATION])}</td>
+        <td style="white-space:nowrap">${esc(row[C3.FOLLOWUP])}</td>
+        <td><div class="cell-notes" title="${esc(row[C3.NOTES])}">${esc(row[C3.NOTES])}</div></td>
+      </tr>`;
+    }).join('');
+    document.getElementById('poTableArea').innerHTML = `
+      <div class="table-wrap"><div class="tscroll">
+        <table><thead><tr>${thead}</tr></thead><tbody>${tbody}</tbody></table>
+      </div>
+      <div class="table-footer">
+        <span class="page-info">Showing ${start+1}–${Math.min(start+PAGE_SIZE,total)} of ${total}</span>
+        <div class="pagination">${buildPages(page3,pages,'goPage3')}</div>
+      </div></div>`;
+  }
+  function goPage3(p) { const max=Math.ceil(filtered3.length/PAGE_SIZE); if(p<1||p>max)return; page3=p; renderTable3(); window.scrollTo({top:0,behavior:'smooth'}); }
+  function sortBy3(key) { sortDir3=(sortKey3===key&&sortDir3==='asc')?'desc':'asc'; sortKey3=key; applyFilters3(); }
 
   // ── Sidebar ──────────────────────────────────
   function renderSidebar() {
@@ -1130,6 +1311,57 @@
     });
 
     document.getElementById('rbiaChartsRow').style.display = 'grid';
+  }
+
+  // ── PO charts ────────────────────────────────
+  function renderPoCharts() {
+    const vendorCounts = {};
+    allRows3.forEach(r => {
+      const v = r[C3.VENDOR]?.trim(); if(v) vendorCounts[v] = (vendorCounts[v]||0)+1;
+    });
+    const vendorSorted = Object.entries(vendorCounts).sort((a,b)=>b[1]-a[1]).slice(0,15);
+
+    if (poVendorChart) poVendorChart.destroy();
+    poVendorChart = new Chart(document.getElementById('poVendorChart'), {
+      type: 'bar',
+      data: {
+        labels: vendorSorted.map(([v])=>v),
+        datasets:[{ label:'POs', data:vendorSorted.map(([,n])=>n), backgroundColor:'#7c3aed', borderRadius:4, borderSkipped:false }]
+      },
+      options: {
+        indexAxis:'y', responsive:true, maintainAspectRatio:false,
+        plugins:{legend:{display:false}},
+        scales:{
+          x:{beginAtZero:true, ticks:{stepSize:1,font:{size:10}}, grid:{color:'#f1f5f9'}},
+          y:{grid:{display:false}, ticks:{font:{size:10}}}
+        }
+      }
+    });
+
+    const locCounts = {};
+    allRows3.forEach(r => {
+      const l = r[C3.LOCATION]?.trim(); if(l) locCounts[l] = (locCounts[l]||0)+1;
+    });
+    const locSorted = Object.entries(locCounts).sort((a,b)=>b[1]-a[1]).slice(0,15);
+
+    if (poLocationChart) poLocationChart.destroy();
+    poLocationChart = new Chart(document.getElementById('poLocationChart'), {
+      type: 'bar',
+      data: {
+        labels: locSorted.map(([l])=>l),
+        datasets:[{ label:'POs', data:locSorted.map(([,n])=>n), backgroundColor:'#2563eb', borderRadius:4, borderSkipped:false }]
+      },
+      options: {
+        indexAxis:'y', responsive:true, maintainAspectRatio:false,
+        plugins:{legend:{display:false}},
+        scales:{
+          x:{beginAtZero:true, ticks:{stepSize:1,font:{size:10}}, grid:{color:'#f1f5f9'}},
+          y:{grid:{display:false}, ticks:{font:{size:10}}}
+        }
+      }
+    });
+
+    document.getElementById('poChartsRow').style.display = 'grid';
   }
 
   // ── Helpers ──────────────────────────────────
