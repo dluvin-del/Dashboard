@@ -838,7 +838,7 @@
   async function loadData3(standalone = true) {
     try {
       const all = await fetchGviz(SHEET_ID_3, SHEET_NAME_3, true);
-      allRows3 = all.filter(r => r[C3.PO]?.trim());
+      allRows3 = all.filter(r => r[C3.VENDOR]?.trim() && r[C3.CONTACT]?.trim());
       updateStats3(); populateFilters3(); applyFilters3();
       document.getElementById('poFilterBar').style.display = 'flex';
       document.getElementById('poInitMsg')?.remove();
