@@ -374,6 +374,7 @@
       <button class="dash-tab"        onclick="selectPanel(3, true)">RB PO's</button>
       <button class="dash-tab"        onclick="selectPanel(4, true)">Fitzgerald W/O</button>
       <button class="dash-tab"        onclick="selectPanel(5, true)">Live Oak W/O</button>
+      <button class="dash-tab"        onclick="selectPanel(6, true)">Unadilla W/O</button>
     </div>
     <div class="dash-controls">
       <select class="interval-select" id="intervalSel" onchange="setInterval_()">
@@ -722,6 +723,66 @@
 
 </div>
 </div>
+
+<!-- ── Panel 6: Unadilla W/O ─────────────────── -->
+<div class="panel" id="panel-6">
+<div class="panel-main">
+
+  <div class="stats-grid">
+    <div class="stat-card c-blue">  <div class="stat-label">Total Jobs</div>  <div class="stat-value" id="un-sTotal">—</div></div>
+    <div class="stat-card c-green"> <div class="stat-label">Invoiced</div>     <div class="stat-value" id="un-sInvoiced">—</div></div>
+    <div class="stat-card c-amber"> <div class="stat-label">Pending</div>      <div class="stat-value" id="un-sPending">—</div></div>
+    <div class="stat-card c-navy">  <div class="stat-label">Technicians</div>  <div class="stat-value" id="un-sTechs">—</div></div>
+    <div class="stat-card c-purple"><div class="stat-label">Customers</div>    <div class="stat-value" id="un-sCustomers">—</div></div>
+  </div>
+
+  <div class="charts-row" id="unadChartsRow" style="display:none">
+    <div class="chart-card">
+      <div class="chart-title">Jobs by Date</div>
+      <div style="position:relative;height:220px"><canvas id="unadDateChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Invoiced vs Open</div>
+      <div style="position:relative;height:220px"><canvas id="unadStatusChart"></canvas></div>
+    </div>
+  </div>
+  <div class="charts-row" id="unadTechChartsRow" style="display:none">
+    <div class="chart-card" style="grid-column:1/-1">
+      <div class="chart-title">Jobs by Technician</div>
+      <div style="position:relative;height:220px"><canvas id="unadTechChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="filters" id="unadFilterBar" style="display:none">
+    <div class="fg">
+      <div class="fl">Search</div>
+      <input type="search" class="fi fi-search" id="unSearch" placeholder="Search any field…" oninput="applyFilters6()" />
+    </div>
+    <div class="fg">
+      <div class="fl">Technician</div>
+      <select class="fs" id="unTech" onchange="applyFilters6()"><option value="">All Techs</option></select>
+    </div>
+    <div class="fg">
+      <div class="fl">Customer</div>
+      <select class="fs" id="unCustomer" onchange="applyFilters6()"><option value="">All Customers</option></select>
+    </div>
+    <div class="fg">
+      <div class="fl">Status</div>
+      <select class="fs" id="unStatus" onchange="applyFilters6()">
+        <option value="">All</option>
+        <option value="invoiced">Invoiced</option>
+        <option value="pending">Pending</option>
+      </select>
+    </div>
+    <span class="result-count" id="unadResultCount"></span>
+  </div>
+
+  <div id="unadTableArea">
+    <div class="msg-box" id="unadInitMsg"><p><strong>Loading Unadilla work orders…</strong></p></div>
+  </div>
+
+</div>
+</div>
 </div><!-- /panels -->
 
 <script>
@@ -821,6 +882,38 @@
     { key: C4.MAP,      label: 'Map',         nosort: true },
   ];
 
+  // ── Config: Sheet 6 (Unadilla W/O) ───────────
+  const SHEET_ID_6 = '1ui9dA_ifq3UJ1X8Vd14OX5m8H5FVLS5o';
+  const SHEET_GID_6 = '1662327897';
+
+  const C6 = {
+    DATE:     'B',
+    ORDER:    'C',
+    CUSTOMER: 'D',
+    SITE:     'E',
+    JOB:      'F',
+    MAP:      'G',
+    ZONE:     'H',
+    TECH:     'I',
+    EST:      'J',
+    BOM:      'K',
+    INVOICE:  'L',
+    HOURS:    'M',
+  };
+
+  const TABLE_COLS_6 = [
+    { key: C6.DATE,     label: 'Date'      },
+    { key: C6.ORDER,    label: 'Order #'   },
+    { key: C6.INVOICE,  label: 'Invoice #' },
+    { key: C6.CUSTOMER, label: 'Customer'  },
+    { key: C6.SITE,     label: 'Site'      },
+    { key: C6.JOB,      label: 'Job Info', nosort: true },
+    { key: C6.ZONE,     label: 'Zone'      },
+    { key: C6.TECH,     label: 'Tech'      },
+    { key: C6.BOM,      label: 'BOM #'     },
+    { key: C6.MAP,      label: 'Map',       nosort: true },
+  ];
+
   // ── Config: Sheet 3 (RB PO's) ────────────────
   // No header row in this sheet — columns referenced by letter ID (A, B, C…)
   const SHEET_ID_3   = '183p2yP9ViMqmJvGDH4YE0JB1EhocuPUt3PFCpr5_zyg';
@@ -866,6 +959,10 @@
 
   // Sheet 5 state
   let allRows5 = [], filtered5 = [], sortKey5 = C5.DATE, sortDir5 = 'desc', page5 = 1;
+
+  // Sheet 6 state
+  let allRows6 = [], filtered6 = [], sortKey6 = C6.ORDER, sortDir6 = 'asc', page6 = 1;
+
   // Chart.js ready flag
   let chartJsReady = false, chartsNeedRender = false, rbiaNeedRender = false, poNeedRender = false;
   let chartDate = null, chartStatus = null, chartTech = null, chartCust = null, chartAmount = null;
@@ -873,11 +970,13 @@
   let poVendorChart = null, poLocationChart = null;
   let fitzDateChart = null, fitzStatusChart = null, fitzTechChart = null;
   let loDateChart = null, loStatusChart = null, loTechChart = null;
+  let unadDateChart = null, unadStatusChart = null, unadTechChart = null;
   let loNeedRender = false;
   let fitzNeedRender = false;
+  let unadNeedRender = false;
 
   // ── Rotation ─────────────────────────────────
-  const NUM_PANELS = 6;
+  const NUM_PANELS = 7;
   let currentPanel = 0;
   let autoRotate   = true;
   let rotateIntervalSec = 300;
@@ -938,9 +1037,10 @@
   }
 
   // ── Sheet fetch helpers ──────────────────────
-  async function fetchGviz(sheetId, sheetName, useColIds = false) {
+  async function fetchGviz(sheetId, sheetName, useColIds = false, sheetGid = null) {
     let url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
     if (sheetName) url += `&sheet=${encodeURIComponent(sheetName)}`;
+    if (sheetGid && !sheetName) url += `&gid=${sheetGid}`;
     if (useColIds) url += `&headers=0`;
     const res = await fetch(url);
     if (!res.ok) throw new Error(`Google Sheets returned ${res.status}.\nEnsure the sheet is shared as "Anyone with the link can view".`);
@@ -965,7 +1065,7 @@
     const icon = document.getElementById('refreshIcon');
     btn.disabled = true; icon.classList.add('spin');
     const d = new Date();
-    await Promise.allSettled([loadData(false), loadData2(false), loadData3(false), loadData4(false), loadData5(false)]);
+    await Promise.allSettled([loadData(false), loadData2(false), loadData3(false), loadData4(false), loadData5(false), loadData6(false)]);
     document.getElementById('lastUpdated').textContent =
       `Updated ${d.toLocaleDateString()} ${d.toLocaleTimeString()}`;
     btn.disabled = false; icon.classList.remove('spin');
@@ -1074,6 +1174,11 @@
       try { renderLoCharts(); document.getElementById('loChartsRow').style.display = 'grid'; document.getElementById('loTechChartsRow').style.display = 'grid'; }
       catch(e) { console.warn('LO Charts:', e.message); }
       loNeedRender = false;
+    }
+    if (unadNeedRender && allRows6.length) {
+      try { renderUnadCharts(); document.getElementById('unadChartsRow').style.display = 'grid'; document.getElementById('unadTechChartsRow').style.display = 'grid'; }
+      catch(e) { console.warn('Unad Charts:', e.message); }
+      unadNeedRender = false;
     }
   }
 
@@ -1832,6 +1937,137 @@
 
     document.getElementById('loChartsRow').style.display = 'grid';
     document.getElementById('loTechChartsRow').style.display = 'grid';
+  }
+
+  // ── Sheet 6: Unadilla W/O ───────────────────
+  async function loadData6(standalone = true) {
+    try {
+      const all = await fetchGviz(SHEET_ID_6, null, true, SHEET_GID_6);
+      allRows6 = all.filter(r => r[C6.CUSTOMER]?.trim() && r[C6.CUSTOMER]?.trim() !== 'CUSTOMER');
+      updateStats6(); populateFilters6(); applyFilters6();
+      document.getElementById('unadFilterBar').style.display = 'flex';
+      document.getElementById('unadInitMsg')?.remove();
+      if (chartJsReady) { renderUnadCharts(); document.getElementById('unadChartsRow').style.display = 'grid'; document.getElementById('unadTechChartsRow').style.display = 'grid'; }
+      else unadNeedRender = true;
+    } catch (err) {
+      document.getElementById('unadTableArea').innerHTML = `
+        <div class="msg-box msg-error">
+          <p><strong>Failed to load Unadilla work orders</strong></p>
+          <div class="err-detail">${esc(err.message)}</div>
+          <p class="err-hint">Make sure the sheet is shared as <strong>"Anyone with the link can view"</strong>.</p>
+        </div>`;
+    }
+  }
+
+  function updateStats6() {
+    const inv   = allRows6.filter(r => r[C6.INVOICE]?.trim());
+    const techs = new Set(allRows6.map(r => r[C6.TECH]?.trim()).filter(Boolean));
+    const custs = new Set(allRows6.map(r => r[C6.CUSTOMER]?.trim()).filter(Boolean));
+    const vals  = [allRows6.length, inv.length, allRows6.length - inv.length, techs.size, custs.size];
+    ['un-sTotal','un-sInvoiced','un-sPending','un-sTechs','un-sCustomers'].forEach((id, i) => {
+      document.getElementById(id).textContent = vals[i];
+    });
+  }
+
+  function populateFilters6() {
+    fillSel('unTech',     uniq(allRows6.map(r => r[C6.TECH]?.trim())).sort(),     'All Techs');
+    fillSel('unCustomer', uniq(allRows6.map(r => r[C6.CUSTOMER]?.trim())).sort(), 'All Customers');
+  }
+
+  function applyFilters6() {
+    const q      = document.getElementById('unSearch').value.toLowerCase();
+    const tech   = document.getElementById('unTech').value;
+    const cust   = document.getElementById('unCustomer').value;
+    const status = document.getElementById('unStatus').value;
+    filtered6 = allRows6.filter(row => {
+      if (tech   && row[C6.TECH]?.trim()     !== tech) return false;
+      if (cust   && row[C6.CUSTOMER]?.trim() !== cust) return false;
+      if (status === 'invoiced' && !row[C6.INVOICE]?.trim()) return false;
+      if (status === 'pending'  &&  row[C6.INVOICE]?.trim()) return false;
+      if (q && !Object.values(row).join(' ').toLowerCase().includes(q)) return false;
+      return true;
+    });
+    filtered6.sort((a, b) => {
+      const cmp = (a[sortKey6]||'').localeCompare(b[sortKey6]||'', undefined, {numeric:true,sensitivity:'base'});
+      return sortDir6 === 'asc' ? cmp : -cmp;
+    });
+    page6 = 1; renderTable6();
+  }
+
+  function renderTable6() {
+    const total = filtered6.length;
+    document.getElementById('unadResultCount').textContent =
+      total === allRows6.length ? `${total} jobs` : `${total} of ${allRows6.length}`;
+    if (!total) { document.getElementById('unadTableArea').innerHTML = '<div class="msg-box"><p>No jobs match the current filters.</p></div>'; return; }
+    const start = (page6-1)*PAGE_SIZE, slice = filtered6.slice(start, start+PAGE_SIZE), pages = Math.ceil(total/PAGE_SIZE);
+    const thead = TABLE_COLS_6.map(c =>
+      `<th class="${sortKey6===c.key?sortDir6:''}" ${c.nosort?'':` onclick="sortBy6('${c.key}')"`}>${c.label}</th>`
+    ).join('');
+    const tbody = slice.map(row => {
+      const inv = row[C6.INVOICE]?.trim();
+      return `<tr class="${inv?'row-invoiced':'row-pending'}">
+        <td style="white-space:nowrap">${esc(row[C6.DATE])}</td>
+        <td>${row[C6.ORDER]?.trim()?`<span class="badge badge-so">${esc(row[C6.ORDER])}</span>`:''}</td>
+        <td>${inv?`<span class="badge badge-invoiced">${esc(inv)}</span>`:`<span class="badge badge-pending">Pending</span>`}</td>
+        <td>${esc(row[C6.CUSTOMER])}</td>
+        <td>${esc(row[C6.SITE])}</td>
+        <td><div class="cell-job" title="${esc(row[C6.JOB])}">${esc(row[C6.JOB])}</div></td>
+        <td style="white-space:nowrap">${esc(row[C6.ZONE])}</td>
+        <td style="white-space:nowrap">${esc(row[C6.TECH])}</td>
+        <td>${esc(row[C6.BOM])}</td>
+        <td>${mapLink(row[C6.MAP])}</td>
+      </tr>`;
+    }).join('');
+    document.getElementById('unadTableArea').innerHTML = `
+      <div class="table-wrap"><div class="tscroll">
+        <table><thead><tr>${thead}</tr></thead><tbody>${tbody}</tbody></table>
+      </div>
+      <div class="table-footer">
+        <span class="page-info">Showing ${start+1}–${Math.min(start+PAGE_SIZE,total)} of ${total}</span>
+        <div class="pagination">${buildPages(page6,pages,'goPage6')}</div>
+      </div></div>`;
+  }
+  function goPage6(p) { const max=Math.ceil(filtered6.length/PAGE_SIZE); if(p<1||p>max)return; page6=p; renderTable6(); window.scrollTo({top:0,behavior:'smooth'}); }
+  function sortBy6(key) { sortDir6=(sortKey6===key&&sortDir6==='asc')?'desc':'asc'; sortKey6=key; applyFilters6(); }
+
+  function renderUnadCharts() {
+    const dateCounts = {};
+    allRows6.forEach(r => { const d=normalizeDate(r[C6.DATE]); if(d) dateCounts[d]=(dateCounts[d]||0)+1; });
+    const labels = Object.keys(dateCounts).sort((a,b) => {
+      const[am,ad]=a.split('/').map(Number),[bm,bd]=b.split('/').map(Number);
+      return am!==bm?am-bm:ad-bd;
+    });
+    if (unadDateChart) unadDateChart.destroy();
+    unadDateChart = new Chart(document.getElementById('unadDateChart'), {
+      type: 'bar',
+      data: { labels, datasets:[{ label:'Jobs', data:labels.map(l=>dateCounts[l]), backgroundColor:'#2563eb', borderRadius:4, borderSkipped:false }] },
+      options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+        scales:{ x:{grid:{display:false},ticks:{font:{size:10},maxRotation:45}}, y:{beginAtZero:true,ticks:{stepSize:1,font:{size:10}},grid:{color:'#f1f5f9'}} } }
+    });
+
+    const inv = allRows6.filter(r=>r[C6.INVOICE]?.trim()).length, open = allRows6.length - inv;
+    if (unadStatusChart) unadStatusChart.destroy();
+    unadStatusChart = new Chart(document.getElementById('unadStatusChart'), {
+      type: 'doughnut', plugins:[makePctPlugin()],
+      data:{labels:['Invoiced','Open'],datasets:[{data:[inv,open],backgroundColor:['#16a34a','#f59e0b'],borderWidth:2,borderColor:'#fff',hoverOffset:6}]},
+      options:{responsive:true,maintainAspectRatio:false,cutout:'62%',
+        plugins:{legend:{position:'bottom',labels:{font:{size:11},padding:14,usePointStyle:true}},
+          tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${ctx.parsed} (${Math.round(ctx.parsed/(inv+open)*100)}%)`}}}}
+    });
+
+    const techCounts = {};
+    allRows6.forEach(r => { const t=r[C6.TECH]?.trim(); if(t) techCounts[t]=(techCounts[t]||0)+1; });
+    const techSorted = Object.entries(techCounts).sort((a,b)=>b[1]-a[1]).slice(0,15);
+    if (unadTechChart) unadTechChart.destroy();
+    unadTechChart = new Chart(document.getElementById('unadTechChart'), {
+      type: 'bar',
+      data: { labels: techSorted.map(([t])=>t), datasets:[{ label:'Jobs', data:techSorted.map(([,n])=>n), backgroundColor:'#7c3aed', borderRadius:4, borderSkipped:false }] },
+      options: { indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+        scales:{ x:{beginAtZero:true,ticks:{stepSize:1,font:{size:10}},grid:{color:'#f1f5f9'}}, y:{grid:{display:false},ticks:{font:{size:10}}} } }
+    });
+
+    document.getElementById('unadChartsRow').style.display = 'grid';
+    document.getElementById('unadTechChartsRow').style.display = 'grid';
   }
 
   // ── Helpers ──────────────────────────────────
