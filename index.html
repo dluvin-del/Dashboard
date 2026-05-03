@@ -375,6 +375,7 @@
       <button class="dash-tab"        onclick="selectPanel(4, true)">Fitzgerald W/O</button>
       <button class="dash-tab"        onclick="selectPanel(5, true)">Live Oak W/O</button>
       <button class="dash-tab"        onclick="selectPanel(6, true)">Unadilla W/O</button>
+      <button class="dash-tab"        onclick="selectPanel(7, true)">Summary</button>
     </div>
     <div class="dash-controls">
       <select class="interval-select" id="intervalSel" onchange="setInterval_()">
@@ -783,6 +784,70 @@
 
 </div>
 </div>
+
+<!-- ── Panel 7: Summary ───────────────────────── -->
+<div class="panel" id="panel-7">
+<div class="panel-main">
+
+  <div class="stats-grid">
+    <div class="stat-card c-blue">  <div class="stat-label">Total Jobs</div>     <div class="stat-value" id="sm-sTotal">—</div></div>
+    <div class="stat-card c-green"> <div class="stat-label">Invoiced</div>        <div class="stat-value" id="sm-sInvoiced">—</div></div>
+    <div class="stat-card c-amber"> <div class="stat-label">Pending</div>         <div class="stat-value" id="sm-sPending">—</div></div>
+    <div class="stat-card c-navy">  <div class="stat-label">Technicians</div>     <div class="stat-value" id="sm-sTechs">—</div></div>
+    <div class="stat-card c-purple"><div class="stat-label">Divisions</div>       <div class="stat-value" id="sm-sDivisions">—</div></div>
+  </div>
+
+  <div class="charts-row" id="smChartsRow" style="display:none">
+    <div class="chart-card">
+      <div class="chart-title">Jobs by Division</div>
+      <div style="position:relative;height:220px"><canvas id="smDivChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Invoiced vs Open</div>
+      <div style="position:relative;height:220px"><canvas id="smStatusChart"></canvas></div>
+    </div>
+  </div>
+  <div class="charts-row" id="smTechChartsRow" style="display:none">
+    <div class="chart-card" style="grid-column:1/-1">
+      <div class="chart-title">Jobs by Technician (All Divisions)</div>
+      <div style="position:relative;height:240px"><canvas id="smTechChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="filters" id="smFilterBar" style="display:none">
+    <div class="fg">
+      <div class="fl">Search</div>
+      <input type="search" class="fi fi-search" id="smSearch" placeholder="Search any field…" oninput="applyFiltersAll()" />
+    </div>
+    <div class="fg">
+      <div class="fl">Division</div>
+      <select class="fs" id="smDivision" onchange="applyFiltersAll()"><option value="">All Divisions</option></select>
+    </div>
+    <div class="fg">
+      <div class="fl">Technician</div>
+      <select class="fs" id="smTech" onchange="applyFiltersAll()"><option value="">All Techs</option></select>
+    </div>
+    <div class="fg">
+      <div class="fl">Customer</div>
+      <select class="fs" id="smCustomer" onchange="applyFiltersAll()"><option value="">All Customers</option></select>
+    </div>
+    <div class="fg">
+      <div class="fl">Status</div>
+      <select class="fs" id="smStatus" onchange="applyFiltersAll()">
+        <option value="">All</option>
+        <option value="invoiced">Invoiced</option>
+        <option value="pending">Pending</option>
+      </select>
+    </div>
+    <span class="result-count" id="smResultCount"></span>
+  </div>
+
+  <div id="smTableArea">
+    <div class="msg-box" id="smInitMsg"><p><strong>Loading summary…</strong></p></div>
+  </div>
+
+</div>
+</div>
 </div><!-- /panels -->
 
 <script>
@@ -971,12 +1036,17 @@
   let fitzDateChart = null, fitzStatusChart = null, fitzTechChart = null;
   let loDateChart = null, loStatusChart = null, loTechChart = null;
   let unadDateChart = null, unadStatusChart = null, unadTechChart = null;
+  let smDivChart = null, smStatusChart = null, smTechChart = null;
   let loNeedRender = false;
   let fitzNeedRender = false;
   let unadNeedRender = false;
+  let summNeedRender = false;
+
+  // ── Summary state ─────────────────────────────
+  let allRowsAll = [], filteredAll = [], sortKeyAll = '_src', sortDirAll = 'asc', pageAll = 1;
 
   // ── Rotation ─────────────────────────────────
-  const NUM_PANELS = 7;
+  const NUM_PANELS = 8;
   let currentPanel = 0;
   let autoRotate   = true;
   let rotateIntervalSec = 300;
@@ -1066,6 +1136,7 @@
     btn.disabled = true; icon.classList.add('spin');
     const d = new Date();
     await Promise.allSettled([loadData(false), loadData2(false), loadData3(false), loadData4(false), loadData5(false), loadData6(false)]);
+    buildSummaryRows();
     document.getElementById('lastUpdated').textContent =
       `Updated ${d.toLocaleDateString()} ${d.toLocaleTimeString()}`;
     btn.disabled = false; icon.classList.remove('spin');
@@ -1179,6 +1250,11 @@
       try { renderUnadCharts(); document.getElementById('unadChartsRow').style.display = 'grid'; document.getElementById('unadTechChartsRow').style.display = 'grid'; }
       catch(e) { console.warn('Unad Charts:', e.message); }
       unadNeedRender = false;
+    }
+    if (summNeedRender && allRowsAll.length) {
+      try { renderSummCharts(); document.getElementById('smChartsRow').style.display = 'grid'; document.getElementById('smTechChartsRow').style.display = 'grid'; }
+      catch(e) { console.warn('Summ Charts:', e.message); }
+      summNeedRender = false;
     }
   }
 
@@ -2068,6 +2144,162 @@
 
     document.getElementById('unadChartsRow').style.display = 'grid';
     document.getElementById('unadTechChartsRow').style.display = 'grid';
+  }
+
+  // ── Summary: build combined rows ─────────────
+  function buildSummaryRows() {
+    const norm = [];
+    allRows.forEach(r  => norm.push({ _src: 'Service Orders', _date: r[C.DATE],  _order: r[C.SO],      _invoice: r[C.INVOICE],  _customer: r[C.CUSTOMER], _site: r[C.SITE],     _job: r[C.JOB],    _tech: r[C.TECH],      _map: r[C.MAP] }));
+    allRows2.forEach(r => norm.push({ _src: 'Americus W/O',   _date: r[C2.DISC], _order: r[C2.ORDER],  _invoice: r[C2.INVOICE], _customer: r[C2.CUSTOMER],_site: r[C2.SITE],    _job: '',          _tech: r[C2.TECH],     _map: r[C2.JOB_LOC] }));
+    allRows4.forEach(r => norm.push({ _src: 'Fitzgerald W/O', _date: r[C4.DATE], _order: r[C4.SO],     _invoice: r[C4.INVOICE], _customer: r[C4.CUSTOMER],_site: '',            _job: r[C4.DESC],  _tech: r[C4.EMPLOYEE], _map: r[C4.MAP] }));
+    allRows5.forEach(r => norm.push({ _src: 'Live Oak W/O',   _date: r[C5.DATE], _order: r[C5.SO],     _invoice: r[C5.INVOICE], _customer: r[C5.CUSTOMER],_site: r[C5.SITE],    _job: r[C5.JOB],   _tech: r[C5.TECH],     _map: r[C5.MAP] }));
+    allRows6.forEach(r => norm.push({ _src: 'Unadilla W/O',   _date: r[C6.DATE], _order: r[C6.ORDER],  _invoice: r[C6.INVOICE], _customer: r[C6.CUSTOMER],_site: r[C6.SITE],    _job: r[C6.JOB],   _tech: r[C6.TECH],     _map: r[C6.MAP] }));
+    allRowsAll = norm.filter(r => r._customer?.trim());
+    updateStatsAll(); populateFiltersAll(); applyFiltersAll();
+    document.getElementById('smFilterBar').style.display = 'flex';
+    document.getElementById('smInitMsg')?.remove();
+    if (chartJsReady) { renderSummCharts(); document.getElementById('smChartsRow').style.display = 'grid'; document.getElementById('smTechChartsRow').style.display = 'grid'; }
+    else summNeedRender = true;
+  }
+
+  function updateStatsAll() {
+    const inv   = allRowsAll.filter(r => r._invoice?.trim()).length;
+    const techs = new Set(allRowsAll.map(r => r._tech?.trim()).filter(Boolean));
+    const divs  = new Set(allRowsAll.map(r => r._src));
+    document.getElementById('sm-sTotal').textContent     = allRowsAll.length;
+    document.getElementById('sm-sInvoiced').textContent  = inv;
+    document.getElementById('sm-sPending').textContent   = allRowsAll.length - inv;
+    document.getElementById('sm-sTechs').textContent     = techs.size;
+    document.getElementById('sm-sDivisions').textContent = divs.size;
+  }
+
+  function populateFiltersAll() {
+    fillSel('smDivision', uniq(allRowsAll.map(r => r._src)).sort(),            'All Divisions');
+    fillSel('smTech',     uniq(allRowsAll.map(r => r._tech?.trim())).sort(),   'All Techs');
+    fillSel('smCustomer', uniq(allRowsAll.map(r => r._customer?.trim())).sort(),'All Customers');
+  }
+
+  function applyFiltersAll() {
+    const q      = document.getElementById('smSearch').value.toLowerCase();
+    const div    = document.getElementById('smDivision').value;
+    const tech   = document.getElementById('smTech').value;
+    const cust   = document.getElementById('smCustomer').value;
+    const status = document.getElementById('smStatus').value;
+    filteredAll = allRowsAll.filter(row => {
+      if (div    && row._src              !== div)  return false;
+      if (tech   && row._tech?.trim()     !== tech) return false;
+      if (cust   && row._customer?.trim() !== cust) return false;
+      if (status === 'invoiced' && !row._invoice?.trim()) return false;
+      if (status === 'pending'  &&  row._invoice?.trim()) return false;
+      if (q && !Object.values(row).join(' ').toLowerCase().includes(q)) return false;
+      return true;
+    });
+    filteredAll.sort((a, b) => {
+      const cmp = (a[sortKeyAll]||'').localeCompare(b[sortKeyAll]||'', undefined, {numeric:true,sensitivity:'base'});
+      return sortDirAll === 'asc' ? cmp : -cmp;
+    });
+    pageAll = 1; renderTableAll();
+  }
+
+  const DIV_COLORS = {
+    'Service Orders': '#2563eb',
+    'Americus W/O':   '#16a34a',
+    'Fitzgerald W/O': '#f59e0b',
+    'Live Oak W/O':   '#7c3aed',
+    'Unadilla W/O':   '#0891b2',
+  };
+  const DIV_BADGES = {
+    'Service Orders': 'background:#dbeafe;color:#1d4ed8',
+    'Americus W/O':   'background:#dcfce7;color:#15803d',
+    'Fitzgerald W/O': 'background:#fef3c7;color:#b45309',
+    'Live Oak W/O':   'background:#ede9fe;color:#6d28d9',
+    'Unadilla W/O':   'background:#cffafe;color:#0e7490',
+  };
+
+  function renderTableAll() {
+    const total = filteredAll.length;
+    document.getElementById('smResultCount').textContent =
+      total === allRowsAll.length ? `${total} jobs` : `${total} of ${allRowsAll.length}`;
+    if (!total) { document.getElementById('smTableArea').innerHTML = '<div class="msg-box"><p>No jobs match the current filters.</p></div>'; return; }
+    const start = (pageAll-1)*PAGE_SIZE, slice = filteredAll.slice(start, start+PAGE_SIZE), pages = Math.ceil(total/PAGE_SIZE);
+    const cols = [
+      { key:'_src',      label:'Division'   },
+      { key:'_date',     label:'Date'       },
+      { key:'_order',    label:'Order #'    },
+      { key:'_invoice',  label:'Invoice #'  },
+      { key:'_customer', label:'Customer'   },
+      { key:'_site',     label:'Site'       },
+      { key:'_job',      label:'Job Info', nosort:true },
+      { key:'_tech',     label:'Tech'       },
+      { key:'_map',      label:'Map',       nosort:true },
+    ];
+    const thead = cols.map(c =>
+      `<th class="${sortKeyAll===c.key?sortDirAll:''}" ${c.nosort?'':` onclick="sortByAll('${c.key}')"`}>${c.label}</th>`
+    ).join('');
+    const tbody = slice.map(row => {
+      const inv   = row._invoice?.trim();
+      const style = DIV_BADGES[row._src] || '';
+      return `<tr class="${inv?'row-invoiced':'row-pending'}">
+        <td><span class="badge" style="${style}">${esc(row._src)}</span></td>
+        <td style="white-space:nowrap">${esc(row._date)}</td>
+        <td>${row._order?.trim()?`<span class="badge badge-so">${esc(row._order)}</span>`:''}</td>
+        <td>${inv?`<span class="badge badge-invoiced">${esc(inv)}</span>`:`<span class="badge badge-pending">Pending</span>`}</td>
+        <td>${esc(row._customer)}</td>
+        <td>${esc(row._site)}</td>
+        <td><div class="cell-job" title="${esc(row._job)}">${esc(row._job)}</div></td>
+        <td style="white-space:nowrap">${esc(row._tech)}</td>
+        <td>${mapLink(row._map)}</td>
+      </tr>`;
+    }).join('');
+    document.getElementById('smTableArea').innerHTML = `
+      <div class="table-wrap"><div class="tscroll">
+        <table><thead><tr>${thead}</tr></thead><tbody>${tbody}</tbody></table>
+      </div>
+      <div class="table-footer">
+        <span class="page-info">Showing ${start+1}–${Math.min(start+PAGE_SIZE,total)} of ${total}</span>
+        <div class="pagination">${buildPages(pageAll,pages,'goPageAll')}</div>
+      </div></div>`;
+  }
+  function goPageAll(p) { const max=Math.ceil(filteredAll.length/PAGE_SIZE); if(p<1||p>max)return; pageAll=p; renderTableAll(); window.scrollTo({top:0,behavior:'smooth'}); }
+  function sortByAll(key) { sortDirAll=(sortKeyAll===key&&sortDirAll==='asc')?'desc':'asc'; sortKeyAll=key; applyFiltersAll(); }
+
+  function renderSummCharts() {
+    const divCounts = {};
+    allRowsAll.forEach(r => { divCounts[r._src] = (divCounts[r._src]||0)+1; });
+    const divOrder = ['Service Orders','Americus W/O','Fitzgerald W/O','Live Oak W/O','Unadilla W/O'];
+    const divLabels = divOrder.filter(d => divCounts[d]);
+    if (smDivChart) smDivChart.destroy();
+    smDivChart = new Chart(document.getElementById('smDivChart'), {
+      type: 'bar',
+      data: { labels: divLabels, datasets:[{ label:'Jobs', data: divLabels.map(d=>divCounts[d]),
+        backgroundColor: divLabels.map(d=>DIV_COLORS[d]||'#64748b'), borderRadius:4, borderSkipped:false }] },
+      options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+        scales:{ x:{grid:{display:false},ticks:{font:{size:10}}}, y:{beginAtZero:true,ticks:{stepSize:1,font:{size:10}},grid:{color:'#f1f5f9'}} } }
+    });
+
+    const inv = allRowsAll.filter(r=>r._invoice?.trim()).length, open = allRowsAll.length - inv;
+    if (smStatusChart) smStatusChart.destroy();
+    smStatusChart = new Chart(document.getElementById('smStatusChart'), {
+      type: 'doughnut', plugins:[makePctPlugin()],
+      data:{labels:['Invoiced','Open'],datasets:[{data:[inv,open],backgroundColor:['#16a34a','#f59e0b'],borderWidth:2,borderColor:'#fff',hoverOffset:6}]},
+      options:{responsive:true,maintainAspectRatio:false,cutout:'62%',
+        plugins:{legend:{position:'bottom',labels:{font:{size:11},padding:14,usePointStyle:true}},
+          tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${ctx.parsed} (${Math.round(ctx.parsed/(inv+open)*100)}%)`}}}}
+    });
+
+    const techCounts = {};
+    allRowsAll.forEach(r => { const t=r._tech?.trim(); if(t) techCounts[t]=(techCounts[t]||0)+1; });
+    const techSorted = Object.entries(techCounts).sort((a,b)=>b[1]-a[1]).slice(0,20);
+    if (smTechChart) smTechChart.destroy();
+    smTechChart = new Chart(document.getElementById('smTechChart'), {
+      type: 'bar',
+      data: { labels: techSorted.map(([t])=>t), datasets:[{ label:'Jobs', data:techSorted.map(([,n])=>n), backgroundColor:'#2563eb', borderRadius:4, borderSkipped:false }] },
+      options: { indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+        scales:{ x:{beginAtZero:true,ticks:{stepSize:1,font:{size:10}},grid:{color:'#f1f5f9'}}, y:{grid:{display:false},ticks:{font:{size:10}}} } }
+    });
+
+    document.getElementById('smChartsRow').style.display = 'grid';
+    document.getElementById('smTechChartsRow').style.display = 'grid';
   }
 
   // ── Helpers ──────────────────────────────────
