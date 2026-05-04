@@ -1164,8 +1164,10 @@
       document.getElementById('sidebar').style.display   = 'flex';
       document.getElementById('initMsg')?.remove();
       renderAnalytics();
-      if (chartJsReady) { renderCharts(); document.getElementById('chartsRow').style.display = 'grid'; document.getElementById('amountChartsRow').style.display = 'grid'; }
-      else chartsNeedRender = true;
+      if (chartJsReady) {
+        try { renderCharts(); document.getElementById('chartsRow').style.display = 'grid'; document.getElementById('amountChartsRow').style.display = 'grid'; document.getElementById('techAmountChartsRow').style.display = 'grid'; }
+        catch(e) { console.warn('Charts:', e.message); }
+      } else chartsNeedRender = true;
     } catch (err) {
       document.getElementById('tableArea').innerHTML = `
         <div class="msg-box msg-error">
@@ -1228,7 +1230,7 @@
   function onChartJsLoad() {
     chartJsReady = true;
     if (chartsNeedRender && allRows.length) {
-      try { renderCharts(); document.getElementById('chartsRow').style.display = 'grid'; document.getElementById('amountChartsRow').style.display = 'grid'; }
+      try { renderCharts(); document.getElementById('chartsRow').style.display = 'grid'; document.getElementById('amountChartsRow').style.display = 'grid'; document.getElementById('techAmountChartsRow').style.display = 'grid'; }
       catch(e) { console.warn('Charts:', e.message); }
       chartsNeedRender = false;
     }
@@ -1690,7 +1692,6 @@
         plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ' $' + ctx.parsed.x.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) } } }
       }
     });
-    document.getElementById('techAmountChartsRow').style.display = 'grid';
 
     renderAnalyticsCharts();
   }
