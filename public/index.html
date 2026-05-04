@@ -1,4 +1,4 @@
-﻿﻿﻿﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -420,6 +420,12 @@
     <div class="chart-card" style="grid-column:1/-1">
       <div class="chart-title">Invoice Amount by Date</div>
       <div style="position:relative;height:200px"><canvas id="chartAmount"></canvas></div>
+    </div>
+  </div>
+  <div class="charts-row" id="techAmountChartsRow" style="display:none">
+    <div class="chart-card" style="grid-column:1/-1">
+      <div class="chart-title">Invoice Amount by Technician</div>
+      <div style="position:relative;height:260px"><canvas id="chartTechAmount"></canvas></div>
     </div>
   </div>
 
@@ -1030,7 +1036,7 @@
 
   // Chart.js ready flag
   let chartJsReady = false, chartsNeedRender = false, rbiaNeedRender = false, poNeedRender = false;
-  let chartDate = null, chartStatus = null, chartTech = null, chartCust = null, chartAmount = null;
+  let chartDate = null, chartStatus = null, chartTech = null, chartCust = null, chartAmount = null, chartTechAmount = null;
   let rbiaTechChart = null, rbiaStatusChart = null, rbiaDateChart = null;
   let poVendorChart = null, poLocationChart = null;
   let fitzDateChart = null, fitzStatusChart = null, fitzTechChart = null;
@@ -1658,6 +1664,32 @@
         plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' $'+ctx.parsed.y.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}}}
       }
     });
+
+    const amountByTech = {};
+    allRows.forEach(r => {
+      const t = r[C.TECH]?.trim(); if (!t) return;
+      const raw = String(r[C.AMOUNT] || '').replace(/[$,\s]/g, '');
+      const n = parseFloat(raw); if (!isNaN(n) && n > 0) amountByTech[t] = (amountByTech[t] || 0) + n;
+    });
+    const techAmtSorted = Object.entries(amountByTech).sort((a, b) => b[1] - a[1]).slice(0, 20);
+    if (chartTechAmount) chartTechAmount.destroy();
+    chartTechAmount = new Chart(document.getElementById('chartTechAmount'), {
+      type: 'bar',
+      plugins: [makeBarLabelPlugin(v => v >= 1000 ? '$' + (v / 1000).toFixed(1) + 'K' : '$' + v.toFixed(0))],
+      data: {
+        labels: techAmtSorted.map(([t]) => t),
+        datasets: [{ label: 'Invoice Amount', data: techAmtSorted.map(([, v]) => +v.toFixed(2)), backgroundColor: '#2563eb', borderRadius: 4, borderSkipped: false }]
+      },
+      options: {
+        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+        scales: {
+          x: { beginAtZero: true, ticks: { font: { size: 10 }, callback: v => '$' + v.toLocaleString() }, grid: { color: '#f1f5f9' } },
+          y: { grid: { display: false }, ticks: { font: { size: 11 } } }
+        },
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ' $' + ctx.parsed.x.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) } } }
+      }
+    });
+    document.getElementById('techAmountChartsRow').style.display = 'grid';
 
     renderAnalyticsCharts();
   }
