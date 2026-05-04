@@ -869,7 +869,7 @@
 
   const TABLE_COLS = [
     { key: C.DATE, label: 'Date' }, { key: C.SO, label: 'SO #' },
-    { key: C.INVOICE, label: 'Invoice #' }, { key: C.CUSTOMER, label: 'Customer' },
+    { key: C.INVOICE, label: 'Invoice #' }, { key: C.AMOUNT, label: 'Amount' }, { key: C.CUSTOMER, label: 'Customer' },
     { key: C.SITE, label: 'Site' }, { key: C.JOB, label: 'Job Info' },
     { key: C.TECH, label: 'Tech' }, { key: C.COMMENTS, label: 'Comments' },
     { key: C.MAP, label: 'Map', nosort: true },
@@ -1398,6 +1398,7 @@
         <td style="white-space:nowrap">${esc(row[C.DATE])}</td>
         <td><span class="badge badge-so">${esc(row[C.SO])}</span></td>
         <td>${inv?`<span class="badge badge-invoiced">${esc(inv)}</span>`:`<span class="badge badge-pending">Pending</span>`}</td>
+        <td style="white-space:nowrap;text-align:right">${(()=>{const a=String(row[C.AMOUNT]||'').replace(/[$,\s]/g,'');const n=parseFloat(a);return n>0?'$'+n.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}):'—';})()}</td>
         <td>${esc(row[C.CUSTOMER])}</td><td>${esc(row[C.SITE])}</td>
         <td><div class="cell-job" title="${esc(row[C.JOB])}">${esc(row[C.JOB])}</div></td>
         <td style="white-space:nowrap">${esc(row[C.TECH])}</td>
