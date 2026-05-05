@@ -404,6 +404,7 @@
     <div class="stat-card c-amber"> <div class="stat-label">Pending</div>      <div class="stat-value" id="sPending">—</div></div>
     <div class="stat-card c-navy">  <div class="stat-label">Technicians</div>  <div class="stat-value" id="sTechs">—</div></div>
     <div class="stat-card c-purple"><div class="stat-label">Customers</div>    <div class="stat-value" id="sCustomers">—</div></div>
+    <div class="stat-card c-green"> <div class="stat-label">Total Invoiced $</div><div class="stat-value" id="sTotalAmount" style="font-size:1.1rem">—</div></div>
   </div>
 
   <div class="charts-row" id="chartsRow" style="display:none">
@@ -1271,9 +1272,14 @@
     const inv   = allRows.filter(r => r[C.INVOICE]?.trim());
     const techs = new Set(allRows.map(r => r[C.TECH]?.trim()).filter(Boolean));
     const custs = new Set(allRows.map(r => r[C.CUSTOMER]?.trim()).filter(Boolean));
+    const total = allRows.reduce((sum, r) => {
+      const n = parseFloat(String(r[C.AMOUNT] || '').replace(/[$,\s]/g, ''));
+      return sum + (isNaN(n) ? 0 : n);
+    }, 0);
     const vals = [allRows.length, inv.length, allRows.length - inv.length, techs.size, custs.size];
     ['sTotal','sInvoiced','sPending','sTechs','sCustomers'].forEach((id, i) => { document.getElementById(id).textContent = vals[i]; });
     ['a-sTotal','a-sInvoiced','a-sPending','a-sTechs','a-sCustomers'].forEach((id, i) => { document.getElementById(id).textContent = vals[i]; });
+    document.getElementById('sTotalAmount').textContent = total > 0 ? '$' + total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '—';
   }
 
   // ── Stats: Sheet 2 ───────────────────────────
