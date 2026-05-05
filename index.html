@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <title>American Irrigation – Service Order Dashboard</title>
   <script async src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"
           onload="onChartJsLoad()"></script>
@@ -1279,7 +1282,7 @@
     const vals = [allRows.length, inv.length, allRows.length - inv.length, techs.size, custs.size];
     ['sTotal','sInvoiced','sPending','sTechs','sCustomers'].forEach((id, i) => { document.getElementById(id).textContent = vals[i]; });
     ['a-sTotal','a-sInvoiced','a-sPending','a-sTechs','a-sCustomers'].forEach((id, i) => { document.getElementById(id).textContent = vals[i]; });
-    document.getElementById('sTotalAmount').textContent = total > 0 ? '$' + total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '—';
+    document.getElementById('sTotalAmount').textContent = allRows.length > 0 ? '$' + total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '—';
   }
 
   // ── Stats: Sheet 2 ───────────────────────────
