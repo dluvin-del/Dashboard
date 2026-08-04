@@ -1187,6 +1187,17 @@
       C.AMOUNT   = pick('INVOICE AMOUNT', 'AMOUNT', 'K');
       const all = rawAll.slice(1);
       allRows = all.filter(r => r[C.DATE]?.trim() && r[C.CUSTOMER]?.trim());
+      if (rawAll.length > 0 && allRows.length === 0) {
+        const r0 = JSON.stringify(rawAll[0]).substring(0, 400);
+        const r1 = rawAll[1] ? JSON.stringify(rawAll[1]).substring(0, 400) : 'none';
+        document.getElementById('tableArea').innerHTML = `
+          <div class="msg-box msg-error">
+            <p><strong>Debug: ${rawAll.length} total rows, 0 matched filter (DATE="${C.DATE}" CUSTOMER="${C.CUSTOMER}")</strong></p>
+            <p>Row 0 (header?): <code>${r0}</code></p>
+            <p>Row 1 (first data?): <code>${r1}</code></p>
+            <p>colByName: <code>${JSON.stringify(colByName).substring(0,400)}</code></p>
+          </div>`; return;
+      }
       updateStats(); populateFilters(); applyFilters(); renderSidebar();
       document.getElementById('filterBar').style.display = 'flex';
       document.getElementById('sidebar').style.display   = 'flex';
