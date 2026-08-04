@@ -1174,7 +1174,7 @@
       Object.entries(headerRow).forEach(([letter, text]) => {
         if (text?.trim()) colByName[text.trim().toUpperCase()] = letter;
       });
-      const pick = (...names) => { for (const n of names) { if (colByName[n.toUpperCase()]) return colByName[n.toUpperCase()]; } return names[0]; };
+      const pick = (...names) => { for (const n of names) { if (colByName[n.toUpperCase()]) return colByName[n.toUpperCase()]; } return names[names.length - 1]; };
       C.DATE     = pick('Date', 'DATE', 'date', 'A');
       C.SO       = pick('SERVICE ORDER #', 'SO#', 'SO #', 'B');
       C.INVOICE  = pick('INVOICE #', 'INVOICE', 'C');
@@ -1187,17 +1187,6 @@
       C.AMOUNT   = pick('INVOICE AMOUNT', 'AMOUNT', 'K');
       const all = rawAll.slice(1);
       allRows = all.filter(r => r[C.DATE]?.trim() && r[C.CUSTOMER]?.trim());
-      if (rawAll.length > 0 && allRows.length === 0) {
-        const r0 = JSON.stringify(rawAll[0]).substring(0, 400);
-        const r1 = rawAll[1] ? JSON.stringify(rawAll[1]).substring(0, 400) : 'none';
-        document.getElementById('tableArea').innerHTML = `
-          <div class="msg-box msg-error">
-            <p><strong>Debug: ${rawAll.length} total rows, 0 matched filter (DATE="${C.DATE}" CUSTOMER="${C.CUSTOMER}")</strong></p>
-            <p>Row 0 (header?): <code>${r0}</code></p>
-            <p>Row 1 (first data?): <code>${r1}</code></p>
-            <p>colByName: <code>${JSON.stringify(colByName).substring(0,400)}</code></p>
-          </div>`; return;
-      }
       updateStats(); populateFilters(); applyFilters(); renderSidebar();
       document.getElementById('filterBar').style.display = 'flex';
       document.getElementById('sidebar').style.display   = 'flex';
