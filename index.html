@@ -1166,8 +1166,14 @@
     try {
       const all = await fetchGviz(SHEET_ID);
       // Auto-detect date column in case the header name changed (e.g. 'M' vs 'Date' vs 'N')
-      const dateKey = ['Date', 'M', 'N', 'DATE', 'date'].find(k => all.some(r => r[k]?.trim()));
+      // Date column has no header — gviz returns the column letter ('A', 'M', etc.)
+      const dateKey = ['Date', 'A', 'M', 'N', 'DATE', 'date'].find(k => all.some(r => r[k]?.trim() && !/^ST|^WT/.test(r[k])));
       if (dateKey) C.DATE = dateKey;
+      // Invoice Amount column also has no header — try column letter 'K' if named key missing
+      if (!all.some(r => r[C.AMOUNT]?.trim())) {
+        const amtKey = ['K', 'Invoice Amount', 'INVOICE AMOUNT'].find(k => all.some(r => { const v=String(r[k]||'').replace(/[$,\s]/g,''); return v && !isNaN(parseFloat(v)); }));
+        if (amtKey) C.AMOUNT = amtKey;
+      }
       allRows = all.filter(r => r[C.DATE]?.trim() && r[C.CUSTOMER]?.trim());
       updateStats(); populateFilters(); applyFilters(); renderSidebar();
       document.getElementById('filterBar').style.display = 'flex';
