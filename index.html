@@ -1165,6 +1165,9 @@
     }
     try {
       const all = await fetchGviz(SHEET_ID);
+      // Auto-detect date column in case the header name changed (e.g. 'M' vs 'Date' vs 'N')
+      const dateKey = ['Date', 'M', 'N', 'DATE', 'date'].find(k => all.some(r => r[k]?.trim()));
+      if (dateKey) C.DATE = dateKey;
       allRows = all.filter(r => r[C.DATE]?.trim() && r[C.CUSTOMER]?.trim());
       updateStats(); populateFilters(); applyFilters(); renderSidebar();
       document.getElementById('filterBar').style.display = 'flex';
