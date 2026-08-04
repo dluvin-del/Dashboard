@@ -1165,18 +1165,28 @@
       btn.disabled = true; icon.classList.add('spin');
     }
     try {
-      const all = await fetchGviz(SHEET_ID, null, false, null, 2);
-      const keys0 = all.length ? Object.keys(all[0]) : [];
+      // Fetch with column letter IDs so we can read the header row and auto-map columns
+      const rawAll = await fetchGviz(SHEET_ID, null, true);
+      // rawAll[0] = first non-blank row = the text header row (row 2 of sheet)
+      // rawAll[1+] = actual service order data
+      const headerRow = rawAll[0] || {};
+      const colByName = {};
+      Object.entries(headerRow).forEach(([letter, text]) => {
+        if (text?.trim()) colByName[text.trim().toUpperCase()] = letter;
+      });
+      const pick = (...names) => { for (const n of names) { if (colByName[n.toUpperCase()]) return colByName[n.toUpperCase()]; } return names[0]; };
+      C.DATE     = pick('Date', 'DATE', 'date', 'A');
+      C.SO       = pick('SERVICE ORDER #', 'SO#', 'SO #', 'B');
+      C.INVOICE  = pick('INVOICE #', 'INVOICE', 'C');
+      C.CUSTOMER = pick('CUSTOMER', 'Customer', 'D');
+      C.SITE     = pick('SITE NAME', 'SITE', 'E');
+      C.JOB      = pick('JOB INFO', 'JOB', 'F');
+      C.MAP      = pick('GOOGLE PIN LOCATION', 'MAP', 'G');
+      C.TECH     = pick('TECH.', 'TECH', 'H');
+      C.COMMENTS = pick('COMMENTS', 'COMMENT', 'I');
+      C.AMOUNT   = pick('INVOICE AMOUNT', 'AMOUNT', 'K');
+      const all = rawAll.slice(1);
       allRows = all.filter(r => r[C.DATE]?.trim() && r[C.CUSTOMER]?.trim());
-      if (all.length > 0 && allRows.length === 0) {
-        document.getElementById('tableArea').innerHTML = `
-          <div class="msg-box msg-error">
-            <p><strong>Loaded ${all.length} rows but none matched filters.</strong></p>
-            <p>Column keys: <code>${keys0.join(' | ')}</code></p>
-            <p>First row: <code>${JSON.stringify(all[0]).substring(0,400)}</code></p>
-            <p>Looking for date key "<code>${C.DATE}</code>" and customer key "<code>${C.CUSTOMER}</code>"</p>
-          </div>`; return;
-      }
       updateStats(); populateFilters(); applyFilters(); renderSidebar();
       document.getElementById('filterBar').style.display = 'flex';
       document.getElementById('sidebar').style.display   = 'flex';
