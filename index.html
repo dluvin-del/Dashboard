@@ -1218,8 +1218,32 @@
   // ── Sheet 2: RBIA W/O ────────────────────────
   async function loadData2(standalone = true) {
     try {
-      const all = await fetchGviz(SHEET_ID_2, SHEET_NAME_2);
-      allRows2 = all.filter(r => r[C2.CUSTOMER]?.trim());
+      const rawAll2 = await fetchGviz(SHEET_ID_2, SHEET_NAME_2, true);
+      const hdr2 = rawAll2[0] || {};
+      const cbn2 = {};
+      Object.entries(hdr2).forEach(([letter, text]) => { if (text?.trim()) cbn2[text.trim().toUpperCase()] = letter; });
+      const pick2 = (...names) => { for (const n of names) { if (cbn2[n.toUpperCase()]) return cbn2[n.toUpperCase()]; } return names[names.length - 1]; };
+      C2.DISC     = pick2('DISC', 'A');
+      C2.CUSTOMER = pick2('CUSTOMER', 'B');
+      C2.SITE     = pick2('SITE', 'C');
+      C2.ORDER    = pick2('ORDER #', 'ORDER#', 'D');
+      C2.JOB_LOC  = pick2('JOB LOCATION', 'E');
+      C2.EST      = pick2('EST. #', 'EST #', 'F');
+      C2.PHOTO    = pick2('PHOTO', 'G');
+      C2.TECH     = pick2('TECH.', 'TECH', 'H');
+      C2.INVOICE  = pick2('INVOICE #', 'INVOICE', 'I');
+      const all2data = rawAll2.slice(1);
+      allRows2 = all2data.filter(r => r[C2.CUSTOMER]?.trim());
+      if (rawAll2.length > 0 && allRows2.length === 0) {
+        const r0 = JSON.stringify(rawAll2[0]).substring(0, 400);
+        const r1 = rawAll2[1] ? JSON.stringify(rawAll2[1]).substring(0, 400) : 'none';
+        document.getElementById('rbiaTableArea').innerHTML = `
+          <div class="msg-box msg-error">
+            <p><strong>Debug Americus W/O: ${rawAll2.length} rows, 0 matched (CUSTOMER="${C2.CUSTOMER}")</strong></p>
+            <p>Row 0: <code>${r0}</code></p><p>Row 1: <code>${r1}</code></p>
+            <p>colByName: <code>${JSON.stringify(cbn2).substring(0,400)}</code></p>
+          </div>`; return;
+      }
       updateStats2(); populateFilters2(); applyFilters2();
       document.getElementById('rbiaFilterBar').style.display = 'flex';
       document.getElementById('rbiaInitMsg')?.remove();
