@@ -867,10 +867,10 @@
   const SHEET_ID = '1HWfIjPqARGR8UqUEtKlO5YZ_9_QyE6vjcSU4P4Fd3rM';
 
   const C = {
-    DATE: 'Date', SO: 'SERVICE ORDER #', INVOICE: 'INVOICE #',
+    DATE: 'A', SO: 'SERVICE ORDER #', INVOICE: 'INVOICE #',
     CUSTOMER: 'CUSTOMER', SITE: 'SITE NAME', JOB: 'JOB INFO',
     MAP: 'GOOGLE PIN LOCATION', TECH: 'TECH.', COMMENTS: 'COMMENTS',
-    AMOUNT: 'Invoice Amount',
+    AMOUNT: 'K',
   };
 
   const TABLE_COLS = [
@@ -1120,11 +1120,12 @@
   }
 
   // ── Sheet fetch helpers ──────────────────────
-  async function fetchGviz(sheetId, sheetName, useColIds = false, sheetGid = null) {
+  async function fetchGviz(sheetId, sheetName, useColIds = false, sheetGid = null, headersParam = null) {
     let url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
     if (sheetName) url += `&sheet=${encodeURIComponent(sheetName)}`;
     if (sheetGid && !sheetName) url += `&gid=${sheetGid}`;
     if (useColIds) url += `&headers=0`;
+    else if (headersParam !== null) url += `&headers=${headersParam}`;
     const res = await fetch(url);
     if (!res.ok) throw new Error(`Google Sheets returned ${res.status}.\nEnsure the sheet is shared as "Anyone with the link can view".`);
     const text = await res.text();
@@ -1164,16 +1165,7 @@
       btn.disabled = true; icon.classList.add('spin');
     }
     try {
-      const all = await fetchGviz(SHEET_ID);
-      // Auto-detect date column in case the header name changed (e.g. 'M' vs 'Date' vs 'N')
-      // Date column has no header — gviz returns the column letter ('A', 'M', etc.)
-      const dateKey = ['Date', 'A', 'M', 'N', 'DATE', 'date'].find(k => all.some(r => r[k]?.trim() && !/^ST|^WT/.test(r[k])));
-      if (dateKey) C.DATE = dateKey;
-      // Invoice Amount column also has no header — try column letter 'K' if named key missing
-      if (!all.some(r => r[C.AMOUNT]?.trim())) {
-        const amtKey = ['K', 'Invoice Amount', 'INVOICE AMOUNT'].find(k => all.some(r => { const v=String(r[k]||'').replace(/[$,\s]/g,''); return v && !isNaN(parseFloat(v)); }));
-        if (amtKey) C.AMOUNT = amtKey;
-      }
+      const all = await fetchGviz(SHEET_ID, null, false, null, 2);
       allRows = all.filter(r => r[C.DATE]?.trim() && r[C.CUSTOMER]?.trim());
       updateStats(); populateFilters(); applyFilters(); renderSidebar();
       document.getElementById('filterBar').style.display = 'flex';
