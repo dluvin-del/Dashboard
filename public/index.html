@@ -1166,7 +1166,25 @@
     }
     try {
       const all = await fetchGviz(SHEET_ID, null, false, null, 2);
-      allRows = all.filter(r => r[C.DATE]?.trim() && r[C.CUSTOMER]?.trim());
+      const keys = all.length ? Object.keys(all[0]) : [];
+      // Case-insensitive key resolution in case sheet headers differ in casing
+      const resolveKey = (want) => keys.find(k => k === want) || keys.find(k => k.toUpperCase() === want.toUpperCase()) || want;
+      const dateKey = resolveKey(C.DATE);
+      const custKey = resolveKey(C.CUSTOMER);
+      allRows = all.filter(r => r[dateKey]?.trim() && r[custKey]?.trim());
+      if (allRows.length === 0 && all.length > 0) {
+        const sample = JSON.stringify(all[0]).substring(0, 300);
+        console.warn('Brownsville: 0 rows after filter. Keys:', keys.join(', '));
+        console.warn('First row sample:', sample);
+        document.getElementById('tableArea').innerHTML = `
+          <div class="msg-box msg-error">
+            <p><strong>Data loaded but no rows matched filters.</strong></p>
+            <p>Available columns: <code>${keys.join(', ')}</code></p>
+            <p>Expected date key "<code>${C.DATE}</code>" → resolved to "<code>${dateKey}</code>", customer key "<code>${C.CUSTOMER}</code>" → "<code>${custKey}</code>"</p>
+            <p>First row: <code>${sample}</code></p>
+          </div>`;
+        return;
+      }
       updateStats(); populateFilters(); applyFilters(); renderSidebar();
       document.getElementById('filterBar').style.display = 'flex';
       document.getElementById('sidebar').style.display   = 'flex';
