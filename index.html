@@ -1198,6 +1198,12 @@
       C.TECH     = pick('TECH.', 'TECH', 'H');
       C.COMMENTS = pick('COMMENTS', 'COMMENT', 'I');
       C.AMOUNT   = pick('INVOICE AMOUNT', 'AMOUNT', 'K');
+      // Sync TABLE_COLS keys so column header clicks sort by the correct resolved key
+      TABLE_COLS[0].key = C.DATE; TABLE_COLS[1].key = C.SO;
+      TABLE_COLS[2].key = C.CUSTOMER; TABLE_COLS[3].key = C.SITE;
+      TABLE_COLS[4].key = C.JOB; TABLE_COLS[5].key = C.TECH;
+      TABLE_COLS[6].key = C.COMMENTS; TABLE_COLS[7].key = C.INVOICE;
+      TABLE_COLS[8].key = C.AMOUNT; TABLE_COLS[9].key = C.MAP;
       const all = rawAll.slice(1);
       allRows = all.filter(r => r[C.DATE]?.trim() && r[C.CUSTOMER]?.trim());
       updateStats(); populateFilters(); applyFilters(); renderSidebar();
