@@ -1388,9 +1388,17 @@
     // YYYY-MM-DD
     const iso = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
     if (iso) return new Date(parseInt(iso[1]), parseInt(iso[2]) - 1, parseInt(iso[3]));
-    // M/D or M-D (no year) — assume current year
+    // M/D or M-D (no year) — use current year, stepping back one year if the
+    // date would be more than 60 days in the future (historical entry, not a
+    // scheduled work order)
     const short = str.match(/^(\d{1,2})[-\/](\d{1,2})$/);
-    if (short) return new Date(new Date().getFullYear(), parseInt(short[1]) - 1, parseInt(short[2]));
+    if (short) {
+      const now = new Date();
+      let y = now.getFullYear();
+      const candidate = new Date(y, parseInt(short[1]) - 1, parseInt(short[2]));
+      if (candidate.getTime() - now.getTime() > 60 * 24 * 60 * 60 * 1000) y--;
+      return new Date(y, parseInt(short[1]) - 1, parseInt(short[2]));
+    }
     const d = new Date(str); return isNaN(d.getTime()) ? null : d;
   }
 
