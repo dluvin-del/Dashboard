@@ -472,6 +472,7 @@
           <input type="date" class="fi" id="qDateValue" onchange="applyFilters()" />
         </div>
         <span class="result-count" id="resultCount"></span>
+        <small id="qDateDebug" style="color:#888;font-size:0.7em;align-self:center"></small>
       </div>
       <div id="tableArea">
         <div class="msg-box" id="initMsg"><p><strong>Loading service orders…</strong></p></div>
@@ -1444,6 +1445,13 @@
       const cmp = (a[sortKey]||'').localeCompare(b[sortKey]||'', undefined, {numeric:true,sensitivity:'base'});
       return sortDir === 'asc' ? cmp : -cmp;
     });
+    // Debug: show raw date and parsed date from first row so we can verify parsing
+    const dbg = document.getElementById('qDateDebug');
+    if (dateRange && selDate && dbg) {
+      const rawDate = allRows[0]?.[C.DATE] ?? 'N/A';
+      const parsed  = parseRowDate(rawDate);
+      dbg.textContent = `Picked: ${selDate.toLocaleDateString()} | Row sample raw: "${rawDate}" → parsed: ${parsed ? parsed.toLocaleDateString() : 'FAIL'}`;
+    } else if (dbg) { dbg.textContent = ''; }
     page = 1; renderTable();
   }
 
