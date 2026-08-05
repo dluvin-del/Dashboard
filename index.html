@@ -1850,8 +1850,32 @@
   // ── Sheet 4: Fitzgerald W/O ─────────────────
   async function loadData4(standalone = true) {
     try {
-      const all = await fetchGviz(SHEET_ID_4);
-      allRows4 = all.filter(r => r[C4.CUSTOMER]?.trim());
+      const rawAll4 = await fetchGviz(SHEET_ID_4, null, true);
+      const hdr4 = rawAll4[0] || {};
+      const cbn4 = {};
+      Object.entries(hdr4).forEach(([letter, text]) => { if (text?.trim()) cbn4[text.trim().toUpperCase()] = letter; });
+      const pick4 = (...names) => { for (const n of names) { if (cbn4[n.toUpperCase()]) return cbn4[n.toUpperCase()]; } return names[names.length - 1]; };
+      C4.DATE     = pick4('Date', 'DATE', 'date', 'A');
+      C4.SO       = pick4('SERVICE ORDER #', 'SO#', 'B');
+      C4.INVOICE  = pick4('INVOICE #', 'INVOICE', 'C');
+      C4.AMOUNT   = pick4('INVOICE AMOUNT', 'AMOUNT', 'Invoice Amount', 'D');
+      C4.CUSTOMER = pick4('CUSTOMER', 'Customer', 'E');
+      C4.DESC     = pick4('CALL/DESCRIPTION', 'DESCRIPTION', 'DESC', 'F');
+      C4.MAP      = pick4('GOOGLE LOCATION', 'GOOGLE PIN LOCATION', 'MAP', 'G');
+      C4.EMPLOYEE = pick4('EMPLOYEE', 'TECH.', 'TECH', 'H');
+      C4.WO       = pick4('W.O. #', 'WO#', 'I');
+      const all4 = rawAll4.slice(1);
+      allRows4 = all4.filter(r => r[C4.CUSTOMER]?.trim());
+      if (rawAll4.length > 0 && allRows4.length === 0) {
+        const r0 = JSON.stringify(rawAll4[0]).substring(0, 400);
+        const r1 = rawAll4[1] ? JSON.stringify(rawAll4[1]).substring(0, 400) : 'none';
+        document.getElementById('fitzTableArea').innerHTML = `
+          <div class="msg-box msg-error">
+            <p><strong>Debug Fitzgerald: ${rawAll4.length} rows, 0 matched (CUSTOMER="${C4.CUSTOMER}")</strong></p>
+            <p>Row 0: <code>${r0}</code></p><p>Row 1: <code>${r1}</code></p>
+            <p>colByName: <code>${JSON.stringify(cbn4).substring(0,400)}</code></p>
+          </div>`; return;
+      }
       updateStats4(); populateFilters4(); applyFilters4();
       document.getElementById('fitzFilterBar').style.display = 'flex';
       document.getElementById('fitzInitMsg')?.remove();
