@@ -1445,12 +1445,16 @@
       const cmp = (a[sortKey]||'').localeCompare(b[sortKey]||'', undefined, {numeric:true,sensitivity:'base'});
       return sortDir === 'asc' ? cmp : -cmp;
     });
-    // Debug: show raw date and parsed date from first row so we can verify parsing
+    // Debug: parse success rate + date range actually indexed
     const dbg = document.getElementById('qDateDebug');
     if (dateRange && selDate && dbg) {
-      const rawDate = allRows[0]?.[C.DATE] ?? 'N/A';
-      const parsed  = parseRowDate(rawDate);
-      dbg.textContent = `Picked: ${selDate.toLocaleDateString()} | Row sample raw: "${rawDate}" → parsed: ${parsed ? parsed.toLocaleDateString() : 'FAIL'}`;
+      const parsed = allRows.map(r => parseRowDate(r[C.DATE])).filter(Boolean);
+      parsed.sort((a,b) => a-b);
+      const fmt = d => d.toLocaleDateString();
+      const samples = allRows.slice(0,3).map(r => `"${r[C.DATE]}"`).join(', ');
+      dbg.textContent = parsed.length
+        ? `${parsed.length}/${allRows.length} dates parsed | range: ${fmt(parsed[0])}–${fmt(parsed[parsed.length-1])} | samples: ${samples}`
+        : `0/${allRows.length} dates parsed! samples: ${samples}`;
     } else if (dbg) { dbg.textContent = ''; }
     page = 1; renderTable();
   }
