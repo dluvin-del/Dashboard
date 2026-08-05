@@ -1369,8 +1369,11 @@
   // ── Date helpers ──────────────────────────────
   function parseRowDate(str) {
     if (!str?.trim()) return null;
+    // gviz internal format: Date(2026,2,24) — month is 0-indexed
+    const gviz = str.match(/^Date\((\d+),(\d+),(\d+)\)$/);
+    if (gviz) return new Date(parseInt(gviz[1]), parseInt(gviz[2]), parseInt(gviz[3]));
     // M-D-YY, M/D/YY, M-D-YYYY, M/D/YYYY
-    const m = str.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{2,4})$/);
+    const m = str.match(/^(\d{1,2})[-\/\.](\d{1,2})[-\/\.](\d{2,4})$/);
     if (m) {
       let y = parseInt(m[3]); if (y < 100) y += 2000;
       return new Date(y, parseInt(m[1]) - 1, parseInt(m[2]));
@@ -1508,7 +1511,19 @@
     const total = filtered.length;
     document.getElementById('resultCount').textContent =
       total === allRows.length ? `${total} orders` : `${total} of ${allRows.length}`;
-    if (!total) { document.getElementById('tableArea').innerHTML = '<div class="msg-box"><p>No orders match the current filters.</p></div>'; return; }
+    if (!total) {
+      const dateRange = document.getElementById('qDateRange').value;
+      let hint = '';
+      if (dateRange) {
+        const dates = allRows.map(r => parseRowDate(r[C.DATE])).filter(Boolean).sort((a,b)=>a-b);
+        if (dates.length) {
+          const fmt = d => d.toLocaleDateString();
+          hint = ` Data covers <strong>${fmt(dates[0])}</strong> – <strong>${fmt(dates[dates.length-1])}</strong>.`;
+        }
+      }
+      document.getElementById('tableArea').innerHTML = `<div class="msg-box"><p>No orders match the current filters.${hint}</p></div>`;
+      return;
+    }
     const start = (page-1)*PAGE_SIZE, slice = filtered.slice(start, start+PAGE_SIZE), pages = Math.ceil(total/PAGE_SIZE);
     const thead = TABLE_COLS.map(c =>
       `<th class="${sortKey===c.key?sortDir:''}" ${c.nosort?'':` onclick="sortBy('${c.key}')"`}>${c.label}</th>`
