@@ -1206,7 +1206,7 @@
       TABLE_COLS[6].key = C.COMMENTS; TABLE_COLS[7].key = C.INVOICE;
       TABLE_COLS[8].key = C.AMOUNT; TABLE_COLS[9].key = C.MAP;
       const all = rawAll.slice(1);
-      allRows = all.filter(r => r[C.DATE]?.trim() && r[C.CUSTOMER]?.trim());
+      allRows = all.filter(r => r[C.DATE]?.trim());
       updateStats(); populateFilters(); applyFilters(); renderSidebar();
       document.getElementById('filterBar').style.display = 'flex';
       document.getElementById('sidebar').style.display   = 'flex';
@@ -1388,6 +1388,9 @@
     // YYYY-MM-DD
     const iso = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
     if (iso) return new Date(parseInt(iso[1]), parseInt(iso[2]) - 1, parseInt(iso[3]));
+    // M/D or M-D (no year) — assume current year
+    const short = str.match(/^(\d{1,2})[-\/](\d{1,2})$/);
+    if (short) return new Date(new Date().getFullYear(), parseInt(short[1]) - 1, parseInt(short[2]));
     const d = new Date(str); return isNaN(d.getTime()) ? null : d;
   }
 
@@ -1445,16 +1448,23 @@
       const cmp = (a[sortKey]||'').localeCompare(b[sortKey]||'', undefined, {numeric:true,sensitivity:'base'});
       return sortDir === 'asc' ? cmp : -cmp;
     });
-    // Debug: parse success rate + date range actually indexed
+    // Debug: show window, total rows, and sample date values
     const dbg = document.getElementById('qDateDebug');
     if (dateRange && selDate && dbg) {
-      const parsed = allRows.map(r => parseRowDate(r[C.DATE])).filter(Boolean);
-      parsed.sort((a,b) => a-b);
-      const fmt = d => d.toLocaleDateString();
-      const samples = allRows.slice(0,3).map(r => `"${r[C.DATE]}"`).join(', ');
-      dbg.textContent = parsed.length
-        ? `${parsed.length}/${allRows.length} dates parsed | range: ${fmt(parsed[0])}–${fmt(parsed[parsed.length-1])} | samples: ${samples}`
-        : `0/${allRows.length} dates parsed! samples: ${samples}`;
+      let winStr = '';
+      if (dateRange === 'week') {
+        const dow = selDate.getDay();
+        const ws2 = new Date(selDate); ws2.setDate(selDate.getDate() - dow); ws2.setHours(0,0,0,0);
+        const we2 = new Date(ws2); we2.setDate(ws2.getDate() + 6);
+        winStr = ` window:${ws2.toLocaleDateString()}–${we2.toLocaleDateString()}`;
+      } else if (dateRange === 'month') {
+        winStr = ` window:${selDate.toLocaleDateString('en-US',{month:'short',year:'numeric'})}`;
+      } else {
+        winStr = ` window:${selDate.toLocaleDateString()}`;
+      }
+      const lastDates = allRows.slice(-3).map(r => `"${r[C.DATE]}"`).join(' ');
+      const otherFilters = [tech&&`tech="${tech}"`,cust&&`cust="${cust}"`,status&&`status="${status}"`,q&&`q="${q}"`].filter(Boolean).join(' ');
+      dbg.textContent = `total:${allRows.length}${winStr} matched:${filtered.length} last3dates:${lastDates}${otherFilters?' other:'+otherFilters:''}`;
     } else if (dbg) { dbg.textContent = ''; }
     page = 1; renderTable();
   }
