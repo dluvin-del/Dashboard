@@ -1207,7 +1207,7 @@
       TABLE_COLS[8].key = C.AMOUNT; TABLE_COLS[9].key = C.MAP;
       const all = rawAll.slice(1);
       allRows = all.filter(r => r[C.DATE]?.trim());
-      updateStats(); populateFilters(); applyFilters(); renderSidebar();
+      populateFilters(); applyFilters(); renderSidebar();
       document.getElementById('filterBar').style.display = 'flex';
       document.getElementById('sidebar').style.display   = 'flex';
       document.getElementById('initMsg')?.remove();
@@ -1339,18 +1339,20 @@
   }
 
   // ── Stats: Sheet 1 ───────────────────────────
+  // Uses `filtered` so tiles always reflect the active date / filter selection.
   function updateStats() {
-    const inv   = allRows.filter(r => r[C.INVOICE]?.trim());
-    const techs = new Set(allRows.map(r => r[C.TECH]?.trim()).filter(Boolean));
-    const custs = new Set(allRows.map(r => r[C.CUSTOMER]?.trim()).filter(Boolean));
-    const total = allRows.reduce((sum, r) => {
+    const rows  = filtered;
+    const inv   = rows.filter(r => r[C.INVOICE]?.trim());
+    const techs = new Set(rows.map(r => r[C.TECH]?.trim()).filter(Boolean));
+    const custs = new Set(rows.map(r => r[C.CUSTOMER]?.trim()).filter(Boolean));
+    const total = rows.reduce((sum, r) => {
       const n = parseFloat(String(r[C.AMOUNT] || '').replace(/[$,\s]/g, ''));
       return sum + (isNaN(n) ? 0 : n);
     }, 0);
-    const vals = [allRows.length, inv.length, allRows.length - inv.length, techs.size, custs.size];
+    const vals = [rows.length, inv.length, rows.length - inv.length, techs.size, custs.size];
     ['sTotal','sInvoiced','sPending','sTechs','sCustomers'].forEach((id, i) => { document.getElementById(id).textContent = vals[i]; });
     ['a-sTotal','a-sInvoiced','a-sPending','a-sTechs','a-sCustomers'].forEach((id, i) => { document.getElementById(id).textContent = vals[i]; });
-    document.getElementById('sTotalAmount').textContent = allRows.length > 0 ? '$' + total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '—';
+    document.getElementById('sTotalAmount').textContent = rows.length > 0 ? '$' + total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '—';
     const invTotal = inv.reduce((sum, r) => { const n = parseFloat(String(r[C.AMOUNT] || '').replace(/[$,\s]/g, '')); return sum + (isNaN(n) ? 0 : n); }, 0);
     document.getElementById('sInvoicedAmt').textContent = inv.length > 0 ? '$' + invTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '—';
   }
@@ -1474,6 +1476,7 @@
       const otherFilters = [tech&&`tech="${tech}"`,cust&&`cust="${cust}"`,status&&`status="${status}"`,q&&`q="${q}"`].filter(Boolean).join(' ');
       dbg.textContent = `total:${allRows.length}${winStr} matched:${filtered.length} last3dates:${lastDates}${otherFilters?' other:'+otherFilters:''}`;
     } else if (dbg) { dbg.textContent = ''; }
+    updateStats();
     page = 1; renderTable();
   }
 
