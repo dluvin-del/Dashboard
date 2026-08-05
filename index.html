@@ -1477,6 +1477,10 @@
       dbg.textContent = `total:${allRows.length}${winStr} matched:${filtered.length} last3dates:${lastDates}${otherFilters?' other:'+otherFilters:''}`;
     } else if (dbg) { dbg.textContent = ''; }
     updateStats();
+    renderSidebar();
+    if (chartJsReady && document.getElementById('chartsRow')?.style.display !== 'none') {
+      try { renderCharts(); renderAnalytics(); } catch(e) { console.warn('Charts:', e.message); }
+    }
     page = 1; renderTable();
   }
 
@@ -1666,7 +1670,7 @@
   // ── Sidebar ──────────────────────────────────
   function renderSidebar() {
     const counts={};
-    allRows.forEach(r=>{ const t=r[C.TECH]?.trim(); if(t) counts[t]=(counts[t]||0)+1; });
+    filtered.forEach(r=>{ const t=r[C.TECH]?.trim(); if(t) counts[t]=(counts[t]||0)+1; });
     const sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]);
     const max=sorted[0]?.[1]||1;
     document.getElementById('wTechs').innerHTML=sorted.slice(0,14).map(([t,n])=>`
@@ -1675,7 +1679,7 @@
         <div class="tech-bar-bg"><div class="tech-bar-fill" style="width:${Math.round(n/max*100)}%"></div></div>
         <span class="tech-count">${n}</span>
       </li>`).join('');
-    document.getElementById('wRecent').innerHTML=[...allRows].reverse().slice(0,8).map(r=>`
+    document.getElementById('wRecent').innerHTML=[...filtered].reverse().slice(0,8).map(r=>`
       <div class="recent-item">
         <div class="recent-so">${esc(r[C.SO])} <span style="font-weight:400;color:var(--gray-500)">${esc(r[C.DATE])}</span></div>
         <div class="recent-sub">${esc(r[C.CUSTOMER])} · ${esc(r[C.SITE])}</div>
@@ -1685,7 +1689,7 @@
   // ── Analytics panel (Panel 1) ────────────────
   function renderAnalytics() {
     const techData = {};
-    allRows.forEach(r => {
+    filtered.forEach(r => {
       const t = r[C.TECH]?.trim(); if (!t) return;
       if (!techData[t]) techData[t] = { total:0, inv:0 };
       techData[t].total++;
@@ -1713,7 +1717,7 @@
 
   function renderAnalyticsCharts() {
     const techCounts = {};
-    allRows.forEach(r => { const t=r[C.TECH]?.trim(); if(t) techCounts[t]=(techCounts[t]||0)+1; });
+    filtered.forEach(r => { const t=r[C.TECH]?.trim(); if(t) techCounts[t]=(techCounts[t]||0)+1; });
     const techSorted = Object.entries(techCounts).sort((a,b)=>b[1]-a[1]).slice(0,15);
 
     if (chartTech) chartTech.destroy();
@@ -1734,7 +1738,7 @@
     });
 
     const custCounts = {};
-    allRows.forEach(r => { const c=r[C.CUSTOMER]?.trim(); if(c) custCounts[c]=(custCounts[c]||0)+1; });
+    filtered.forEach(r => { const c=r[C.CUSTOMER]?.trim(); if(c) custCounts[c]=(custCounts[c]||0)+1; });
     const custSorted = Object.entries(custCounts).sort((a,b)=>b[1]-a[1]).slice(0,15);
 
     if (chartCust) chartCust.destroy();
@@ -1794,7 +1798,7 @@
 
   function renderCharts() {
     const dateCounts={};
-    allRows.forEach(r=>{ const d=normalizeDate(r[C.DATE]); if(d) dateCounts[d]=(dateCounts[d]||0)+1; });
+    filtered.forEach(r=>{ const d=normalizeDate(r[C.DATE]); if(d) dateCounts[d]=(dateCounts[d]||0)+1; });
     const labels=Object.keys(dateCounts).sort((a,b)=>{
       const[am,ad]=a.split('/').map(Number),[bm,bd]=b.split('/').map(Number);
       return am!==bm?am-bm:ad-bd;
@@ -1807,7 +1811,7 @@
         scales:{x:{grid:{display:false},ticks:{font:{size:10},maxRotation:45}},y:{beginAtZero:true,ticks:{stepSize:1,font:{size:10}},grid:{color:'#f1f5f9'}}}}
     });
 
-    const inv=allRows.filter(r=>r[C.INVOICE]?.trim()).length, open=allRows.length-inv;
+    const inv=filtered.filter(r=>r[C.INVOICE]?.trim()).length, open=filtered.length-inv;
     if(chartStatus) chartStatus.destroy();
     chartStatus=new Chart(document.getElementById('chartStatus'),{
       type:'doughnut', plugins:[makePctPlugin()],
@@ -1818,7 +1822,7 @@
     });
 
     const amountByDate={};
-    allRows.forEach(r=>{
+    filtered.forEach(r=>{
       const d=normalizeDate(r[C.DATE]); if(!d) return;
       const raw=String(r[C.AMOUNT]||'').replace(/[$,\s]/g,'');
       const n=parseFloat(raw); if(!isNaN(n)&&n>0) amountByDate[d]=(amountByDate[d]||0)+n;
@@ -1842,7 +1846,7 @@
     });
 
     const amountByTech = {};
-    allRows.forEach(r => {
+    filtered.forEach(r => {
       const t = r[C.TECH]?.trim(); if (!t) return;
       const raw = String(r[C.AMOUNT] || '').replace(/[$,\s]/g, '');
       const n = parseFloat(raw); if (!isNaN(n) && n > 0) amountByTech[t] = (amountByTech[t] || 0) + n;
