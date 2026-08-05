@@ -458,6 +458,19 @@
             <option value="pending">Pending</option>
           </select>
         </div>
+        <div class="fg">
+          <div class="fl">Date Range</div>
+          <select class="fs" id="qDateRange" onchange="onDateRangeChange()">
+            <option value="">All Dates</option>
+            <option value="day">Day</option>
+            <option value="week">Week</option>
+            <option value="month">Month</option>
+          </select>
+        </div>
+        <div class="fg" id="qDatePickerFg" style="display:none">
+          <div class="fl" id="qDatePickerLabel">Date</div>
+          <input type="date" class="fi" id="qDateValue" onchange="applyFilters()" />
+        </div>
         <span class="result-count" id="resultCount"></span>
       </div>
       <div id="tableArea">
@@ -1353,22 +1366,69 @@
     ['p-sTotal','p-sVendors','p-sFollowup','p-sLocations'].forEach((id, i) => { document.getElementById(id).textContent = vals[i]; });
   }
 
+  // ── Date helpers ──────────────────────────────
+  function parseRowDate(str) {
+    if (!str?.trim()) return null;
+    // M-D-YY, M/D/YY, M-D-YYYY, M/D/YYYY
+    const m = str.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{2,4})$/);
+    if (m) {
+      let y = parseInt(m[3]); if (y < 100) y += 2000;
+      return new Date(y, parseInt(m[1]) - 1, parseInt(m[2]));
+    }
+    // YYYY-MM-DD
+    const iso = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (iso) return new Date(parseInt(iso[1]), parseInt(iso[2]) - 1, parseInt(iso[3]));
+    const d = new Date(str); return isNaN(d.getTime()) ? null : d;
+  }
+
+  function onDateRangeChange() {
+    const range = document.getElementById('qDateRange').value;
+    const fg    = document.getElementById('qDatePickerFg');
+    const lbl   = document.getElementById('qDatePickerLabel');
+    if (!range) { fg.style.display = 'none'; }
+    else {
+      fg.style.display = '';
+      lbl.textContent = range === 'day' ? 'Pick Date' : range === 'week' ? 'Week of' : 'Month';
+    }
+    applyFilters();
+  }
+
   // ── Filters: Sheet 1 ─────────────────────────
   function populateFilters() {
     fillSel('qTech',     uniq(allRows.map(r => r[C.TECH]?.trim())).sort(),     'All Techs');
     fillSel('qCustomer', uniq(allRows.map(r => r[C.CUSTOMER]?.trim())).sort(), 'All Customers');
   }
   function applyFilters() {
-    const q = document.getElementById('qSearch').value.toLowerCase();
-    const tech = document.getElementById('qTech').value;
-    const cust = document.getElementById('qCustomer').value;
-    const status = document.getElementById('qStatus').value;
+    const q         = document.getElementById('qSearch').value.toLowerCase();
+    const tech      = document.getElementById('qTech').value;
+    const cust      = document.getElementById('qCustomer').value;
+    const status    = document.getElementById('qStatus').value;
+    const dateRange = document.getElementById('qDateRange').value;
+    const dateVal   = document.getElementById('qDateValue').value; // YYYY-MM-DD
+    const selDate   = dateVal ? new Date(dateVal + 'T00:00:00') : null;
     filtered = allRows.filter(row => {
       if (tech   && row[C.TECH]?.trim()     !== tech) return false;
       if (cust   && row[C.CUSTOMER]?.trim() !== cust) return false;
       if (status === 'invoiced' && !row[C.INVOICE]?.trim()) return false;
       if (status === 'pending'  &&  row[C.INVOICE]?.trim()) return false;
       if (q && !Object.values(row).join(' ').toLowerCase().includes(q)) return false;
+      if (dateRange && selDate) {
+        const rd = parseRowDate(row[C.DATE]);
+        if (!rd) return false;
+        if (dateRange === 'day') {
+          if (rd.getFullYear() !== selDate.getFullYear() ||
+              rd.getMonth()    !== selDate.getMonth()    ||
+              rd.getDate()     !== selDate.getDate()) return false;
+        } else if (dateRange === 'week') {
+          const dow = selDate.getDay();
+          const ws  = new Date(selDate); ws.setDate(selDate.getDate() - dow); ws.setHours(0,0,0,0);
+          const we  = new Date(ws); we.setDate(ws.getDate() + 6); we.setHours(23,59,59,999);
+          if (rd < ws || rd > we) return false;
+        } else if (dateRange === 'month') {
+          if (rd.getFullYear() !== selDate.getFullYear() ||
+              rd.getMonth()    !== selDate.getMonth()) return false;
+        }
+      }
       return true;
     });
     filtered.sort((a, b) => {
