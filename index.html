@@ -412,6 +412,44 @@
     <div class="stat-card c-green"> <div class="stat-label">Total Invoiced $</div><div class="stat-value" id="sTotalAmount" style="font-size:1.1rem">—</div></div>
   </div>
 
+  <div class="filters" id="filterBar" style="display:none">
+    <div class="fg">
+      <div class="fl">Search</div>
+      <input type="search" class="fi fi-search" id="qSearch" placeholder="Search any field…" oninput="applyFilters()" />
+    </div>
+    <div class="fg">
+      <div class="fl">Technician</div>
+      <select class="fs" id="qTech" onchange="applyFilters()"><option value="">All Techs</option></select>
+    </div>
+    <div class="fg">
+      <div class="fl">Customer</div>
+      <select class="fs" id="qCustomer" onchange="applyFilters()"><option value="">All Customers</option></select>
+    </div>
+    <div class="fg">
+      <div class="fl">Status</div>
+      <select class="fs" id="qStatus" onchange="applyFilters()">
+        <option value="">All</option>
+        <option value="invoiced">Invoiced</option>
+        <option value="pending">Pending</option>
+      </select>
+    </div>
+    <div class="fg">
+      <div class="fl">Date Range</div>
+      <select class="fs" id="qDateRange" onchange="onDateRangeChange()">
+        <option value="">All Dates</option>
+        <option value="day">Day</option>
+        <option value="week">Week</option>
+        <option value="month">Month</option>
+      </select>
+    </div>
+    <div class="fg" id="qDatePickerFg" style="display:none">
+      <div class="fl" id="qDatePickerLabel">Date</div>
+      <input type="date" class="fi" id="qDateValue" onchange="applyFilters()" />
+    </div>
+    <span class="result-count" id="resultCount"></span>
+    <small id="qDateDebug" style="color:#888;font-size:0.7em;align-self:center"></small>
+  </div>
+
   <div class="charts-row" id="chartsRow" style="display:none">
     <div class="chart-card">
       <div class="chart-title">Jobs by Date</div>
@@ -437,43 +475,6 @@
 
   <div class="body-grid">
     <div id="mainCol">
-      <div class="filters" id="filterBar" style="display:none">
-        <div class="fg">
-          <div class="fl">Search</div>
-          <input type="search" class="fi fi-search" id="qSearch" placeholder="Search any field…" oninput="applyFilters()" />
-        </div>
-        <div class="fg">
-          <div class="fl">Technician</div>
-          <select class="fs" id="qTech" onchange="applyFilters()"><option value="">All Techs</option></select>
-        </div>
-        <div class="fg">
-          <div class="fl">Customer</div>
-          <select class="fs" id="qCustomer" onchange="applyFilters()"><option value="">All Customers</option></select>
-        </div>
-        <div class="fg">
-          <div class="fl">Status</div>
-          <select class="fs" id="qStatus" onchange="applyFilters()">
-            <option value="">All</option>
-            <option value="invoiced">Invoiced</option>
-            <option value="pending">Pending</option>
-          </select>
-        </div>
-        <div class="fg">
-          <div class="fl">Date Range</div>
-          <select class="fs" id="qDateRange" onchange="onDateRangeChange()">
-            <option value="">All Dates</option>
-            <option value="day">Day</option>
-            <option value="week">Week</option>
-            <option value="month">Month</option>
-          </select>
-        </div>
-        <div class="fg" id="qDatePickerFg" style="display:none">
-          <div class="fl" id="qDatePickerLabel">Date</div>
-          <input type="date" class="fi" id="qDateValue" onchange="applyFilters()" />
-        </div>
-        <span class="result-count" id="resultCount"></span>
-        <small id="qDateDebug" style="color:#888;font-size:0.7em;align-self:center"></small>
-      </div>
       <div id="tableArea">
         <div class="msg-box" id="initMsg"><p><strong>Loading service orders…</strong></p></div>
       </div>
