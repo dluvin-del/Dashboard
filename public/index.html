@@ -2086,8 +2086,37 @@
   // ── Sheet 5: Live Oak W/O ────────────────────
   async function loadData5(standalone = true) {
     try {
-      const all = await fetchGviz(SHEET_ID_5);
-      allRows5 = all.filter(r => r[C5.CUSTOMER]?.trim());
+      const rawAll5 = await fetchGviz(SHEET_ID_5, null, true);
+      const hdr5 = rawAll5[0] || {};
+      const cbn5 = {};
+      Object.entries(hdr5).forEach(([letter, text]) => { if (text?.trim()) cbn5[text.trim().toUpperCase()] = letter; });
+      const pick5 = (...names) => { for (const n of names) { if (cbn5[n.toUpperCase()]) return cbn5[n.toUpperCase()]; } return names[names.length - 1]; };
+      C5.DATE     = pick5('Date', 'KEY DATE', 'DATE', 'A');
+      C5.SO       = pick5('SERVICE ORDER #', 'SO#', 'INVOICED SERVICE ORDER #', 'B');
+      C5.CUSTOMER = pick5('CUSTOMER', 'Customer', 'C');
+      C5.SITE     = pick5('SITE NAME', 'SITE', 'NOT INVOICED SITE NAME', 'D');
+      C5.JOB      = pick5('JOB INFO', 'JOB', 'E');
+      C5.MAP      = pick5('GOOGLE LOCATION', 'GOOGLE PIN LOCATION', 'WAITING ON WARRANTY GOOGLE LOCATION', 'F');
+      C5.TECH     = pick5('TECH.', 'TECH', 'G');
+      C5.BOM      = pick5('BOM #', 'BOM', 'H');
+      C5.INVOICE  = pick5('INVOICE #', 'INVOICE', 'I');
+      TABLE_COLS_5[0].key = C5.DATE; TABLE_COLS_5[1].key = C5.SO;
+      TABLE_COLS_5[2].key = C5.INVOICE; TABLE_COLS_5[3].key = C5.CUSTOMER;
+      TABLE_COLS_5[4].key = C5.SITE; TABLE_COLS_5[5].key = C5.JOB;
+      TABLE_COLS_5[6].key = C5.TECH; TABLE_COLS_5[7].key = C5.BOM;
+      TABLE_COLS_5[8].key = C5.MAP;
+      const all5 = rawAll5.slice(1);
+      allRows5 = all5.filter(r => r[C5.CUSTOMER]?.trim());
+      if (rawAll5.length > 0 && allRows5.length === 0) {
+        const r0 = JSON.stringify(rawAll5[0]).substring(0, 400);
+        const r1 = rawAll5[1] ? JSON.stringify(rawAll5[1]).substring(0, 400) : 'none';
+        document.getElementById('loTableArea').innerHTML = `
+          <div class="msg-box msg-error">
+            <p><strong>Debug Live Oak: ${rawAll5.length} rows, 0 matched (CUSTOMER="${C5.CUSTOMER}")</strong></p>
+            <p>Row 0: <code>${r0}</code></p><p>Row 1: <code>${r1}</code></p>
+            <p>colByName: <code>${JSON.stringify(cbn5).substring(0,400)}</code></p>
+          </div>`; return;
+      }
       updateStats5(); populateFilters5(); applyFilters5();
       document.getElementById('loFilterBar').style.display = 'flex';
       document.getElementById('loInitMsg')?.remove();
